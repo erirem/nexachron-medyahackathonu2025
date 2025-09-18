@@ -6,8 +6,7 @@ services:
     branch: main
     autoDeploy: true
     buildCommand: |
-      corepack enable
-      corepack prepare pnpm@10.17.0 --activate
+      npm install -g pnpm@10.17.0
       pnpm install --frozen-lockfile
       pnpm --filter api build
     startCommand: pnpm --filter api start:prod
@@ -23,8 +22,7 @@ services:
     branch: main
     autoDeploy: true
     buildCommand: |
-      corepack enable
-      corepack prepare pnpm@10.17.0 --activate
+      npm install -g pnpm@10.17.0
       pnpm install --frozen-lockfile
       pnpm --filter web build
     startCommand: pnpm --filter web start -- --hostname 0.0.0.0 --port $PORT
