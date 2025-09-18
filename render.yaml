@@ -7,7 +7,9 @@ services:
     autoDeploy: true
     rootDir: apps/api
     buildCommand: |
-      npm install -g pnpm@10.17.0
+      cd ../..
+      corepack enable
+      corepack prepare pnpm@10.17.0 --activate
       pnpm install --frozen-lockfile
       pnpm --filter api build
     startCommand: pnpm start:prod
@@ -24,10 +26,12 @@ services:
     autoDeploy: true
     rootDir: apps/web
     buildCommand: |
-      npm install -g pnpm@10.17.0
+      cd ../..
+      corepack enable
+      corepack prepare pnpm@10.17.0 --activate
       pnpm install --frozen-lockfile
       pnpm --filter web build
-    startCommand: pnpm start
+    startCommand: pnpm start:prod
     envVars:
       - key: NODE_VERSION
         value: '20'
