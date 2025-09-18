@@ -109,6 +109,27 @@ pnpm dev:mobile  # placeholder, Flutter komutunu manuel çalıştırır
 - Test: `pnpm test`
 - Tüm kontroller: `pnpm check`
 
+## CI/CD
+- GitHub Actions ile ücretsiz CI akışları `.github/workflows/api-ci.yml` ve `.github/workflows/web-ci.yml` dosyalarında tanımlıdır.
+- Her iki workflow da `main` branşına gelen push/pull request ve manuel `Run workflow` tetiklemelerinde çalışır.
+- Kurulum adımları sırasında `pnpm install --frozen-lockfile`, ilgili `lint/test/build` komutları ve başarı sonrası opsiyonel deploy hook tetiklemeleri gerçekleştirilir.
+
+### Deploy hook'larını hazırlama
+1. **API (örnek: Render)**
+   - Render servisinizi oluşturun ve **Settings → Deploy Hooks** altından production deploy hook URL'sini alın.
+   - GitHub repo ayarlarında **Settings → Secrets and variables → Actions** bölümüne `API_DEPLOY_HOOK` adında yeni bir secret ekleyip bu URL'yi yapıştırın.
+2. **Web (örnek: Vercel)**
+   - Vercel projesinde **Settings → Deploy Hooks** altından Production için yeni bir hook oluşturun.
+   - Aynı Secrets ekranında `WEB_DEPLOY_HOOK` adını kullanarak hook URL'sini girin.
+- Farklı sağlayıcılar (Railway, Fly.io vb.) kullanıyorsanız uygun webhook adresini aynı secret isimleriyle tanımlayarak ya da workflow içindeki `curl` komutunu güncelleyerek entegre edebilirsiniz.
+- Deploy secret'ları tanımlanmadığında ilgili job otomatik olarak atlanır; bu sayede yalnızca CI adımları çalışır.
+
+### Render blueprint kullanımı
+- Render hesabınızda **Blueprint** açarken depo root'unda bulunan `render.yaml` dosyası otomatik algılanır.
+- Dosya iki adet `plan: free` Node servisi tanımlar: `nexachron-api` (NestJS) ve `nexachron-web` (Next.js).
+- Blueprint kurulumu sırasında `DATABASE_URL` ve isteğe bağlı `NEXT_PUBLIC_API_URL` gibi `sync: false` env değişkenlerini Render panelinden doldurun.
+- Kurulum tamamlandıktan sonra her push'ta Render kendi bygg/start komutlarını çalıştırır; GitHub Actions'daki deploy hook job'ı ile daha sık tetiklemek isterseniz Render'dan deploy hook URL'lerini alıp ilgili secret'ları girin.
+
 ## Troubleshooting
 - **`Cannot switch to pnpm@9` uyarısı:** Kök `package.json` içindeki `packageManager` alanı pnpm 10.17.0 olarak tanımlıdır. `corepack` ile aynı sürümü etkinleştirdiğinizden emin olun.
 - **Turbo `pipeline` hatası:** Turborepo 2.x ile `turbo.json` dosyasında `tasks` alanı kullanılmalıdır (depo şimdiden uyumlu).

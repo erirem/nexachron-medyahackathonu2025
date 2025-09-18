@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: nexachron-api
+    env: node
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: |
+      corepack enable
+      corepack prepare pnpm@10.17.0 --activate
+      pnpm install --frozen-lockfile
+      pnpm --filter api build
+    startCommand: pnpm --filter api start:prod
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      - key: DATABASE_URL
+        sync: false
+  - type: web
+    name: nexachron-web
+    env: node
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: |
+      corepack enable
+      corepack prepare pnpm@10.17.0 --activate
+      pnpm install --frozen-lockfile
+      pnpm --filter web build
+    startCommand: pnpm --filter web start -- --hostname 0.0.0.0 --port $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
