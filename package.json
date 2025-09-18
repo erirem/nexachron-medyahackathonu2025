@@ -1,0 +1,22 @@
+{
+  "name": "nexachron",
+  "private": true,
+  "packageManager": "pnpm@9",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=web",
+    "dev:api": "turbo run dev --filter=api",
+    "dev:mobile": "cd apps/mobile && flutter run",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "check": "turbo run check"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}
