@@ -5,6 +5,7 @@ services:
     plan: free
     branch: main
     autoDeploy: true
+    rootDir: apps/api
     buildCommand: |
       npm install -g pnpm@10.17.0
       pnpm install --frozen-lockfile
@@ -21,6 +22,7 @@ services:
     plan: free
     branch: main
     autoDeploy: true
+    rootDir: apps/web
     buildCommand: |
       npm install -g pnpm@10.17.0
       pnpm install --frozen-lockfile

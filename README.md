@@ -127,6 +127,7 @@ pnpm dev:mobile  # placeholder, Flutter komutunu manuel çalıştırır
 ### Render blueprint kullanımı
 - Render hesabınızda **Blueprint** açarken depo root'unda bulunan `render.yaml` dosyası otomatik algılanır.
 - Dosya iki adet `plan: free` Node servisi tanımlar: `nexachron-api` (NestJS) ve `nexachron-web` (Next.js).
+- Her servis için `rootDir` monorepo içinde ilgili dizine (`apps/api`, `apps/web`) işaret eder, böylece Render doğru package.json'u kullanır.
 - Blueprint kurulumu sırasında `DATABASE_URL` ve isteğe bağlı `NEXT_PUBLIC_API_URL` gibi `sync: false` env değişkenlerini Render panelinden doldurun.
 - Kurulum tamamlandıktan sonra her push'ta Render kendi bygg/start komutlarını çalıştırır; GitHub Actions'daki deploy hook job'ı ile daha sık tetiklemek isterseniz Render'dan deploy hook URL'lerini alıp ilgili secret'ları girin.
 
