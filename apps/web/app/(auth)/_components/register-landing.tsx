@@ -1,12 +1,13 @@
 import type { JSX } from "react";
+import Link from "next/link";
 import { RegisterForm } from "./register-form";
 
 export function RegisterLanding(): JSX.Element {
   return (
-    <div className="relative h-screen overflow-hidden bg-gradient-to-br from-[#051937] via-[#0a2f5a] to-[#144f92] text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-[#051937] via-[#0a2f5a] to-[#144f92] text-white">
       <BackgroundAnimations />
-      <main className="relative z-10 mx-auto flex h-full w-full max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid w-full items-center gap-6 md:gap-8 lg:grid-cols-[1.2fr_1fr] lg:gap-10 xl:gap-12">
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl justify-center px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <div className="grid w-full items-start lg:items-center gap-6 md:gap-8 lg:grid-cols-[1.2fr_1fr] lg:gap-10 xl:gap-12">
           <RegisterHero className="animate-slide-in-left max-w-2xl lg:max-w-none" />
           <AuthPanel className="animate-slide-in-right mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-center xl:justify-self-end" />
         </div>
@@ -55,7 +56,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         {/* Floating cards - positioned around the form */}
         
         {/* Top card */}
-        <div className="absolute -top-36 lg:-top-40 xl:-top-44 left-1/2 -translate-x-1/2 hidden lg:block z-0">
+        <div className="absolute -top-28 lg:-top-32 xl:-top-36 left-1/2 -translate-x-1/2 hidden lg:block z-0">
           <FloatingKPICard2 
             title="İlk Kayıt Bonusu" 
             description="Hemen kaydol, 50 XP ile başla!"
@@ -65,7 +66,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
         
         {/* Top-left diagonal */}
-        <div className="absolute -top-24 lg:-top-28 xl:-top-32 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
+        <div className="absolute -top-16 lg:-top-20 xl:-top-24 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
           <FloatingKPICard2 
             title="Premium Rozet" 
             description="İlk 1000 kullanıcıya özel rozet."
@@ -75,7 +76,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
         
         {/* Top-right diagonal */}
-        <div className="absolute -top-24 lg:-top-28 xl:-top-32 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
+        <div className="absolute -top-16 lg:-top-20 xl:-top-24 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
           <FloatingKPICard2 
             title="Şehir Liderleri" 
             description="Şehrindeki en aktif okuyucu ol."
@@ -171,15 +172,13 @@ function RegisterHero({ className }: RegisterHeroProps): JSX.Element {
   return (
     <section className={sectionClassName}>
       <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.35em] sm:tracking-[0.45em] text-[#a5d8ff]/90 animate-fade-in">
-        <span className="h-[1px] w-6 sm:w-9 bg-current animate-shimmer" aria-hidden /> 
+        <span className="hero-accent-line h-[1px] w-6 sm:w-9" aria-hidden /> 
         Ücretsiz Kayıt
       </span>
       <div className="space-y-3 md:space-y-5">
         <h1 className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-semibold leading-tight animate-fade-up" style={{ animationDelay: '0.1s' }}>
           Nexachron ailesine katıl,{' '}
-          <span className="bg-gradient-to-r from-[#7dcfff] to-[#a5d8ff] bg-clip-text text-transparent animate-shimmer">
-            haberleri oyunlaştır
-          </span>
+          <span className="text-glow-gradient">haberleri oyunlaştır</span>
         </h1>
         <p className="max-w-xl text-sm sm:text-base leading-6 sm:leading-7 text-white/70 animate-fade-up" style={{ animationDelay: '0.2s' }}>
           Anadolu Ajansı&apos;nın güvenilir haberlerini gamified deneyimle oku, XP kazan, 
@@ -188,6 +187,13 @@ function RegisterHero({ className }: RegisterHeroProps): JSX.Element {
       </div>
       
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+        <Link
+          className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white transition-all duration-500 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/15"
+          href="/"
+        >
+          Giriş sayfasına dön
+          <span className="transition-transform duration-500 group-hover:translate-x-1">→</span>
+        </Link>
         <span className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/20 bg-gradient-to-r from-white/10 to-white/5 px-4 sm:px-5 py-2.5 sm:py-3 text-[10px] sm:text-xs font-medium text-white/70 backdrop-blur-xl hover:border-white/30 transition-all duration-300">
           <span className="flex size-5 sm:size-6 items-center justify-center rounded-full bg-gradient-to-r from-[#1a3b68] to-[#2a4b78] text-[#a5d8ff] animate-pulse">
             1K
@@ -274,46 +280,45 @@ function FloatingKPICard2({ title, description, capture, variant }: FloatingKPIC
     }
   };
 
-  // Different animations for each variant
-  const getAnimationClass = () => {
+  const getAnimationDelay = () => {
     switch (variant) {
-      case "xp":
-      case "streak":
-        return "animate-float";
       case "card":
       case "emoji":
-        return "animate-float-delay";
+        return "80ms";
       case "ai":
-        return "animate-pulse-slow";
+        return "120ms";
       case "quiz":
-        return "animate-pulse-slower";
+        return "160ms";
+      case "streak":
+        return "200ms";
       default:
-        return "animate-float";
+        return "40ms";
     }
   };
-  
-  const animationClass = getAnimationClass();
 
   const cardStyle = getCardStyle();
   const captureColor = getCaptureColor();
+  const animationDelay = getAnimationDelay();
 
   return (
-    <div
-      className={`relative w-32 lg:w-36 xl:w-40 2xl:w-44 rounded-xl lg:rounded-2xl border ${cardStyle} p-3 lg:p-3.5 xl:p-4 text-[10px] lg:text-[11px] xl:text-xs shadow-lg backdrop-blur-xl ${animationClass} transition-all duration-500 opacity-70 hover:opacity-90 hover:scale-105 cursor-pointer text-white`}
-    >
-      {capture ? (
-        <p className={`text-[8px] lg:text-[9px] uppercase tracking-[0.25em] font-bold mb-1 ${captureColor}`}>
-          {capture}
+    <div className="animate-kpi-intro inline-block" style={{ animationDelay }}>
+      <div
+        className={`relative w-32 lg:w-36 xl:w-40 2xl:w-44 rounded-xl lg:rounded-2xl border ${cardStyle} p-3 lg:p-3.5 xl:p-4 text-[10px] lg:text-[11px] xl:text-xs shadow-lg backdrop-blur-xl transition-all duration-500 opacity-90 hover:opacity-100 hover:scale-105 cursor-pointer text-white`}
+      >
+        {capture ? (
+          <p className={`text-[8px] lg:text-[9px] uppercase tracking-[0.25em] font-bold mb-1 ${captureColor}`}>
+            {capture}
+          </p>
+        ) : null}
+        <p className="font-semibold text-white text-[11px] lg:text-xs xl:text-[13px] leading-tight">
+          {title}
         </p>
-      ) : null}
-      <p className="font-semibold text-white text-[11px] lg:text-xs xl:text-[13px] leading-tight">
-        {title}
-      </p>
-      <p className="mt-1 leading-[1.4] text-white/75 text-[9px] lg:text-[10px] xl:text-[11px]">
-        {description}
-      </p>
-      {/* Animated indicator dot */}
-      <div className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full ${captureColor.replace('text-', 'bg-')} animate-pulse`} />
+        <p className="mt-1 leading-[1.4] text-white/75 text-[9px] lg:text-[10px] xl:text-[11px]">
+          {description}
+        </p>
+        {/* Animated indicator dot */}
+        <div className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full ${captureColor.replace('text-', 'bg-')} animate-pulse`} />
+      </div>
     </div>
   );
 }

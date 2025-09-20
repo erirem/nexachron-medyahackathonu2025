@@ -202,46 +202,45 @@ function FloatingKPICard2({ title, description, capture, variant }: FloatingKPIC
     }
   };
 
-  // Different animations for each variant
-  const getAnimationClass = () => {
+  const getAnimationDelay = () => {
     switch (variant) {
-      case "xp":
-      case "streak":
-        return "animate-float";
       case "card":
       case "emoji":
-        return "animate-float-delay";
+        return "80ms";
       case "ai":
-        return "animate-pulse-slow";
+        return "120ms";
       case "quiz":
-        return "animate-pulse-slower";
+        return "160ms";
+      case "streak":
+        return "200ms";
       default:
-        return "animate-float";
+        return "40ms";
     }
   };
-  
-  const animationClass = getAnimationClass();
 
   const cardStyle = getCardStyle();
   const captureColor = getCaptureColor();
+  const animationDelay = getAnimationDelay();
 
   return (
-    <div
-      className={`relative w-32 lg:w-36 xl:w-40 2xl:w-44 rounded-xl lg:rounded-2xl border ${cardStyle} p-3 lg:p-3.5 xl:p-4 text-[10px] lg:text-[11px] xl:text-xs shadow-lg backdrop-blur-xl ${animationClass} transition-all duration-500 opacity-70 hover:opacity-90 hover:scale-105 cursor-pointer text-white`}
-    >
-      {capture ? (
-        <p className={`text-[8px] lg:text-[9px] uppercase tracking-[0.25em] font-bold mb-1 ${captureColor}`}>
-          {capture}
+    <div className="animate-kpi-intro inline-block" style={{ animationDelay }}>
+      <div
+        className={`relative w-32 lg:w-36 xl:w-40 2xl:w-44 rounded-xl lg:rounded-2xl border ${cardStyle} p-3 lg:p-3.5 xl:p-4 text-[10px] lg:text-[11px] xl:text-xs shadow-lg backdrop-blur-xl transition-all duration-500 opacity-90 hover:opacity-100 hover:scale-105 cursor-pointer text-white`}
+      >
+        {capture ? (
+          <p className={`text-[8px] lg:text-[9px] uppercase tracking-[0.25em] font-bold mb-1 ${captureColor}`}>
+            {capture}
+          </p>
+        ) : null}
+        <p className="font-semibold text-white text-[11px] lg:text-xs xl:text-[13px] leading-tight">
+          {title}
         </p>
-      ) : null}
-      <p className="font-semibold text-white text-[11px] lg:text-xs xl:text-[13px] leading-tight">
-        {title}
-      </p>
-      <p className="mt-1 leading-[1.4] text-white/75 text-[9px] lg:text-[10px] xl:text-[11px]">
-        {description}
-      </p>
-      {/* Animated indicator dot */}
-      <div className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full ${captureColor.replace('text-', 'bg-')} animate-pulse`} />
+        <p className="mt-1 leading-[1.4] text-white/75 text-[9px] lg:text-[10px] xl:text-[11px]">
+          {description}
+        </p>
+        {/* Animated indicator dot */}
+        <div className={`absolute top-2 right-2 h-1.5 w-1.5 rounded-full ${captureColor.replace('text-', 'bg-')} animate-pulse`} />
+      </div>
     </div>
   );
 }

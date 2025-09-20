@@ -42,31 +42,31 @@ body {
 
 @keyframes pulseSlow {
   0% {
-    opacity: 0.4;
-    transform: scale(0.98);
+    opacity: 0.75;
+    transform: scale(0.99);
   }
   50% {
-    opacity: 0.8;
-    transform: scale(1.02);
+    opacity: 0.95;
+    transform: scale(1.01);
   }
   100% {
-    opacity: 0.4;
-    transform: scale(0.98);
+    opacity: 0.75;
+    transform: scale(0.99);
   }
 }
 
 @keyframes pulseSlower {
   0% {
-    opacity: 0.3;
-    transform: scale(0.94);
+    opacity: 0.7;
+    transform: scale(0.985);
   }
   50% {
-    opacity: 0.7;
-    transform: scale(1.04);
+    opacity: 0.9;
+    transform: scale(1.01);
   }
   100% {
-    opacity: 0.3;
-    transform: scale(0.94);
+    opacity: 0.7;
+    transform: scale(0.985);
   }
 }
 
@@ -77,6 +77,21 @@ body {
   }
   50% {
     transform: translateY(-14px);
+  }
+}
+
+@keyframes kpiCardIntro {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -99,6 +114,10 @@ body {
 .animate-float-delay {
   animation: float 14s ease-in-out infinite;
   animation-delay: 2.4s;
+}
+
+.animate-kpi-intro {
+  animation: kpiCardIntro 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes fadeUp {
@@ -145,16 +164,6 @@ body {
 .animate-scale-in {
   animation: scaleIn var(--animation-duration, 0.7s) ease-out both;
   animation-delay: var(--animation-delay, 0s);
-}
-
-/* New Animation Keyframes */
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
 }
 
 @keyframes slideInLeft {
@@ -240,16 +249,27 @@ body {
   }
 }
 
-/* Utility Animation Classes */
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(125, 207, 255, 0.2),
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s linear infinite;
+/* Highlight Utilities */
+.hero-accent-line {
+  background: linear-gradient(90deg, rgba(125, 207, 255, 0.85), rgba(125, 207, 255, 0.2));
+  border-radius: 9999px;
+  box-shadow: 0 0 24px rgba(125, 207, 255, 0.35);
+}
+
+.text-glow-gradient {
+  background-image: linear-gradient(120deg, #7dcfff, #a5d8ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 12px 32px rgba(125, 207, 255, 0.25));
+}
+
+.text-glow-muted {
+  background-image: linear-gradient(120deg, rgba(255, 255, 255, 0.65), rgba(125, 207, 255, 0.6));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 8px 24px rgba(125, 207, 255, 0.22));
 }
 
 .animate-slide-in-left {

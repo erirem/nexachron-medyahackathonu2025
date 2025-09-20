@@ -313,12 +313,12 @@ export function LoginForm(): JSX.Element {
       </button>
       <p className="text-center text-[11px] sm:text-xs text-white/70 animate-fade-up pt-2" style={{ animationDelay: '0.5s' }}>
         Nexachron&apos;da yeni misin?{' '}
-        <a
+        <Link
           className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:underline underline-offset-2 inline-block hover:translate-y-[-1px]"
-          href="#"
+          href="/register"
         >
           Hemen kaydol
-        </a>
+        </Link>
       </p>
       <p 
         className={`text-center text-[10px] sm:text-xs font-medium transition-all duration-500 ${statusAccent} ${
@@ -327,7 +327,7 @@ export function LoginForm(): JSX.Element {
         aria-live="polite"
       >
         {formState.message ?? (
-          <span className="animate-shimmer bg-clip-text text-transparent bg-gradient-to-r from-white/50 via-[#7dcfff] to-white/50">
+          <span className="text-glow-muted">
             Supabase entegrasyonu ile gerçek veri girişi yakında
           </span>
         )}

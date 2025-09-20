@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import Link from "next/link";
 import type { FeatureHighlight } from "../_domain/feature-highlight";
 
 interface LoginHeroProps {
@@ -13,13 +14,13 @@ export function LoginHero({ highlights, className }: LoginHeroProps): JSX.Elemen
   return (
     <section className={sectionClassName}>
       <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.35em] sm:tracking-[0.45em] text-[#a5d8ff]/90 animate-fade-in">
-        <span className="h-[1px] w-6 sm:w-9 bg-current animate-shimmer" aria-hidden /> 
+        <span className="hero-accent-line h-[1px] w-6 sm:w-9" aria-hidden /> 
         Anadolu Ajansı İçin Özel
       </span>
       <div className="space-y-3 md:space-y-5">
         <h1 className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-semibold leading-tight animate-fade-up" style={{ animationDelay: '0.1s' }}>
           Nexachron ile habere giriş yap, haberi 
-          <span className="bg-gradient-to-r from-[#7dcfff] to-[#a5d8ff] bg-clip-text text-transparent animate-shimmer"> oyunlaştırılmış </span>
+          <span className="text-glow-gradient"> oyunlaştırılmış </span>
           bir deneyimle yaşa.
         </h1>
         <p className="max-w-xl text-sm sm:text-base leading-6 sm:leading-7 text-white/70 animate-fade-up" style={{ animationDelay: '0.2s' }}>
@@ -28,13 +29,13 @@ export function LoginHero({ highlights, className }: LoginHeroProps): JSX.Elemen
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-        <a
+        <Link
           className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-white to-[#f0f9ff] px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#0a2141] shadow-lg shadow-black/10 transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(125,207,255,0.3)] hover:from-[#dff2ff] hover:to-white active:scale-95"
-          href="#auth"
+          href="/register"
         >
-          Hemen giriş yap
+          Hemen kaydol
           <span className="transition-transform duration-500 group-hover:translate-x-1">→</span>
-        </a>
+        </Link>
         <span className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/20 bg-gradient-to-r from-white/10 to-white/5 px-4 sm:px-5 py-2.5 sm:py-3 text-[10px] sm:text-xs font-medium text-white/70 backdrop-blur-xl hover:border-white/30 transition-all duration-300 hover:scale-105">
           <span className="flex size-5 sm:size-6 items-center justify-center rounded-full bg-gradient-to-r from-[#1a3b68] to-[#2a4b78] text-[#a5d8ff] animate-bounce">
             +10

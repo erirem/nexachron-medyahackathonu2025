@@ -577,7 +577,7 @@ export function RegisterForm(): JSX.Element {
         aria-live="polite"
       >
         {formState.message ?? (
-          <span className="animate-shimmer bg-clip-text text-transparent bg-gradient-to-r from-white/50 via-[#7dcfff] to-white/50">
+          <span className="text-glow-muted">
             Nexachron&apos;a katıl, haberleri oyunlaştırılmış deneyimle yaşa
           </span>
         )}
