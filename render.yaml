@@ -2,20 +2,13 @@ services:
   # Backend API Service
   - type: web
     name: nexachron-api
-    env: node
+    runtime: node
     plan: free
     branch: main
     autoDeploy: true
-    buildCommand: |
-      curl -fsSL https://get.pnpm.io/install.sh | sh -
-      export PNPM_HOME="/opt/render/project/.pnpm"
-      export PATH="$PNPM_HOME:$PATH"
-      pnpm install --frozen-lockfile
-      pnpm --filter api build
-    startCommand: |
-      export PNPM_HOME="/opt/render/project/.pnpm"
-      export PATH="$PNPM_HOME:$PATH"
-      cd apps/api && pnpm start:prod
+    rootDir: apps/api
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
@@ -38,20 +31,13 @@ services:
   # Frontend Web Service  
   - type: web
     name: nexachron-web
-    env: node
+    runtime: node
     plan: free
     branch: main
     autoDeploy: true
-    buildCommand: |
-      curl -fsSL https://get.pnpm.io/install.sh | sh -
-      export PNPM_HOME="/opt/render/project/.pnpm"
-      export PATH="$PNPM_HOME:$PATH"
-      pnpm install --frozen-lockfile
-      pnpm --filter web build
-    startCommand: |
-      export PNPM_HOME="/opt/render/project/.pnpm"
-      export PATH="$PNPM_HOME:$PATH"
-      cd apps/web && pnpm start:prod
+    rootDir: apps/web
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
     healthCheckPath: /
     envVars:
       - key: NODE_VERSION
