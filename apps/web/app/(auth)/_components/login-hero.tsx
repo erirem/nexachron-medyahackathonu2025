@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import type { FeatureHighlight } from "../_domain/feature-highlight";
 
 interface LoginHeroProps {

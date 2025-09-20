@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { LoginHero } from "./login-hero";
 import { LoginForm } from "./login-form";
 import { onboardingHighlights } from "../_data/onboarding-highlights";

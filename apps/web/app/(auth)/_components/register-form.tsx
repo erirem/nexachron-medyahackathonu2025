@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, type FormEvent } from "react";
+import { useMemo, useState, useEffect, type FormEvent, type JSX } from "react";
 import { z } from "zod";
 import Link from "next/link";
 

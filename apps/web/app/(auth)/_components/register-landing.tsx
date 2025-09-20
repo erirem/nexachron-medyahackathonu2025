@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { RegisterForm } from "./register-form";
 
 export function RegisterLanding(): JSX.Element {
