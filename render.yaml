@@ -7,7 +7,7 @@ services:
     branch: main
     autoDeploy: true
     rootDir: apps/api
-    buildCommand: npm install && npm run build
+    buildCommand: npm run build:render
     startCommand: npm run start:prod
     healthCheckPath: /health
     envVars:
@@ -36,7 +36,7 @@ services:
     branch: main
     autoDeploy: true
     rootDir: apps/web
-    buildCommand: npm install && npm run build
+    buildCommand: npm run build:render
     startCommand: npm run start:prod
     healthCheckPath: /
     envVars:
