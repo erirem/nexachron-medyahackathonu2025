@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SupabaseModule } from './supabase/supabase.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { SupabaseModule } from './supabase/supabase.module';
       isGlobal: true,
     }),
     SupabaseModule,
+    NewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
