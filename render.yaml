@@ -35,7 +35,6 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
-postgresql://postgres:strongpassword@db.tfqnfkyntjreanffixti.supabase.co:5432/postgres
   # Frontend Web Service  
   - type: web
     name: nexachron-web
