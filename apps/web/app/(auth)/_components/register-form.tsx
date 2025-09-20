@@ -106,7 +106,7 @@ export function RegisterForm(): JSX.Element {
       const fieldErrors: FormErrors = {};
 
       result.error.issues.forEach((issue) => {
-        const [field] = issue.path as [keyof RegisterSchemaInput?];
+        const [field] = issue.path as Array<keyof RegisterSchemaInput | undefined>;
         if (field) {
           fieldErrors[field] = issue.message;
         }

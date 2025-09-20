@@ -62,7 +62,7 @@ export function LoginForm(): JSX.Element {
       const fieldErrors: FormErrors = {};
 
       result.error.issues.forEach((issue) => {
-        const [field] = issue.path as [keyof LoginSchemaInput?];
+        const [field] = issue.path as Array<keyof LoginSchemaInput | undefined>;
         if (field) {
           fieldErrors[field] = issue.message;
         }
