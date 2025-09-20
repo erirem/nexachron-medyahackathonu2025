@@ -2,49 +2,54 @@ services:
   # Backend API Service
   - type: web
     name: nexachron-api
-    runtime: node
+    env: node
     plan: free
     branch: main
     autoDeploy: true
-    rootDir: ./
     buildCommand: |
-      corepack enable
-      corepack prepare pnpm@10.17.0 --activate
+      curl -fsSL https://get.pnpm.io/install.sh | sh -
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
       pnpm install --frozen-lockfile
       pnpm --filter api build
-    startCommand: cd apps/api && pnpm start:prod
+    startCommand: |
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
+      cd apps/api && pnpm start:prod
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
-        value: '20.18.0'
+        value: '20'
       - key: PORT
         value: '3001'
       - key: DATABASE_URL
         sync: false
       - key: NODE_ENV
         value: production
+      - key: FRONTEND_URL
+        value: https://nexachron-web.onrender.com
 
-  # Frontend Web Service
+  # Frontend Web Service  
   - type: web
     name: nexachron-web
-    runtime: node
+    env: node
     plan: free
     branch: main
     autoDeploy: true
-    rootDir: ./
     buildCommand: |
-      corepack enable
-      corepack prepare pnpm@10.17.0 --activate
+      curl -fsSL https://get.pnpm.io/install.sh | sh -
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
       pnpm install --frozen-lockfile
       pnpm --filter web build
-      cp -r apps/web/.next/standalone/* apps/web/
-      cp -r apps/web/.next/static apps/web/.next/
-      cp -r apps/web/public apps/web/
-    startCommand: cd apps/web && node server.js
+    startCommand: |
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
+      cd apps/web && pnpm start:prod
     healthCheckPath: /
     envVars:
       - key: NODE_VERSION
-        value: '20.18.0'
+        value: '20'
       - key: PORT
         value: '3000'
       - key: NEXT_PUBLIC_API_URL

@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Disable standalone for now to fix deployment
+  // output: "standalone",
   reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
