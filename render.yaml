@@ -2,13 +2,21 @@ services:
   # Backend API Service
   - type: web
     name: nexachron-api
-    runtime: node
+    env: node
     plan: free
     branch: main
     autoDeploy: true
-    rootDir: apps/api
-    buildCommand: npm run build:render
-    startCommand: npm run start:prod
+    buildCommand: |
+      curl -fsSL https://get.pnpm.io/install.sh | PNPM_VERSION=10.17.0 SHELL=/bin/bash sh -
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
+      export HUSKY=0
+      pnpm install --frozen-lockfile
+      pnpm --filter api... run build
+    startCommand: |
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
+      pnpm --filter api... run start:prod
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
@@ -20,24 +28,32 @@ services:
       - key: FRONTEND_URL
         value: https://nexachron-web.onrender.com
       - key: SUPABASE_URL
-        value: https://tfqnfkyntjreanffixti.supabase.co
+        sync: false
       - key: SUPABASE_ANON_KEY
-        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmcW5ma3ludGpyZWFuZmZpeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNjczODAsImV4cCI6MjA3Mzk0MzM4MH0.GHyet9orem6sYpOb-suaFPcYRfOVYohZRLfRzGTgxLk
+        sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
-        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmcW5ma3ludGpyZWFuZmZpeHRpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODM2NzM4MCwiZXhwIjoyMDczOTQzMzgwfQ.VxKnTsqLB1X5t5qXCFmNNjkBxcTOKFzPzXrPYOZ9uAc
+        sync: false
       - key: DATABASE_URL
         sync: false
-
+postgresql://postgres:strongpassword@db.tfqnfkyntjreanffixti.supabase.co:5432/postgres
   # Frontend Web Service  
   - type: web
     name: nexachron-web
-    runtime: node
+    env: node
     plan: free
     branch: main
     autoDeploy: true
-    rootDir: apps/web
-    buildCommand: npm run build:render
-    startCommand: npm run start:prod
+    buildCommand: |
+      curl -fsSL https://get.pnpm.io/install.sh | PNPM_VERSION=10.17.0 SHELL=/bin/bash sh -
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
+      export HUSKY=0
+      pnpm install --frozen-lockfile
+      pnpm --filter web... run build
+    startCommand: |
+      export PNPM_HOME="/opt/render/project/.pnpm"
+      export PATH="$PNPM_HOME:$PATH"
+      pnpm --filter web... run start:prod
     healthCheckPath: /
     envVars:
       - key: NODE_VERSION
@@ -49,6 +65,6 @@ services:
       - key: NEXT_PUBLIC_API_URL
         value: https://nexachron-api.onrender.com
       - key: NEXT_PUBLIC_SUPABASE_URL
-        value: https://tfqnfkyntjreanffixti.supabase.co
+        sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmcW5ma3ludGpyZWFuZmZpeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNjczODAsImV4cCI6MjA3Mzk0MzM4MH0.GHyet9orem6sYpOb-suaFPcYRfOVYohZRLfRzGTgxLk
+        sync: false
