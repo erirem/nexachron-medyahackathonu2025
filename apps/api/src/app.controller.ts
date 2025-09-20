@@ -27,16 +27,32 @@ export class AppController {
   @Get('supabase-test')
   async testSupabase() {
     try {
-      const { data, error } = await this.supabaseService.supabase
-        .from('users')
-        .select('*')
-        .limit(1);
+      // Test basic Supabase connection
+      const client = this.supabaseService.supabase;
+      
+      if (!client) {
+        throw new Error('Supabase client not initialized');
+      }
+
+      // Try to get current user (this doesn't require tables)
+      const { data: { user }, error: authError } = await client.auth.getUser();
+      
+      // Test database connection with a simple query
+      const { data, error } = await client
+        .from('information_schema')
+        .select('table_name')
+        .eq('table_schema', 'public')
+        .limit(5);
 
       return {
         status: 'success',
         message: 'Supabase connection working',
-        data,
-        error,
+        supabaseUrl: process.env.SUPABASE_URL,
+        hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
+        authUser: user ? 'User found' : 'No authenticated user',
+        authError: authError?.message || null,
+        publicTables: data || [],
+        dbError: error?.message || null,
         timestamp: new Date().toISOString(),
       };
     } catch (err) {
@@ -44,6 +60,8 @@ export class AppController {
         status: 'error',
         message: 'Supabase connection failed',
         error: err.message,
+        supabaseUrl: process.env.SUPABASE_URL,
+        hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
         timestamp: new Date().toISOString(),
       };
     }
