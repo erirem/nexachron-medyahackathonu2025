@@ -1,39 +1,53 @@
 services:
+  # Backend API Service
   - type: web
     name: nexachron-api
-    env: node
+    runtime: node
     plan: free
     branch: main
     autoDeploy: true
-    rootDir: apps/api
+    rootDir: ./
     buildCommand: |
-      cd ../..
       corepack enable
       corepack prepare pnpm@10.17.0 --activate
       pnpm install --frozen-lockfile
       pnpm --filter api build
-    startCommand: pnpm start:prod
+    startCommand: cd apps/api && pnpm start:prod
+    healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
-        value: '20'
+        value: '20.18.0'
+      - key: PORT
+        value: '3001'
       - key: DATABASE_URL
         sync: false
+      - key: NODE_ENV
+        value: production
+
+  # Frontend Web Service
   - type: web
     name: nexachron-web
-    env: node
+    runtime: node
     plan: free
     branch: main
     autoDeploy: true
-    rootDir: apps/web
+    rootDir: ./
     buildCommand: |
-      cd ../..
       corepack enable
       corepack prepare pnpm@10.17.0 --activate
       pnpm install --frozen-lockfile
       pnpm --filter web build
-    startCommand: pnpm start:prod
+      cp -r apps/web/.next/standalone/* apps/web/
+      cp -r apps/web/.next/static apps/web/.next/
+      cp -r apps/web/public apps/web/
+    startCommand: cd apps/web && node server.js
+    healthCheckPath: /
     envVars:
       - key: NODE_VERSION
-        value: '20'
+        value: '20.18.0'
+      - key: PORT
+        value: '3000'
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: https://nexachron-api.onrender.com
+      - key: NODE_ENV
+        value: production
