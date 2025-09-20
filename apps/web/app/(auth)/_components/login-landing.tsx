@@ -57,97 +57,118 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         {/* Floating cards - closer to form for better visual connection */}
         
         {/* Top card - centered above */}
-        <div className="absolute -top-36 lg:-top-40 xl:-top-44 left-1/2 -translate-x-1/2 hidden lg:block z-0">
-          <FloatingKPICard2 
-            title="Canlı XP Akışı" 
-            description="Kullanıcılar anlık XP kazanıyor. Sen de katıl!"
-            variant="xp"
-            capture="CANLI"
-          />
+        <div className="absolute -top-10 lg:-top-12 xl:-top-14 left-1/2 -translate-x-1/2 hidden lg:block z-0">
+          <div className="float-card">
+            <FloatingKPICard2 
+              title="Canlı XP Akışı" 
+              description="Kullanıcılar anlık XP kazanıyor. Sen de katıl!"
+              variant="xp"
+              capture="CANLI"
+            />
+          </div>
         </div>
 
         {/* Top-left diagonal */}
-        <div className="absolute -top-24 lg:-top-28 xl:-top-32 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
-          <FloatingKPICard2 
-            title="Kart Koleksiyonu" 
-            description="Nadir kartları topla, vitrininde sergile."
-            capture="KOLEKSİYON"
-            variant="card"
-          />
+        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
+          <div className="float-card float-card-delay-1">
+            <FloatingKPICard2 
+              title="Kart Koleksiyonu" 
+              description="Nadir kartları topla, vitrininde sergile."
+              capture="KOLEKSİYON"
+              variant="card"
+            />
+          </div>
         </div>
 
         {/* Top-right diagonal */}
-        <div className="absolute -top-24 lg:-top-28 xl:-top-32 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
-          <FloatingKPICard2 
-            title="AI Destekli Haberler" 
-            description="Senin için özel seçilmiş haberler."
-            capture="AI POWERED"
-            variant="ai"
-          />
+        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
+          <div className="float-card float-card-delay-2">
+            <FloatingKPICard2 
+              title="AI Destekli Haberler" 
+              description="Senin için özel seçilmiş haberler."
+              capture="AI POWERED"
+              variant="ai"
+            />
+          </div>
         </div>
 
         {/* Left side - middle */}
         <div className="absolute top-1/2 -translate-y-1/2 -left-36 xl:-left-44 2xl:-left-52 hidden 2xl:block z-0">
-          <FloatingKPICard2 
-            title="Streak Sistemi" 
-            description="Kesintisiz giriş yap, ödüller kazan."
-            capture="7 GÜN STREAK"
-            variant="streak"
-          />
+          <div className="float-card float-card-delay-3">
+            <FloatingKPICard2 
+              title="Streak Sistemi" 
+              description="Kesintisiz giriş yap, ödüller kazan."
+              capture="7 GÜN STREAK"
+              variant="streak"
+            />
+          </div>
         </div>
 
         {/* Right side - middle */}
         <div className="absolute top-1/2 -translate-y-1/2 -right-36 xl:-right-44 2xl:-right-52 hidden 2xl:block z-0">
-          <FloatingKPICard2 
-            title="Günlük Quiz" 
-            description="Her gün yeni sorular ve ödüller."
-            capture="QUIZ"
-            variant="quiz"
-          />
+          <div className="float-card float-card-delay-4">
+            <FloatingKPICard2 
+              title="Günlük Quiz" 
+              description="Her gün yeni sorular ve ödüller."
+              capture="QUIZ"
+              variant="quiz"
+            />
+          </div>
         </div>
 
         {/* Bottom cards - strategically placed around form */}
         <div className="absolute -bottom-36 lg:-bottom-40 xl:-bottom-44 left-1/2 -translate-x-1/2 hidden xl:block z-0">
-          <FloatingKPICard2 
-            title="Günlük Hedefler" 
-            description="Günlük okuma hedefini tamamla."
-            capture="HEDEFLER"
-            variant="xp"
-          />
+          <div className="float-card float-card-delay-5">
+            <FloatingKPICard2 
+              title="Günlük Hedefler" 
+              description="Günlük okuma hedefini tamamla."
+              capture="HEDEFLER"
+              variant="xp"
+            />
+          </div>
         </div>
         <div className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -left-24 lg:-left-36 xl:-left-44 hidden lg:block z-0">
-          <FloatingKPICard2 
-            title="Sosyal Etkileşim" 
-            description="Topluluğa katıl, fikirlerini paylaş."
-            capture="SOSYAL"
-            variant="emoji"
-          />
+          <div className="float-card float-card-delay-6">
+            <FloatingKPICard2 
+              title="Sosyal Etkileşim" 
+              description="Topluluğa katıl, fikirlerini paylaş."
+              capture="SOSYAL"
+              variant="emoji"
+            />
+          </div>
         </div>
         <div className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -right-24 lg:-right-36 xl:-right-44 hidden xl:block z-0">
-          <FloatingKPICard2 
-            title="Başarı Rozetleri" 
-            description="Özel görevleri tamamla, rozet kazan."
-            capture="ROZETLER"
-            variant="streak"
-          />
+          <div className="float-card float-card-delay-7">
+            <FloatingKPICard2 
+              title="Başarı Rozetleri" 
+              description="Özel görevleri tamamla, rozet kazan."
+              capture="ROZETLER"
+              variant="streak"
+            />
+          </div>
         </div>
-        
-        <div className="relative z-10 rounded-[1.5rem] md:rounded-[2rem] lg:rounded-[2.5rem] border border-white/15 bg-white/10 p-6 sm:p-7 lg:p-8 shadow-[0_40px_120px_rgba(5,25,55,0.55)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_50px_140px_rgba(125,207,255,0.25)] hover:border-white/20 overflow-hidden">
-          {/* Decorative gradient overlay */}
-          <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-[#7dcfff]/20 blur-3xl animate-pulse-slow" aria-hidden />
-          <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-[#5bb5f0]/20 blur-3xl animate-pulse-slower" aria-hidden />
-          
-          <div className="relative">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
-              <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Giriş</h2>
-              <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
-                +10 XP hazır
-              </span>
+        <div className="relative group">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-[-72px] sm:inset-[-84px] lg:inset-[-96px] z-[5] rounded-[2.5rem] bg-[#0b2546]/20 opacity-0 transition-all duration-500 ease-out backdrop-blur-none group-hover:opacity-90 group-hover:backdrop-blur-2xl group-hover:bg-[#0b2546]/35"
+          />
+          <div className="relative z-10 rounded-[1.5rem] md:rounded-[2rem] lg:rounded-[2.5rem] border border-white/15 bg-white/10 p-6 sm:p-7 lg:p-8 shadow-[0_40px_120px_rgba(5,25,55,0.55)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_50px_140px_rgba(125,207,255,0.25)] hover:border-white/20 overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-[#7dcfff]/20 blur-3xl animate-pulse-slow" aria-hidden />
+            <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-[#5bb5f0]/20 blur-3xl animate-pulse-slower" aria-hidden />
+            
+            <div className="relative">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
+                <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Giriş</h2>
+                <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
+                  +10 XP hazır
+                </span>
+              </div>
+              <p className="text-[13px] sm:text-sm leading-5 sm:leading-6 text-white/70 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                Güvenilir ajans haberlerine eriş, kişisel streak&apos;ini koru ve liderlik tablosunda yüksel.
+              </p>
+              <LoginForm />
             </div>
-            <p className="text-[13px] sm:text-sm leading-5 sm:leading-6 text-white/70 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              Güvenilir ajans haberlerine eriş, kişisel streak&apos;ini koru ve liderlik tablosunda yüksel.
-            </p>
-            <LoginForm />
           </div>
         </div>
       </div>

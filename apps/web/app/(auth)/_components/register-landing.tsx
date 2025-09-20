@@ -56,7 +56,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         {/* Floating cards - positioned around the form */}
         
         {/* Top card */}
-        <div className="absolute -top-28 lg:-top-32 xl:-top-36 left-1/2 -translate-x-1/2 hidden lg:block z-0">
+        <div className="absolute -top-10 lg:-top-12 xl:-top-14 left-1/2 -translate-x-1/2 hidden lg:block z-0">
           <FloatingKPICard2 
             title="İlk Kayıt Bonusu" 
             description="Hemen kaydol, 50 XP ile başla!"
@@ -66,7 +66,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
         
         {/* Top-left diagonal */}
-        <div className="absolute -top-16 lg:-top-20 xl:-top-24 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
+        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
           <FloatingKPICard2 
             title="Premium Rozet" 
             description="İlk 1000 kullanıcıya özel rozet."
@@ -76,7 +76,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
         
         {/* Top-right diagonal */}
-        <div className="absolute -top-16 lg:-top-20 xl:-top-24 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
+        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
           <FloatingKPICard2 
             title="Şehir Liderleri" 
             description="Şehrindeki en aktif okuyucu ol."
@@ -114,23 +114,28 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
             variant="xp"
           />
         </div>
-        
-        <div className="relative z-10 rounded-[1.5rem] md:rounded-[2rem] lg:rounded-[2.5rem] border border-white/15 bg-white/10 p-6 sm:p-7 lg:p-8 shadow-[0_40px_120px_rgba(5,25,55,0.55)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_50px_140px_rgba(125,207,255,0.25)] hover:border-white/20 overflow-hidden">
-          {/* Decorative gradient overlay */}
-          <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-[#7dcfff]/20 blur-3xl animate-pulse-slow" aria-hidden />
-          <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-[#5bb5f0]/20 blur-3xl animate-pulse-slower" aria-hidden />
-          
-          <div className="relative">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
-              <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Katıl</h2>
-              <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
-                +50 XP başlangıç
-              </span>
+        <div className="relative group">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-[-72px] sm:inset-[-84px] lg:inset-[-96px] z-[5] rounded-[2.5rem] bg-[#0b2546]/20 opacity-0 transition-all duration-500 ease-out backdrop-blur-none group-hover:opacity-90 group-hover:backdrop-blur-2xl group-hover:bg-[#0b2546]/35"
+          />
+          <div className="relative z-10 rounded-[1.5rem] md:rounded-[2rem] lg:rounded-[2.5rem] border border-white/15 bg-white/10 p-6 sm:p-7 lg:p-8 shadow-[0_40px_120px_rgba(5,25,55,0.55)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_50px_140px_rgba(125,207,255,0.25)] hover:border-white/20 overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-[#7dcfff]/20 blur-3xl animate-pulse-slow" aria-hidden />
+            <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-[#5bb5f0]/20 blur-3xl animate-pulse-slower" aria-hidden />
+            
+            <div className="relative">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
+                <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Katıl</h2>
+                <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
+                  +50 XP başlangıç
+                </span>
+              </div>
+              <p className="text-[13px] sm:text-sm leading-5 sm:leading-6 text-white/70 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                Gamified haber platformuna katıl, XP kazan ve liderlik tablosunda yüksel.
+              </p>
+              <RegisterForm />
             </div>
-            <p className="text-[13px] sm:text-sm leading-5 sm:leading-6 text-white/70 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              Gamified haber platformuna katıl, XP kazan ve liderlik tablosunda yüksel.
-            </p>
-            <RegisterForm />
           </div>
         </div>
       </div>
