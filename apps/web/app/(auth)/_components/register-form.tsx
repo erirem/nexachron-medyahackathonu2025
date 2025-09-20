@@ -6,23 +6,23 @@ import Link from "next/link";
 
 const RegisterSchema = z.object({
   username: z
-    .string({ required_error: "Kullanıcı adı zorunlu" })
+    .string({ error: "Kullanıcı adı zorunlu" })
     .min(3, "Kullanıcı adı en az 3 karakter olmalı")
     .max(20, "Kullanıcı adı en fazla 20 karakter olabilir")
     .regex(/^[a-zA-Z0-9_]+$/, "Sadece harf, rakam ve alt çizgi kullanılabilir"),
   email: z
-    .string({ required_error: "E-posta zorunlu" })
+    .string({ error: "E-posta zorunlu" })
     .email("Geçerli bir e-posta girin"),
   password: z
-    .string({ required_error: "Şifre zorunlu" })
+    .string({ error: "Şifre zorunlu" })
     .min(8, "Şifre en az 8 karakter olmalı")
     .regex(/[A-Z]/, "En az bir büyük harf içermeli")
     .regex(/[a-z]/, "En az bir küçük harf içermeli")
     .regex(/[0-9]/, "En az bir rakam içermeli"),
   confirmPassword: z
-    .string({ required_error: "Şifre tekrarı zorunlu" }),
+    .string({ error: "Şifre tekrarı zorunlu" }),
   city: z
-    .string({ required_error: "Şehir seçimi zorunlu" })
+    .string({ error: "Şehir seçimi zorunlu" })
     .min(1, "Lütfen bir şehir seçin"),
   terms: z
     .boolean()

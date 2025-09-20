@@ -6,11 +6,11 @@ import { z } from "zod";
 
 const LoginSchema = z.object({
   email: z
-    .string({ required_error: "E-posta zorunlu" })
+    .string({ error: "E-posta zorunlu" })
     .min(5, "E-posta en az 5 karakter olmalı")
     .email("Geçerli bir e-posta gir"),
   password: z
-    .string({ required_error: "Şifre zorunlu" })
+    .string({ error: "Şifre zorunlu" })
     .min(8, "Şifren en az 8 karakter olmalı"),
   remember: z.boolean().default(true),
 });
