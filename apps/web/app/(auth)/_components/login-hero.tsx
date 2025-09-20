@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { FeatureHighlight } from "../_domain/feature-highlight";
 
 interface LoginHeroProps {
@@ -35,13 +34,6 @@ export function LoginHero({ highlights, className }: LoginHeroProps): JSX.Elemen
           Hemen giriş yap
           <span className="transition-transform duration-500 group-hover:translate-x-1">→</span>
         </a>
-        <Link
-          className="flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white/80 backdrop-blur-xl transition-all duration-500 hover:-translate-y-0.5 hover:border-white/60 hover:text-white active:scale-95"
-          href="/register"
-        >
-          Kayıt ol
-          <span aria-hidden className="text-base leading-none">☆</span>
-        </Link>
         <span className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/20 bg-gradient-to-r from-white/10 to-white/5 px-4 sm:px-5 py-2.5 sm:py-3 text-[10px] sm:text-xs font-medium text-white/70 backdrop-blur-xl hover:border-white/30 transition-all duration-300 hover:scale-105">
           <span className="flex size-5 sm:size-6 items-center justify-center rounded-full bg-gradient-to-r from-[#1a3b68] to-[#2a4b78] text-[#a5d8ff] animate-bounce">
             +10

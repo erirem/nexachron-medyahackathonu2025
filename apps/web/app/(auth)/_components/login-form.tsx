@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState, useEffect, type FormEvent } from "react";
-import { z } from "zod";
 import Link from "next/link";
+import { z } from "zod";
 
 const LoginSchema = z.object({
   email: z
@@ -313,12 +313,12 @@ export function LoginForm(): JSX.Element {
       </button>
       <p className="text-center text-[11px] sm:text-xs text-white/70 animate-fade-up pt-2" style={{ animationDelay: '0.5s' }}>
         Nexachron'da yeni misin?{' '}
-        <Link 
-          className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:underline underline-offset-2 inline-block hover:translate-y-[-1px]" 
-          href="/register"
+        <a
+          className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:underline underline-offset-2 inline-block hover:translate-y-[-1px]"
+          href="#"
         >
           Hemen kaydol
-        </Link>
+        </a>
       </p>
       <p 
         className={`text-center text-[10px] sm:text-xs font-medium transition-all duration-500 ${statusAccent} ${

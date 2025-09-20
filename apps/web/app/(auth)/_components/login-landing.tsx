@@ -56,7 +56,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         {/* Floating cards - closer to form for better visual connection */}
         
         {/* Top card - centered above */}
-        <div className="absolute left-1/2 top-0 -translate-y-[120%] -translate-x-1/2 hidden lg:block z-0 transform-gpu">
+        <div className="absolute -top-36 lg:-top-40 xl:-top-44 left-1/2 -translate-x-1/2 hidden lg:block z-0">
           <FloatingKPICard2 
             title="Canlı XP Akışı" 
             description="Kullanıcılar anlık XP kazanıyor. Sen de katıl!"
@@ -66,7 +66,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
 
         {/* Top-left diagonal */}
-        <div className="absolute left-0 top-[18%] -translate-x-[120%] hidden xl:block z-0 transform-gpu">
+        <div className="absolute -top-24 lg:-top-28 xl:-top-32 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
           <FloatingKPICard2 
             title="Kart Koleksiyonu" 
             description="Nadir kartları topla, vitrininde sergile."
@@ -76,7 +76,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
 
         {/* Top-right diagonal */}
-        <div className="absolute right-0 top-[18%] translate-x-[120%] hidden xl:block z-0 transform-gpu">
+        <div className="absolute -top-24 lg:-top-28 xl:-top-32 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
           <FloatingKPICard2 
             title="AI Destekli Haberler" 
             description="Senin için özel seçilmiş haberler."
@@ -86,7 +86,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
 
         {/* Left side - middle */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[120%] hidden 2xl:block z-0 transform-gpu">
+        <div className="absolute top-1/2 -translate-y-1/2 -left-36 xl:-left-44 2xl:-left-52 hidden 2xl:block z-0">
           <FloatingKPICard2 
             title="Streak Sistemi" 
             description="Kesintisiz giriş yap, ödüller kazan."
@@ -96,7 +96,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
 
         {/* Right side - middle */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[120%] hidden 2xl:block z-0 transform-gpu">
+        <div className="absolute top-1/2 -translate-y-1/2 -right-36 xl:-right-44 2xl:-right-52 hidden 2xl:block z-0">
           <FloatingKPICard2 
             title="Günlük Quiz" 
             description="Her gün yeni sorular ve ödüller."
@@ -106,7 +106,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
 
         {/* Bottom cards - strategically placed around form */}
-        <div className="absolute left-1/2 bottom-0 translate-y-[120%] -translate-x-1/2 hidden xl:block z-0 transform-gpu">
+        <div className="absolute -bottom-36 lg:-bottom-40 xl:-bottom-44 left-1/2 -translate-x-1/2 hidden xl:block z-0">
           <FloatingKPICard2 
             title="Günlük Hedefler" 
             description="Günlük okuma hedefini tamamla."
@@ -114,7 +114,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
             variant="xp"
           />
         </div>
-        <div className="absolute left-0 bottom-[18%] -translate-x-[120%] hidden lg:block z-0 transform-gpu">
+        <div className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -left-24 lg:-left-36 xl:-left-44 hidden lg:block z-0">
           <FloatingKPICard2 
             title="Sosyal Etkileşim" 
             description="Topluluğa katıl, fikirlerini paylaş."
@@ -122,7 +122,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
             variant="emoji"
           />
         </div>
-        <div className="absolute right-0 bottom-[18%] translate-x-[120%] hidden xl:block z-0 transform-gpu">
+        <div className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -right-24 lg:-right-36 xl:-right-44 hidden xl:block z-0">
           <FloatingKPICard2 
             title="Başarı Rozetleri" 
             description="Özel görevleri tamamla, rozet kazan."
