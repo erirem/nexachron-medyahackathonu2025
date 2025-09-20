@@ -22,12 +22,18 @@ services:
         value: '20'
       - key: PORT
         value: '3001'
-      - key: DATABASE_URL
-        sync: false
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
         value: https://nexachron-web.onrender.com
+      - key: SUPABASE_URL
+        value: https://tfqnfkyntjreanffixtl.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmcW5ma3ludGpyZWFuZmZpeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNjczODAsImV4cCI6MjA3Mzk0MzM4MH0.GHyet9orem6sYpOb-suaFPcYRfOVYohZRLfRzGTgxLk
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmcW5ma3ludGpyZWFuZmZpeHRpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODM2NzM4MCwiZXhwIjoyMDczOTQzMzgwfQ.VxKnTsqLB1X5t5qXCFmNNjkBxcTOKFzPzXrPYOZ9uAc
+      - key: DATABASE_URL
+        sync: false
 
   # Frontend Web Service  
   - type: web
@@ -52,7 +58,11 @@ services:
         value: '20'
       - key: PORT
         value: '3000'
-      - key: NEXT_PUBLIC_API_URL
-        value: https://nexachron-api.onrender.com
       - key: NODE_ENV
         value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://nexachron-api.onrender.com
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: https://tfqnfkyntjreanffixtl.supabase.co
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmcW5ma3ludGpyZWFuZmZpeHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNjczODAsImV4cCI6MjA3Mzk0MzM4MH0.GHyet9orem6sYpOb-suaFPcYRfOVYohZRLfRzGTgxLk
