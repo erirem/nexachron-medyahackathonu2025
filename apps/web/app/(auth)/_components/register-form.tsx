@@ -578,7 +578,7 @@ export function RegisterForm(): JSX.Element {
       >
         {formState.message ?? (
           <span className="animate-shimmer bg-clip-text text-transparent bg-gradient-to-r from-white/50 via-[#7dcfff] to-white/50">
-            Nexachron'a katıl, haberleri oyunlaştırılmış deneyimle yaşa
+            Nexachron&apos;a katıl, haberleri oyunlaştırılmış deneyimle yaşa
           </span>
         )}
       </p>

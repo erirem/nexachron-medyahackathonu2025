@@ -22,8 +22,8 @@ export function LoginHero({ highlights, className }: LoginHeroProps): JSX.Elemen
           bir deneyimle yaşa.
         </h1>
         <p className="max-w-xl text-sm sm:text-base leading-6 sm:leading-7 text-white/70 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          Anadolu Ajansı'nın güvenilir haberlerinden beslenen Nexachron, okuma alışkanlığını XP ile ödüllendirir,
-          quiz'lerle gündemi pekiştirir ve kart koleksiyonu ile gazetecilik kariyerini parlatır.
+          Anadolu Ajansı&apos;nın güvenilir haberlerinden beslenen Nexachron, okuma alışkanlığını XP ile ödüllendirir,
+          quiz&apos;lerle gündemi pekiştirir ve kart koleksiyonu ile gazetecilik kariyerini parlatır.
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 animate-fade-up" style={{ animationDelay: '0.3s' }}>

@@ -138,13 +138,13 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
           
           <div className="relative">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
-              <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron'a Giriş</h2>
+              <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Giriş</h2>
               <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
                 +10 XP hazır
               </span>
             </div>
             <p className="text-[13px] sm:text-sm leading-5 sm:leading-6 text-white/70 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              Güvenilir ajans haberlerine eriş, kişisel streak'ini koru ve liderlik tablosunda yüksel.
+              Güvenilir ajans haberlerine eriş, kişisel streak&apos;ini koru ve liderlik tablosunda yüksel.
             </p>
             <LoginForm />
           </div>

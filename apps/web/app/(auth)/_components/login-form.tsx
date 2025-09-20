@@ -312,7 +312,7 @@ export function LoginForm(): JSX.Element {
         </span>
       </button>
       <p className="text-center text-[11px] sm:text-xs text-white/70 animate-fade-up pt-2" style={{ animationDelay: '0.5s' }}>
-        Nexachron'da yeni misin?{' '}
+        Nexachron&apos;da yeni misin?{' '}
         <a
           className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:underline underline-offset-2 inline-block hover:translate-y-[-1px]"
           href="#"

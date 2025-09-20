@@ -1,5 +1,4 @@
 import { RegisterForm } from "./register-form";
-import { onboardingHighlights } from "../_data/onboarding-highlights";
 
 export function RegisterLanding(): JSX.Element {
   return (
@@ -121,7 +120,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
           
           <div className="relative">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
-              <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron'a Katıl</h2>
+              <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Katıl</h2>
               <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
                 +50 XP başlangıç
               </span>
@@ -182,7 +181,7 @@ function RegisterHero({ className }: RegisterHeroProps): JSX.Element {
           </span>
         </h1>
         <p className="max-w-xl text-sm sm:text-base leading-6 sm:leading-7 text-white/70 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          Anadolu Ajansı'nın güvenilir haberlerini gamified deneyimle oku, XP kazan, 
+          Anadolu Ajansı&apos;nın güvenilir haberlerini gamified deneyimle oku, XP kazan, 
           rozet topla ve liderlik tablosunda yüksel. Hemen ücretsiz hesap oluştur!
         </p>
       </div>
