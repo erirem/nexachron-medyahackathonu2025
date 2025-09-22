@@ -18,7 +18,8 @@
 nexachron/
 ├── apps/
 │   ├── web/              # Next.js frontend
-│   └── api/              # NestJS backend API
+│   ├── api/              # NestJS backend API
+│   └── mobile/           # Flutter mobile app
 ├── docs/
 │   ├── database/         # SQL schemas & migrations
 │   ├── DEPLOYMENT.md     # Production deployment guide
@@ -42,6 +43,14 @@ nexachron/
 - **TypeScript** - Static typing
 - **Supabase Client** - Real-time data
 
+### Mobile
+- **Flutter** - Cross-platform mobile framework
+- **Dart** - Programming language for Flutter
+- **Supabase Flutter** - Real-time database & auth
+- **Riverpod** - State management
+- **Go Router** - Declarative navigation
+- **Flutter TTS** - Text-to-speech functionality
+
 ### Infrastructure
 - **Render** - Production hosting
 - **GitHub Actions** - CI/CD automation
@@ -53,6 +62,8 @@ nexachron/
 ### Prerequisites
 - Node.js 20+
 - PNPM 10+
+- Flutter SDK 3.9+
+- Dart SDK
 
 ### Development Setup
 
@@ -76,6 +87,23 @@ pnpm dev
 ```bash
 pnpm dev:api    # Backend only (port 4000)
 pnpm dev:web    # Frontend only (port 3000)
+```
+
+### Mobile Development
+
+```bash
+# Setup Flutter mobile app
+cd apps/mobile
+flutter pub get
+
+# Run on device/simulator
+flutter run
+
+# Build APK (Android)
+flutter build apk
+
+# Build for iOS
+flutter build ios
 ```
 
 ## 📊 Database Schema
@@ -158,7 +186,7 @@ git push origin main  # Triggers auto-deployment
 - [ ] Real-time features
 
 ### Phase 3 📅 (Planned)
-- [ ] Mobile app (React Native)
+- [ ] Mobile app features (Flutter)
 - [ ] AI content curation
 - [ ] Advanced analytics
 - [ ] Push notifications
