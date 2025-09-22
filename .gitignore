@@ -49,6 +49,15 @@ Thumbs.db
 .flutter-plugins-dependencies
 .packages
 .melos_tool/
+.pub-cache/
+.pub/
+**/doc/api/
+**/.symlinks/
+
+# Flutter-generated files
+**/Flutter/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
 
 # Android
 **/android/.gradle/
