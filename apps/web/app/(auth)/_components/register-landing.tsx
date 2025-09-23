@@ -59,7 +59,7 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         <div className="absolute -top-10 lg:-top-12 xl:-top-14 left-1/2 -translate-x-1/2 hidden lg:block z-0">
           <FloatingKPICard2 
             title="İlk Kayıt Bonusu" 
-            description="Hemen kaydol, 50 XP ile başla!"
+            description="Hemen Kayıt Ol, 50 XP ile başla!"
             variant="xp"
             capture="+50 XP"
           />

@@ -124,7 +124,7 @@ export function RegisterForm(): JSX.Element {
     window.setTimeout(() => {
       setFormState({
         status: "success",
-        message: "Başarıyla kaydoldun! 🎉 +50 XP kazandın!",
+        message: "Başarıyla Kayıt Oldun! 🎉 +50 XP kazandın!",
       });
     }, fakeLatencyMs);
   };
@@ -547,11 +547,11 @@ export function RegisterForm(): JSX.Element {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Başarıyla kaydoldun!
+              Başarıyla Kayıt Oldun!
             </>
           ) : (
             <>
-              Kaydol ve başla
+              Kayıt Ol ve başla
               <span className="inline-block ml-1.5 px-2 py-0.5 text-[10px] sm:text-xs bg-white/20 rounded-full animate-pulse">
                 +50 XP
               </span>

@@ -33,7 +33,7 @@ export function LoginHero({ highlights, className }: LoginHeroProps): JSX.Elemen
           className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-white to-[#f0f9ff] px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#0a2141] shadow-lg shadow-black/10 transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(125,207,255,0.3)] hover:from-[#dff2ff] hover:to-white active:scale-95"
           href="/register"
         >
-          Hemen kaydol
+          Hemen Kayıt Ol
           <span className="transition-transform duration-500 group-hover:translate-x-1">→</span>
         </Link>
         <span className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/20 bg-gradient-to-r from-white/10 to-white/5 px-4 sm:px-5 py-2.5 sm:py-3 text-[10px] sm:text-xs font-medium text-white/70 backdrop-blur-xl hover:border-white/30 transition-all duration-300 hover:scale-105">

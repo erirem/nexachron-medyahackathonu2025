@@ -317,7 +317,7 @@ export function LoginForm(): JSX.Element {
           className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:underline underline-offset-2 inline-block hover:translate-y-[-1px]"
           href="/register"
         >
-          Hemen kaydol
+          Hemen Kayıt Ol
         </Link>
       </p>
       <p 
@@ -328,7 +328,7 @@ export function LoginForm(): JSX.Element {
       >
         {formState.message ?? (
           <span className="text-glow-muted">
-            Supabase entegrasyonu ile gerçek veri girişi yakında
+            Nexachron&apos;a katıl, haberleri oyunlaştırılmış deneyimle yaşa
           </span>
         )}
       </p>
