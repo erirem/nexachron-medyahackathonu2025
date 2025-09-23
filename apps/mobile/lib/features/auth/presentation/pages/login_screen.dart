@@ -73,30 +73,33 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
             SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final screenHeight = constraints.maxHeight;
-                  final isVeryCompact = screenHeight < 650;
-
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: isVeryCompact ? 12 : 20,
-                    ),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight:
+                        MediaQuery.of(context).size.height -
+                        MediaQuery.of(context).padding.top -
+                        MediaQuery.of(context).padding.bottom -
+                        kToolbarHeight,
+                  ),
+                  child: IntrinsicHeight(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (!isVeryCompact) ...[
-                          Text(
-                            'Tek tıkla oyunlaştırılmış haber deneyimine geri dön.',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                ),
-                          ),
-                          SizedBox(height: isVeryCompact ? 12 : 20),
-                        ],
-                        Flexible(
+                        Text(
+                          'Tek tıkla oyunlaştırılmış haber deneyimine geri dön.',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.75),
+                              ),
+                        ),
+                        const SizedBox(height: 20),
+                        Expanded(
                           child: Center(
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 420),
@@ -112,8 +115,8 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ],
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
             ),
           ],
