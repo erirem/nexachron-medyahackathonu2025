@@ -1,5 +1,7 @@
 import type { JSX } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { RegisterForm } from "./register-form";
 
 export function RegisterLanding(): JSX.Element {
@@ -46,6 +48,26 @@ interface AuthPanelProps {
 function AuthPanel(props?: AuthPanelProps): JSX.Element {
   const { className } = props ?? {};
   const sectionClassName = className ? `relative ${className}` : "relative";
+  const t = useTranslations("register.panel");
+
+  type FloatingCardKey =
+    | "topCenter"
+    | "topLeft"
+    | "topRight"
+    | "middleLeft"
+    | "middleRight"
+    | "bottomCenter";
+
+  type FloatingCardContent = {
+    readonly title: string;
+    readonly description: string;
+    readonly capture?: string;
+  };
+
+  const floatingCards = useMemo(
+    () => t.raw("floatingCards") as Record<FloatingCardKey, FloatingCardContent>,
+    [t],
+  );
 
   return (
     <section id="auth" className={sectionClassName}>
@@ -55,65 +77,64 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
       <div className="relative w-full max-w-[440px] mx-auto">
         {/* Floating cards - positioned around the form */}
         
-        {/* Top card */}
-        <div className="absolute -top-10 lg:-top-12 xl:-top-14 left-1/2 -translate-x-1/2 hidden lg:block z-0">
+        <FloatingCardWrapper className="absolute -top-10 lg:-top-12 xl:-top-14 left-1/2 -translate-x-1/2 hidden lg:block z-0">
           <FloatingKPICard2 
-            title="İlk Kayıt Bonusu" 
-            description="Hemen Kayıt Ol, 50 XP ile başla!"
+            title={floatingCards.topCenter.title}
+            description={floatingCards.topCenter.description}
             variant="xp"
-            capture="+50 XP"
+            capture={floatingCards.topCenter.capture}
           />
-        </div>
+        </FloatingCardWrapper>
         
         {/* Top-left diagonal */}
-        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
+        <FloatingCardWrapper className="absolute -top-6 lg:-top-8 xl:-top-10 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0" delay="float-card-delay-1">
           <FloatingKPICard2 
-            title="Premium Rozet" 
-            description="İlk 1000 kullanıcıya özel rozet."
-            capture="EARLY BIRD"
+            title={floatingCards.topLeft.title}
+            description={floatingCards.topLeft.description}
+            capture={floatingCards.topLeft.capture}
             variant="card"
           />
-        </div>
+        </FloatingCardWrapper>
         
         {/* Top-right diagonal */}
-        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
+        <FloatingCardWrapper className="absolute -top-6 lg:-top-8 xl:-top-10 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0" delay="float-card-delay-2">
           <FloatingKPICard2 
-            title="Şehir Liderleri" 
-            description="Şehrindeki en aktif okuyucu ol."
-            capture="ŞEHİR"
+            title={floatingCards.topRight.title}
+            description={floatingCards.topRight.description}
+            capture={floatingCards.topRight.capture}
             variant="ai"
           />
-        </div>
+        </FloatingCardWrapper>
         
         {/* Left side */}
-        <div className="absolute top-1/2 -translate-y-1/2 -left-36 xl:-left-44 2xl:-left-52 hidden 2xl:block z-0">
+        <FloatingCardWrapper className="absolute top-1/2 -translate-y-1/2 -left-36 xl:-left-44 2xl:-left-52 hidden 2xl:block z-0" delay="float-card-delay-3">
           <FloatingKPICard2 
-            title="Güvenli Giriş" 
-            description="Verilerini koruyoruz, güvende kal."
-            capture="GÜVENLİK"
+            title={floatingCards.middleLeft.title}
+            description={floatingCards.middleLeft.description}
+            capture={floatingCards.middleLeft.capture}
             variant="streak"
           />
-        </div>
+        </FloatingCardWrapper>
         
         {/* Right side */}
-        <div className="absolute top-1/2 -translate-y-1/2 -right-36 xl:-right-44 2xl:-right-52 hidden 2xl:block z-0">
+        <FloatingCardWrapper className="absolute top-1/2 -translate-y-1/2 -right-36 xl:-right-44 2xl:-right-52 hidden 2xl:block z-0" delay="float-card-delay-4">
           <FloatingKPICard2 
-            title="Arkadaş Davet" 
-            description="Arkadaşını davet et, ikimiz de kazan."
-            capture="DAVET"
+            title={floatingCards.middleRight.title}
+            description={floatingCards.middleRight.description}
+            capture={floatingCards.middleRight.capture}
             variant="quiz"
           />
-        </div>
+        </FloatingCardWrapper>
         
         {/* Bottom cards */}
-        <div className="absolute -bottom-36 lg:-bottom-40 xl:-bottom-44 left-1/2 -translate-x-1/2 hidden xl:block z-0">
+        <FloatingCardWrapper className="absolute -bottom-36 lg:-bottom-40 xl:-bottom-44 left-1/2 -translate-x-1/2 hidden xl:block z-0" delay="float-card-delay-5">
           <FloatingKPICard2 
-            title="Başarı Yolu" 
-            description="Liderlik tablosunda yüksel."
-            capture="LİDERLİK"
+            title={floatingCards.bottomCenter.title}
+            description={floatingCards.bottomCenter.description}
+            capture={floatingCards.bottomCenter.capture}
             variant="xp"
           />
-        </div>
+        </FloatingCardWrapper>
         <div className="relative group">
           <div
             aria-hidden
@@ -126,13 +147,15 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
             
             <div className="relative">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
-                <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Katıl</h2>
+                <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">
+                  {t("heading")}
+                </h2>
                 <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
-                  +50 XP başlangıç
+                  {t("xpBadge")}
                 </span>
               </div>
               <p className="text-[13px] sm:text-sm leading-5 sm:leading-6 text-white/70 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                Gamified haber platformuna katıl, XP kazan ve liderlik tablosunda yüksel.
+                {t("description")}
               </p>
               <RegisterForm />
             </div>
@@ -143,6 +166,22 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
   );
 }
 
+interface FloatingCardWrapperProps {
+  readonly className: string;
+  readonly children: JSX.Element;
+  readonly delay?: string;
+}
+
+function FloatingCardWrapper({ className, children, delay }: FloatingCardWrapperProps): JSX.Element {
+  const composed = delay ? `float-card ${delay}` : "float-card";
+
+  return (
+    <div className={className}>
+      <div className={composed}>{children}</div>
+    </div>
+  );
+}
+
 interface RegisterHeroProps {
   readonly className?: string;
 }
@@ -150,63 +189,56 @@ interface RegisterHeroProps {
 function RegisterHero({ className }: RegisterHeroProps): JSX.Element {
   const baseClassName = "flex flex-col justify-center gap-6 md:gap-8 text-white";
   const sectionClassName = className ? `${baseClassName} ${className}` : baseClassName;
+  const locale = useLocale();
+  const t = useTranslations("register.hero");
 
-  const benefits = [
-    {
-      icon: "🎯",
-      title: "50 XP Başlangıç Bonusu",
-      description: "Hesabını oluştur, anında 50 XP kazan"
-    },
-    {
-      icon: "🏆",
-      title: "Özel Early Bird Rozeti",
-      description: "İlk 1000 kullanıcıya özel rozet"
-    },
-    {
-      icon: "🌟",
-      title: "Şehir Lideri Ol",
-      description: "Kendi şehrinde en aktif okuyucu sen ol"
-    },
-    {
-      icon: "🎮",
-      title: "Gamified Deneyim",
-      description: "Haberleri oyunlaştırılmış şekilde deneyimle"
-    }
-  ];
+  type Benefit = {
+    readonly icon: string;
+    readonly title: string;
+    readonly description: string;
+  };
+
+  const benefits = t.raw("benefits") as Benefit[];
 
   return (
     <section className={sectionClassName}>
       <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.35em] sm:tracking-[0.45em] text-[#a5d8ff]/90 animate-fade-in">
         <span className="hero-accent-line h-[1px] w-6 sm:w-9" aria-hidden /> 
-        Ücretsiz Kayıt
+        {t("badge")}
       </span>
       <div className="space-y-3 md:space-y-5">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-semibold leading-tight animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          Nexachron ailesine katıl,{' '}
-          <span className="text-glow-gradient">haberleri oyunlaştır</span>
+        <h1
+          className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-semibold leading-tight animate-fade-up"
+          style={{ animationDelay: "0.1s" }}
+        >
+          {t.rich("title", {
+            highlight: (chunks) => <span className="text-glow-gradient">{chunks}</span>,
+          })}
         </h1>
-        <p className="max-w-xl text-sm sm:text-base leading-6 sm:leading-7 text-white/70 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          Anadolu Ajansı&apos;nın güvenilir haberlerini gamified deneyimle oku, XP kazan, 
-          rozet topla ve liderlik tablosunda yüksel. Hemen ücretsiz hesap oluştur!
+        <p
+          className="max-w-xl text-sm sm:text-base leading-6 sm:leading-7 text-white/70 animate-fade-up"
+          style={{ animationDelay: "0.2s" }}
+        >
+          {t("description")}
         </p>
       </div>
       
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 animate-fade-up" style={{ animationDelay: '0.3s' }}>
         <Link
           className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white transition-all duration-500 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/15"
-          href="/"
+          href={`/${locale}`}
         >
-          Giriş sayfasına dön
+          {t("cta.back")}
           <span className="transition-transform duration-500 group-hover:translate-x-1">→</span>
         </Link>
         <span className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/20 bg-gradient-to-r from-white/10 to-white/5 px-4 sm:px-5 py-2.5 sm:py-3 text-[10px] sm:text-xs font-medium text-white/70 backdrop-blur-xl hover:border-white/30 transition-all duration-300">
           <span className="flex size-5 sm:size-6 items-center justify-center rounded-full bg-gradient-to-r from-[#1a3b68] to-[#2a4b78] text-[#a5d8ff] animate-pulse">
-            1K
+            {t("cta.badgeValue")}
           </span>
-          İlk 1000 kullanıcıya özel rozet
+          {t("cta.badgeText")}
         </span>
         <span className="flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-500/30 px-4 py-2.5 text-[10px] sm:text-xs font-medium text-emerald-300">
-          Ücretsiz kayıt
+          {t("cta.free")}
         </span>
       </div>
       

@@ -4,11 +4,12 @@ import type { ExecutionContext } from '@nestjs/common';
 import { SupabaseAuthGuard } from './supabase-auth.guard';
 
 describe('SupabaseAuthGuard', () => {
-  const getContext = (request: Record<string, unknown>): ExecutionContext => ({
-    switchToHttp: () => ({
-      getRequest: () => request,
-    }),
-  }) as unknown as ExecutionContext;
+  const getContext = (request: Record<string, unknown>): ExecutionContext =>
+    ({
+      switchToHttp: () => ({
+        getRequest: () => request,
+      }),
+    }) as unknown as ExecutionContext;
 
   it('throws when authorization header missing', async () => {
     const supabaseServiceMock = {
@@ -21,14 +22,18 @@ describe('SupabaseAuthGuard', () => {
 
     const guard = new SupabaseAuthGuard(supabaseServiceMock as never);
 
-    await expect(guard.canActivate(getContext({ headers: {} }))).rejects.toThrow(UnauthorizedException);
+    await expect(
+      guard.canActivate(getContext({ headers: {} })),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('attaches supabase user on success', async () => {
     const supabaseServiceMock = {
       supabase: {
         auth: {
-          getUser: jest.fn().mockResolvedValue({ data: { user: { id: '123' } }, error: null }),
+          getUser: jest
+            .fn()
+            .mockResolvedValue({ data: { user: { id: '123' } }, error: null }),
         },
       },
     };

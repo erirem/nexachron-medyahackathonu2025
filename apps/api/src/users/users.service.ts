@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import type { PostgrestError, User } from '@supabase/supabase-js';
 
 import { SupabaseService } from '../supabase/supabase.service';
@@ -93,7 +97,10 @@ export class UsersService {
           .single();
 
         if (retryResponse.error) {
-          throw this.handleSupabaseError('users.select-retry', retryResponse.error);
+          throw this.handleSupabaseError(
+            'users.select-retry',
+            retryResponse.error,
+          );
         }
 
         return retryResponse.data;
@@ -128,12 +135,16 @@ export class UsersService {
   }
 
   private deriveUsername(user: User): string | null {
-    const metadataUsername = this.extractMetadata<string | null>(user, 'username');
+    const metadataUsername = this.extractMetadata<string | null>(
+      user,
+      'username',
+    );
     if (metadataUsername) {
       return metadataUsername;
     }
 
-    const email = user.email ?? this.extractMetadata<string | null>(user, 'email');
+    const email =
+      user.email ?? this.extractMetadata<string | null>(user, 'email');
     if (!email) {
       return null;
     }
@@ -146,7 +157,10 @@ export class UsersService {
     return (value as T | undefined) ?? null;
   }
 
-  private handleSupabaseError(scope: string, error: PostgrestError): InternalServerErrorException {
+  private handleSupabaseError(
+    scope: string,
+    error: PostgrestError,
+  ): InternalServerErrorException {
     this.logger.error(`${scope} failed`, JSON.stringify(error));
     return new InternalServerErrorException('Supabase isteği başarısız oldu.');
   }

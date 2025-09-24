@@ -1,0 +1,354 @@
+{
+  "common": {
+    "localeSwitcher": {
+      "label": "Gjuha"
+    }
+  },
+  "login": {
+    "hero": {
+      "badge": "Me mbështetjen e Anadolu Ajansı",
+      "title": "Hyr në lajme me Nexachron dhe përjeto një eksperiencë <highlight>të lojëzuar</highlight>.",
+      "description": "Nexachron mbështetet në raportimet e besueshme të Anadolu Ajansı, shpërblen zakonet e leximit me XP, forcon njohuritë me kuize dhe të lejon të shkëlqesh me karta koleksioni.",
+      "ctaPrimary": "Krijo llogari",
+      "ctaBonus": "+10",
+      "ctaSecondary": "Lexo lajmin e parë dhe fito XP bonus.",
+      "highlights": [
+        {
+          "icon": "📈",
+          "title": "Lexim me streak",
+          "description": "Ndiq titujt me ritmin tënd, fito XP për çdo artikull dhe mos humb shpërblimet ditore."
+        },
+        {
+          "icon": "🧠",
+          "title": "Forcohu me kuize",
+          "description": "Rishiko lajmet e verifikuara nga Anadolu Ajansı me kuize dhe merr 25 XP shtesë për çdo përgjigje të saktë."
+        },
+        {
+          "icon": "📍",
+          "title": "Feed sipas qytetit",
+          "description": "Ndjej pulsimin e qytetit tënd – nga Stambolli në Ankara – me një feed të personalizuar."
+        },
+        {
+          "icon": "🎴",
+          "title": "Koleksion kartash",
+          "description": "Mblidh karta gazetarësh nga Common në Legendary, forco profilin dhe ngjitu në renditje."
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Hyr në Nexachron",
+      "xpBadge": "+10 XP gati",
+      "description": "Akseso lajmet e verifikuara, ruaj streak-un personal dhe ngjitu në tabelën e liderëve.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "XP në kohë reale",
+          "description": "Përdoruesit po fitojnë XP tani. Bashkohu!",
+          "capture": "LIVE"
+        },
+        "topLeft": {
+          "title": "Koleksion kartash",
+          "description": "Mblidh kartat e rralla dhe ekspozoji."
+          ,
+          "capture": "KOLEKSION"
+        },
+        "topRight": {
+          "title": "Briefing me AI",
+          "description": "Lajme të përzgjedhura posaçërisht për ty.",
+          "capture": "AI POWERED"
+        },
+        "middleLeft": {
+          "title": "Sistemi streak",
+          "description": "Hyr pa ndërprerje dhe fito shpërblime.",
+          "capture": "STREAK 7 DITË"
+        },
+        "middleRight": {
+          "title": "Kuizi ditor",
+          "description": "Pyetje dhe shpërblime të reja çdo ditë.",
+          "capture": "QUIZ"
+        },
+        "bottomCenter": {
+          "title": "Synimet ditore",
+          "description": "Përmbush objektivin e leximit dhe qëndro në formë.",
+          "capture": "SYNIME"
+        },
+        "bottomLeft": {
+          "title": "Ndërveprim social",
+          "description": "Bashkohu me komunitetin dhe ndaj mendimin tënd.",
+          "capture": "SOCIAL"
+        },
+        "bottomRight": {
+          "title": "Distinksione",
+          "description": "Përfundo misionet speciale dhe fito distinksione.",
+          "capture": "BADGE"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "shembull@aa.com.tr"
+        },
+        "password": {
+          "label": "Fjalëkalimi",
+          "placeholder": "••••••••"
+        },
+        "remember": "Më mbaj mend",
+        "forgot": "Harrove fjalëkalimin"
+      },
+      "submit": {
+        "loading": "Duke kontrolluar...",
+        "success": "Sukses!",
+        "default": "Hyr dhe fito XP"
+      },
+      "badges": {
+        "xp": "+10 XP"
+      },
+      "links": {
+        "registerPrompt": "I ri në Nexachron?",
+        "registerCta": "Krijo llogari"
+      },
+      "status": {
+        "default": "Bëhu pjesë e Nexachron dhe përjeto lajmet e gamifikuara.",
+        "submitting": "Po verifikojmë të dhënat...",
+        "invalid": "Kontrollo formularin",
+        "success": "Mirë se u ktheve! Po të ridrejtojmë te profili...",
+        "error": "Pati një problem gjatë hyrjes."
+      },
+      "supabase": {
+        "invalidCredentials": "Email ose fjalëkalim i pasaktë.",
+        "emailNotConfirmed": "Konfirmo adresën e email-it.",
+        "generic": "Nuk mundëm të përfundojmë hyrjen."
+      },
+      "validation": {
+        "email": {
+          "required": "Email-i është i detyrueshëm",
+          "min": "Email-i duhet të ketë të paktën 5 karaktere",
+          "email": "Shkruaj një email të vlefshëm"
+        },
+        "password": {
+          "required": "Fjalëkalimi është i detyrueshëm",
+          "min": "Fjalëkalimi duhet të ketë të paktën 8 karaktere"
+        }
+      },
+      "messages": {
+        "demo": "Ky është version demonstrues. Sapo të aktivizohet Supabase Auth, formulari lidhet direkt."
+      }
+    }
+  },
+  "register": {
+    "hero": {
+      "badge": "Regjistrim falas",
+      "title": "Bëhu pjesë e familjes Nexachron dhe <highlight>lojëzo lajmet</highlight>",
+      "description": "Lexo lajmet e sigurta të Anadolu Ajansı në një rrjedhë të gamifikuar, fito XP, grumbullo badge dhe ngjitu në leaderboard. Regjistrohu falas tani!",
+      "cta": {
+        "back": "Kthehu te hyrja",
+        "badgeValue": "1K",
+        "badgeText": "Badge ekskluzive për 1.000 përdoruesit e parë",
+        "free": "Falas"
+      },
+      "benefits": [
+        {
+          "icon": "🎯",
+          "title": "Bonus fillestar 50 XP",
+          "description": "Krijo llogarinë dhe merr menjëherë 50 XP"
+        },
+        {
+          "icon": "🏆",
+          "title": "Badge Early Bird",
+          "description": "Badge speciale për anëtarët e parë"
+        },
+        {
+          "icon": "🌟",
+          "title": "Udhëheqësi i qytetit",
+          "description": "Bëhu lexuesi më aktiv në qytetin tënd"
+        },
+        {
+          "icon": "🎮",
+          "title": "Përvojë e gamifikuar",
+          "description": "Përjeto lajmet si një lojë interaktive"
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Krijo llogari Nexachron",
+      "xpBadge": "+50 XP mirëseardhje",
+      "description": "Hyr në redaksinë e gamifikuar, fito XP dhe ngjitu në renditje.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "Bonus regjistrimi",
+          "description": "Regjistrohu tani dhe nis me 50 XP",
+          "capture": "+50 XP"
+        },
+        "topLeft": {
+          "title": "Badge premium",
+          "description": "Badge i veçantë për 1.000 përdoruesit e parë",
+          "capture": "EARLY BIRD"
+        },
+        "topRight": {
+          "title": "Liderët e qyteteve",
+          "description": "Bëhu lexuesi më aktiv në qytetin tënd",
+          "capture": "CITY"
+        },
+        "middleLeft": {
+          "title": "Hyrje e sigurt",
+          "description": "Të dhënat tuaja janë të mbrojtura",
+          "capture": "SIGURI"
+        },
+        "middleRight": {
+          "title": "Fto dhe përfito",
+          "description": "Fto miqtë dhe fitoni të dy",
+          "capture": "FTESË"
+        },
+        "bottomCenter": {
+          "title": "Rruga drejt majës",
+          "description": "Sukses drejt tabelës së liderëve",
+          "capture": "LIDERSHIP"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "username": {
+          "label": "Emri i përdoruesit",
+          "placeholder": "nexauser"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "shembull@aa.com.tr"
+        },
+        "password": {
+          "label": "Fjalëkalimi",
+          "placeholder": "••••••••"
+        },
+        "confirmPassword": {
+          "label": "Përsërit fjalëkalimin",
+          "placeholder": "••••••••"
+        },
+        "city": {
+          "label": "Qyteti",
+          "placeholder": "Zgjidh qytetin"
+        },
+        "terms": {
+          "agreement": "Kam lexuar dhe pranoj <terms>Kushtet e përdorimit</terms> dhe <privacy>Politikën e privatësisë</privacy>."
+        }
+      },
+      "cities": [
+        "Stamboll",
+        "Ankara",
+        "Izmir",
+        "Bursa",
+        "Antalya",
+        "Adana",
+        "Konja",
+        "Gaziantep",
+        "Mersin",
+        "Diyarbakër",
+        "Kayseri",
+        "Samsun",
+        "Denizli",
+        "Eskishehir",
+        "Trabzon"
+      ],
+      "password": {
+        "strength": {
+          "1": "Shumë i dobët",
+          "2": "I dobët",
+          "3": "Mesatar",
+          "4": "I fortë",
+          "5": "Shumë i fortë"
+        }
+      },
+      "submit": {
+        "loading": "Po krijojmë llogarinë...",
+        "success": "Gati!",
+        "default": "Regjistrohu dhe nis",
+        "badge": "+50 XP"
+      },
+      "links": {
+        "loginPrompt": "Ke tashmë llogari?",
+        "loginCta": "Hyr"
+      },
+      "status": {
+        "default": "Bëhu pjesë e Nexachron dhe përjeto lajmet e gamifikuara.",
+        "submitting": "Po nisim regjistrimin...",
+        "invalid": "Kontrollo fushat e detyrueshme",
+        "successEmail": "Regjistrimi u krye! Kontrollo email-in për konfirmim.",
+        "successRedirect": "Mirësevjen! Po të ridrejtojmë te profili...",
+        "error": "Nuk mundëm të përfundojmë regjistrimin."
+      },
+      "supabase": {
+        "exists": "Ekziston tashmë një llogari me këtë email.",
+        "weakPassword": "Fjalëkalimi duhet të ketë të paktën 6 karaktere.",
+        "generic": "Regjistrimi dështoi."
+      },
+      "validation": {
+        "username": {
+          "required": "Emri i përdoruesit është i detyrueshëm",
+          "min": "Minimumi 3 karaktere",
+          "max": "Maksimumi 20 karaktere",
+          "pattern": "Lejohen vetëm shkronja, numra dhe nënvizime"
+        },
+        "email": {
+          "required": "Email-i është i detyrueshëm",
+          "email": "Fut një email të vlefshëm"
+        },
+        "password": {
+          "required": "Fjalëkalimi është i detyrueshëm",
+          "min": "Minimumi 8 karaktere",
+          "uppercase": "Fut të paktën një shkronjë të madhe",
+          "lowercase": "Fut të paktën një shkronjë të vogël",
+          "digit": "Fut të paktën një numër"
+        },
+        "confirmPassword": {
+          "required": "Përsëritja e fjalëkalimit është e detyrueshme",
+          "match": "Fjalëkalimet nuk përputhen"
+        },
+        "city": {
+          "required": "Zgjidh një qytet",
+          "min": "Zgjidh një qytet të vlefshëm"
+        },
+        "terms": {
+          "accept": "Duhet të pranosh kushtet"
+        }
+      },
+      "messages": {
+        "successCard": "Mirë se erdhe! Llogaria jote është gati. Nisë me +50 XP! 🎉"
+      }
+    }
+  },
+  "profile": {
+    "heading": "Profili im",
+    "subheading": "Monitoro ritmin e leximit dhe progresin tënd të XP këtu.",
+    "actions": {
+      "logout": "Dil"
+    },
+    "loading": "Po ngarkojmë të dhënat e profilit...",
+    "errors": {
+      "missingApi": "URL e API mungon. Kontrollo konfigurimin e ambientit.",
+      "generic": "Nuk mundëm të ngarkojmë informacionin e profilit."
+    },
+    "account": {
+      "heading": "Të dhënat e llogarisë",
+      "fields": {
+        "username": "Emri i përdoruesit",
+        "email": "Email",
+        "city": "Qyteti",
+        "lastSeen": "Herën e fundit"
+      },
+      "unknown": "Nuk është dhënë",
+      "unknownDate": "E panjohur"
+    },
+    "stats": {
+      "heading": "Statistikat",
+      "xp": "XP",
+      "streak": "Streak",
+      "rank": "Niveli"
+    },
+    "streak": {
+      "none": "Fillo streak-un duke eksploruar lajmet e sotme.",
+      "low": "Streak prej {count} ditësh! Vazhdoni.",
+      "high": "Streak prej {count} ditësh 🔥"
+    }
+  }
+}

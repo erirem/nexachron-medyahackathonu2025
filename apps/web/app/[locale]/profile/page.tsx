@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 
 import { getAccessToken, getSupabaseClient } from "@/lib/supabase/client";
 
@@ -28,6 +29,8 @@ type FetchState = "idle" | "loading" | "error";
 
 export default function ProfilePage(): JSX.Element {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("profile");
   const [state, setState] = useState<FetchState>("idle");
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +39,7 @@ export default function ProfilePage(): JSX.Element {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (!apiUrl) {
-      setError("API adresi tanımlı değil. .env dosyasını kontrol edin.");
+      setError(t("errors.missingApi"));
       return;
     }
 
@@ -55,7 +58,7 @@ export default function ProfilePage(): JSX.Element {
 
         if (!accessToken) {
           setState("idle");
-          router.replace("/");
+          router.replace(`/${locale}`);
           return;
         }
 
@@ -68,12 +71,12 @@ export default function ProfilePage(): JSX.Element {
         if (response.status === 401) {
           await signOutFromAllClients();
           setState("idle");
-          router.replace("/");
+          router.replace(`/${locale}`);
           return;
         }
 
         if (!response.ok) {
-          throw new Error(`Profil verisi alınamadı (${response.status}).`);
+          throw new Error(`Failed to fetch profile (${response.status}).`);
         }
 
         const payload = (await response.json()) as ProfileResponse;
@@ -85,12 +88,12 @@ export default function ProfilePage(): JSX.Element {
       } catch (cause) {
         console.error("Profil verisi alınamadı", cause);
         setState("error");
-        setError("Profil bilgileri yüklenirken hata oluştu.");
+        setError(t("errors.generic"));
       }
     };
 
     void fetchProfile();
-  }, [router]);
+  }, [locale, router, t]);
 
   const streakMessage = useMemo(() => {
     if (!profile) {
@@ -98,51 +101,51 @@ export default function ProfilePage(): JSX.Element {
     }
 
     if (profile.stats.streak === 0) {
-      return "Seri başlatmak için bugün haberleri keşfet.";
+      return t("streak.none");
     }
 
     if (profile.stats.streak < 3) {
-      return `${profile.stats.streak} günlük seri! Devam et.`;
+      return t("streak.low", { count: profile.stats.streak });
     }
 
-    return `${profile.stats.streak} günlük seri 🔥`; 
-  }, [profile]);
+    return t("streak.high", { count: profile.stats.streak });
+  }, [profile, t]);
 
   const lastSeenText = useMemo(() => {
     if (!profile?.stats.lastSeen) {
-      return "Bilinmiyor";
+      return t("account.unknownDate");
     }
 
-    const formatter = new Intl.DateTimeFormat("tr-TR", {
+    const formatter = new Intl.DateTimeFormat(locale, {
       dateStyle: "medium",
       timeStyle: "short",
     });
 
     return formatter.format(new Date(profile.stats.lastSeen));
-  }, [profile?.stats.lastSeen]);
+  }, [locale, profile?.stats.lastSeen, t]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#04163c] via-[#0a2f5a] to-[#113e7b] text-white">
       <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-4 py-10 md:px-8 lg:px-12">
         <header className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Profilim</h1>
-            <p className="text-sm text-white/70">Haber ritmini ve XP ilerlemeni buradan takip et.</p>
+            <h1 className="text-2xl font-semibold">{t("heading")}</h1>
+            <p className="text-sm text-white/70">{t("subheading")}</p>
           </div>
           <button
             type="button"
             onClick={() => {
-              void handleLogout(router);
+              void handleLogout(router, locale);
             }}
             className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/20"
           >
-            Çıkış yap
+            {t("actions.logout")}
           </button>
         </header>
 
         {state === "loading" && (
           <section className="rounded-3xl border border-white/10 bg-white/10 px-6 py-10 text-center">
-            <p className="text-white/80">Profil bilgilerin yükleniyor...</p>
+            <p className="text-white/80">{t("loading")}</p>
           </section>
         )}
 
@@ -155,33 +158,33 @@ export default function ProfilePage(): JSX.Element {
         {state !== "loading" && profile && (
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <section className="rounded-3xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl">
-              <h2 className="text-lg font-semibold">Hesap Bilgileri</h2>
+              <h2 className="text-lg font-semibold">{t("account.heading")}</h2>
               <dl className="mt-4 grid gap-3 text-sm text-white/80">
                 <div className="flex justify-between gap-2">
-                  <dt className="text-white/60">Kullanıcı adı</dt>
-                  <dd>{profile.user.username ?? "Belirtilmedi"}</dd>
+                  <dt className="text-white/60">{t("account.fields.username")}</dt>
+                  <dd>{profile.user.username ?? t("account.unknown")}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt className="text-white/60">E-posta</dt>
-                  <dd>{profile.user.email ?? "Belirtilmedi"}</dd>
+                  <dt className="text-white/60">{t("account.fields.email")}</dt>
+                  <dd>{profile.user.email ?? t("account.unknown")}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt className="text-white/60">Şehir</dt>
-                  <dd>{profile.user.city ?? "Belirtilmedi"}</dd>
+                  <dt className="text-white/60">{t("account.fields.city")}</dt>
+                  <dd>{profile.user.city ?? t("account.unknown")}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt className="text-white/60">Son görülen</dt>
+                  <dt className="text-white/60">{t("account.fields.lastSeen")}</dt>
                   <dd>{lastSeenText}</dd>
                 </div>
               </dl>
             </section>
 
             <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#133c66]/90 to-[#1d4d85]/60 p-6 shadow-lg">
-              <h2 className="text-lg font-semibold">User Stats</h2>
+              <h2 className="text-lg font-semibold">{t("stats.heading")}</h2>
               <div className="mt-4 grid gap-4">
-                <StatBadge label="XP" value={profile.stats.xp} accent="from-amber-300 to-orange-400" />
-                <StatBadge label="Streak" value={profile.stats.streak} accent="from-emerald-300 to-emerald-500" description={streakMessage} />
-                <StatBadge label="Rank Level" value={profile.stats.rankLevel} accent="from-sky-300 to-sky-500" />
+                <StatBadge label={t("stats.xp")} value={profile.stats.xp} accent="from-amber-300 to-orange-400" />
+                <StatBadge label={t("stats.streak")} value={profile.stats.streak} accent="from-emerald-300 to-emerald-500" description={streakMessage} />
+                <StatBadge label={t("stats.rank")} value={profile.stats.rankLevel} accent="from-sky-300 to-sky-500" />
               </div>
             </section>
           </div>
@@ -220,7 +223,7 @@ async function signOutFromAllClients() {
   cachedClientPreference = null;
 }
 
-async function handleLogout(router: ReturnType<typeof useRouter>) {
+async function handleLogout(router: ReturnType<typeof useRouter>, locale: string) {
   try {
     if (cachedClientPreference === "session") {
       await getSupabaseClient(false).auth.signOut({ scope: "local" });
@@ -230,6 +233,6 @@ async function handleLogout(router: ReturnType<typeof useRouter>) {
     }
   } finally {
     cachedClientPreference = null;
-    router.replace("/");
+    router.replace(`/${locale}`);
   }
 }

@@ -1,0 +1,353 @@
+{
+  "common": {
+    "localeSwitcher": {
+      "label": "Bahasa"
+    }
+  },
+  "login": {
+    "hero": {
+      "badge": "Didukung oleh Anadolu Ajansı",
+      "title": "Masuk ke dunia berita bersama Nexachron dan rasakan pengalaman <highlight>bergamifikasi</highlight>.",
+      "description": "Dibangun di atas laporan terpercaya Anadolu Ajansı, Nexachron memberi XP untuk kebiasaan membaca Anda, memperkuat wawasan lewat kuis, dan membuat Anda bersinar dengan kartu koleksi.",
+      "ctaPrimary": "Buat Akun",
+      "ctaBonus": "+10",
+      "ctaSecondary": "Baca berita pertama Anda dan raih XP bonus.",
+      "highlights": [
+        {
+          "icon": "📈",
+          "title": "Membaca dengan streak",
+          "description": "Ikuti headline sesuai ritme Anda, dapatkan XP setiap artikel, dan jangan lewatkan hadiah harian."
+        },
+        {
+          "icon": "🧠",
+          "title": "Perkuat dengan kuis",
+          "description": "Uji berita yang telah diverifikasi Anadolu Ajansı dengan kuis dan rebut 25 XP tambahan untuk tiap jawaban benar."
+        },
+        {
+          "icon": "📍",
+          "title": "Feed berdasarkan kota",
+          "description": "Rasakan denyut kota Anda—dari Istanbul hingga Ankara—dengan feed personal."
+        },
+        {
+          "icon": "🎴",
+          "title": "Koleksi kartu",
+          "description": "Kumpulkan kartu jurnalis dari Common hingga Legendary, kuatkan profil Anda, dan naikkan peringkat."
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Masuk ke Nexachron",
+      "xpBadge": "+10 XP siap",
+      "description": "Akses berita terpercaya, jaga streak pribadi, dan naik di papan peringkat.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "XP real-time",
+          "description": "Pengguna lain sedang meraih XP sekarang. Ikutlah!",
+          "capture": "LIVE"
+        },
+        "topLeft": {
+          "title": "Koleksi kartu",
+          "description": "Kumpulkan kartu langka dan pamerkan di etalase Anda.",
+          "capture": "KOLEKSI"
+        },
+        "topRight": {
+          "title": "Briefing AI",
+          "description": "Artikel pilihan khusus untuk Anda.",
+          "capture": "AI POWERED"
+        },
+        "middleLeft": {
+          "title": "Sistem streak",
+          "description": "Login tanpa jeda dan dapatkan hadiah.",
+          "capture": "STREAK 7 HARI"
+        },
+        "middleRight": {
+          "title": "Kuis harian",
+          "description": "Pertanyaan baru dan hadiah setiap hari.",
+          "capture": "QUIZ"
+        },
+        "bottomCenter": {
+          "title": "Target harian",
+          "description": "Selesaikan target baca harian Anda.",
+          "capture": "TARGET"
+        },
+        "bottomLeft": {
+          "title": "Interaksi komunitas",
+          "description": "Gabung komunitas dan bagikan perspektif Anda.",
+          "capture": "SOSIAL"
+        },
+        "bottomRight": {
+          "title": "Lencana prestasi",
+          "description": "Selesaikan misi khusus dan raih lencana.",
+          "capture": "LENCANA"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "contoh@aa.com.tr"
+        },
+        "password": {
+          "label": "Kata sandi",
+          "placeholder": "••••••••"
+        },
+        "remember": "Ingat saya",
+        "forgot": "Lupa kata sandi"
+      },
+      "submit": {
+        "loading": "Memeriksa...",
+        "success": "Berhasil!",
+        "default": "Masuk dan raih XP"
+      },
+      "badges": {
+        "xp": "+10 XP"
+      },
+      "links": {
+        "registerPrompt": "Baru di Nexachron?",
+        "registerCta": "Buat Akun"
+      },
+      "status": {
+        "default": "Bergabunglah dengan Nexachron dan nikmati berita yang bergamifikasi.",
+        "submitting": "Sedang memverifikasi data...",
+        "invalid": "Periksa kembali formulir",
+        "success": "Selamat datang kembali! Mengarahkan ke profil Anda...",
+        "error": "Terjadi kesalahan saat masuk."
+      },
+      "supabase": {
+        "invalidCredentials": "Email atau kata sandi salah.",
+        "emailNotConfirmed": "Silakan konfirmasi alamat email Anda.",
+        "generic": "Kami tidak dapat menyelesaikan proses masuk."
+      },
+      "validation": {
+        "email": {
+          "required": "Email wajib diisi",
+          "min": "Email minimal 5 karakter",
+          "email": "Masukkan alamat email yang valid"
+        },
+        "password": {
+          "required": "Kata sandi wajib diisi",
+          "min": "Kata sandi minimal 8 karakter"
+        }
+      },
+      "messages": {
+        "demo": "Ini versi demo. Setelah Supabase Auth aktif, formulir akan terhubung secara langsung."
+      }
+    }
+  },
+  "register": {
+    "hero": {
+      "badge": "Daftar gratis",
+      "title": "Gabung keluarga Nexachron dan <highlight>buat berita jadi permainan</highlight>",
+      "description": "Baca berita terpercaya Anadolu Ajansı dalam format gamified, kumpulkan XP, dapatkan lencana, dan naik di papan peringkat. Daftar gratis sekarang!",
+      "cta": {
+        "back": "Kembali ke masuk",
+        "badgeValue": "1K",
+        "badgeText": "Lencana eksklusif untuk 1.000 pengguna pertama",
+        "free": "Daftar gratis"
+      },
+      "benefits": [
+        {
+          "icon": "🎯",
+          "title": "Bonus awal 50 XP",
+          "description": "Buat akun dan langsung dapat 50 XP"
+        },
+        {
+          "icon": "🏆",
+          "title": "Lencana Early Bird",
+          "description": "Lencana spesial untuk anggota pertama"
+        },
+        {
+          "icon": "🌟",
+          "title": "Jadi pemimpin kota",
+          "description": "Jadilah pembaca paling aktif di kota Anda"
+        },
+        {
+          "icon": "🎮",
+          "title": "Pengalaman gamified",
+          "description": "Rasakan berita bak permainan interaktif"
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Buat akun Nexachron",
+      "xpBadge": "+50 XP sambutan",
+      "description": "Masuk ke newsroom gamified, kumpulkan XP, dan naikkan level Anda.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "Bonus pendaftaran",
+          "description": "Daftar sekarang dan mulai dengan 50 XP!",
+          "capture": "+50 XP"
+        },
+        "topLeft": {
+          "title": "Lencana premium",
+          "description": "Lencana khusus untuk 1.000 anggota pertama.",
+          "capture": "EARLY BIRD"
+        },
+        "topRight": {
+          "title": "Pemimpin kota",
+          "description": "Jadi pembaca teraktif di kota Anda.",
+          "capture": "CITY"
+        },
+        "middleLeft": {
+          "title": "Login aman",
+          "description": "Data Anda kami jaga dengan aman.",
+          "capture": "SECURITY"
+        },
+        "middleRight": {
+          "title": "Ajak & dapatkan",
+          "description": "Undang teman dan raih hadiah bersama.",
+          "capture": "INVITE"
+        },
+        "bottomCenter": {
+          "title": "Jalan menuju puncak",
+          "description": "Langsung menanjak ke papan peringkat.",
+          "capture": "LEADERSHIP"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "username": {
+          "label": "Nama pengguna",
+          "placeholder": "nexauser"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "contoh@aa.com.tr"
+        },
+        "password": {
+          "label": "Kata sandi",
+          "placeholder": "••••••••"
+        },
+        "confirmPassword": {
+          "label": "Konfirmasi kata sandi",
+          "placeholder": "••••••••"
+        },
+        "city": {
+          "label": "Kota",
+          "placeholder": "Pilih kota"
+        },
+        "terms": {
+          "agreement": "Saya telah membaca dan menyetujui <terms>Syarat penggunaan</terms> serta <privacy>Kebijakan privasi</privacy>."
+        }
+      },
+      "cities": [
+        "Istanbul",
+        "Ankara",
+        "Izmir",
+        "Bursa",
+        "Antalya",
+        "Adana",
+        "Konya",
+        "Gaziantep",
+        "Mersin",
+        "Diyarbakir",
+        "Kayseri",
+        "Samsun",
+        "Denizli",
+        "Eskisehir",
+        "Trabzon"
+      ],
+      "password": {
+        "strength": {
+          "1": "Sangat lemah",
+          "2": "Lemah",
+          "3": "Sedang",
+          "4": "Kuat",
+          "5": "Sangat kuat"
+        }
+      },
+      "submit": {
+        "loading": "Membuat akun...",
+        "success": "Berhasil dibuat!",
+        "default": "Daftar dan mulai",
+        "badge": "+50 XP"
+      },
+      "links": {
+        "loginPrompt": "Sudah punya akun?",
+        "loginCta": "Masuk"
+      },
+      "status": {
+        "default": "Bergabunglah dengan Nexachron dan nikmati berita yang bergamifikasi.",
+        "submitting": "Memulai pendaftaran...",
+        "invalid": "Periksa kolom wajib",
+        "successEmail": "Registrasi sukses! Cek email Anda untuk verifikasi.",
+        "successRedirect": "Selamat datang! Mengarahkan ke profil...",
+        "error": "Terjadi kesalahan saat membuat akun."
+      },
+      "supabase": {
+        "exists": "Email ini sudah terdaftar.",
+        "weakPassword": "Kata sandi harus minimal 6 karakter.",
+        "generic": "Registrasi tidak dapat diselesaikan."
+      },
+      "validation": {
+        "username": {
+          "required": "Nama pengguna harus diisi",
+          "min": "Minimal 3 karakter",
+          "max": "Maksimal 20 karakter",
+          "pattern": "Hanya huruf, angka, dan garis bawah yang diizinkan"
+        },
+        "email": {
+          "required": "Email harus diisi",
+          "email": "Masukkan email yang valid"
+        },
+        "password": {
+          "required": "Kata sandi harus diisi",
+          "min": "Minimal 8 karakter",
+          "uppercase": "Gunakan minimal satu huruf besar",
+          "lowercase": "Gunakan minimal satu huruf kecil",
+          "digit": "Gunakan minimal satu angka"
+        },
+        "confirmPassword": {
+          "required": "Konfirmasi kata sandi wajib",
+          "match": "Kata sandi tidak sama"
+        },
+        "city": {
+          "required": "Pilih kota",
+          "min": "Silakan pilih salah satu kota"
+        },
+        "terms": {
+          "accept": "Anda harus menyetujui persyaratan"
+        }
+      },
+      "messages": {
+        "successCard": "Selamat datang! Akun Anda siap. Mulai dengan +50 XP! 🎉"
+      }
+    }
+  },
+  "profile": {
+    "heading": "Profil Saya",
+    "subheading": "Pantau ritme baca dan progres XP Anda di sini.",
+    "actions": {
+      "logout": "Keluar"
+    },
+    "loading": "Memuat data profil...",
+    "errors": {
+      "missingApi": "URL API belum disetel. Cek konfigurasi environment Anda.",
+      "generic": "Data profil tidak dapat dimuat."
+    },
+    "account": {
+      "heading": "Informasi akun",
+      "fields": {
+        "username": "Nama pengguna",
+        "email": "Email",
+        "city": "Kota",
+        "lastSeen": "Terakhir aktif"
+      },
+      "unknown": "Belum diisi",
+      "unknownDate": "Tidak diketahui"
+    },
+    "stats": {
+      "heading": "Statistik",
+      "xp": "XP",
+      "streak": "Streak",
+      "rank": "Level peringkat"
+    },
+    "streak": {
+      "none": "Mulai streak Anda dengan menjelajah berita hari ini.",
+      "low": "Streak {count} hari! Pertahankan.",
+      "high": "Streak {count} hari 🔥"
+    }
+  }
+}

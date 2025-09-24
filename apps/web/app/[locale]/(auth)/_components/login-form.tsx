@@ -1,24 +1,18 @@
 "use client";
 
-import { useMemo, useState, useEffect, type FormEvent, type JSX } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type JSX } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { useLocale, useTranslations } from "next-intl";
 
 import { getSupabaseClient, getAccessToken } from "@/lib/supabase/client";
 
-const LoginSchema = z.object({
-  email: z
-    .string({ error: "E-posta zorunlu" })
-    .min(5, "E-posta en az 5 karakter olmalı")
-    .email("Geçerli bir e-posta gir"),
-  password: z
-    .string({ error: "Şifre zorunlu" })
-    .min(8, "Şifren en az 8 karakter olmalı"),
-  remember: z.boolean().default(true),
-});
-
-type LoginSchemaInput = z.infer<typeof LoginSchema>;
+type LoginSchemaInput = {
+  readonly email: string;
+  readonly password: string;
+  readonly remember: boolean;
+};
 
 type FormState = {
   readonly status: "idle" | "submitting" | "success" | "error";
@@ -32,23 +26,47 @@ type InputFocus = {
   password: boolean;
 };
 
+type TranslateFn = (key: string, values?: Record<string, unknown>) => string;
+
+type SupabaseErrorKey = "invalidCredentials" | "emailNotConfirmed";
+
+const SUPABASE_ERROR_CODE_MAP: Record<string, SupabaseErrorKey> = {
+  "Invalid login credentials": "invalidCredentials",
+  "Email not confirmed": "emailNotConfirmed",
+};
+
 const initialValues: LoginSchemaInput = {
   email: "",
   password: "",
   remember: true,
 };
 
-const supabaseErrorMap: Record<string, string> = {
-  "Invalid login credentials": "E-posta veya şifre hatalı.",
-  "Email not confirmed": "E-posta adresini onaylaman gerekiyor.",
-};
+function createLoginSchema(t: TranslateFn) {
+  return z.object({
+    email: z
+      .string({ required_error: t("validation.email.required") })
+      .min(5, t("validation.email.min"))
+      .email(t("validation.email.email")),
+    password: z
+      .string({ required_error: t("validation.password.required") })
+      .min(8, t("validation.password.min")),
+    remember: z.boolean().default(true),
+  });
+}
 
-function mapSupabaseAuthError(message: string): string {
-  return supabaseErrorMap[message] ?? "Giriş işlemi sırasında bir hata oluştu.";
+function mapSupabaseAuthError(
+  message: string,
+  lookup: Record<SupabaseErrorKey, string>,
+  fallback: string,
+): string {
+  const key = SUPABASE_ERROR_CODE_MAP[message];
+  return key ? lookup[key] : fallback;
 }
 
 export function LoginForm(): JSX.Element {
+  const locale = useLocale();
   const router = useRouter();
+  const t = useTranslations("login.form");
   const [values, setValues] = useState<LoginSchemaInput>(initialValues);
   const [formState, setFormState] = useState<FormState>({ status: "idle" });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -58,33 +76,54 @@ export function LoginForm(): JSX.Element {
   });
   const [mounted, setMounted] = useState(false);
 
+  const loginSchema = useMemo(() => createLoginSchema(t), [t]);
+  const supabaseErrorMessages = useMemo(
+    () => ({
+      invalidCredentials: t("supabase.invalidCredentials"),
+      emailNotConfirmed: t("supabase.emailNotConfirmed"),
+    }),
+    [t],
+  );
+  const supabaseFallbackMessage = t("supabase.generic");
+
+  const statusMessages = useMemo(
+    () => ({
+      default: t("status.default"),
+      submitting: t("status.submitting"),
+      invalid: t("status.invalid"),
+      success: t("status.success"),
+      error: t("status.error"),
+    }),
+    [t],
+  );
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    void router.prefetch("/profile");
-  }, [router]);
+    void router.prefetch(`/${locale}/profile`);
+  }, [locale, router]);
 
   useEffect(() => {
     const detectExistingSession = async () => {
       const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
       if (token) {
-        router.replace("/profile");
+        router.replace(`/${locale}/profile`);
       }
     };
 
     void detectExistingSession();
-  }, [router]);
+  }, [locale, router]);
 
   const isSubmitting = formState.status === "submitting";
   const isSuccess = formState.status === "success";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormState({ status: "submitting", message: "Bilgiler kontrol ediliyor..." });
+    setFormState({ status: "submitting", message: statusMessages.submitting });
 
-    const result = LoginSchema.safeParse(values);
+    const result = loginSchema.safeParse(values);
 
     if (!result.success) {
       const fieldErrors: FormErrors = {};
@@ -97,7 +136,7 @@ export function LoginForm(): JSX.Element {
       });
 
       setFormErrors(fieldErrors);
-      setFormState({ status: "error", message: "Formu kontrol et" });
+      setFormState({ status: "error", message: statusMessages.invalid });
       return;
     }
 
@@ -113,24 +152,28 @@ export function LoginForm(): JSX.Element {
       if (error) {
         setFormState({
           status: "error",
-          message: mapSupabaseAuthError(error.message),
+          message: mapSupabaseAuthError(
+            error.message,
+            supabaseErrorMessages,
+            supabaseFallbackMessage,
+          ),
         });
         return;
       }
 
       setFormState({
         status: "success",
-        message: "Hoş geldin! Profiline yönlendiriliyorsun...",
+        message: statusMessages.success,
       });
 
       window.setTimeout(() => {
-        router.push("/profile");
+        router.push(`/${locale}/profile`);
       }, 400);
     } catch (error) {
       console.error("Supabase login failed", error);
       setFormState({
         status: "error",
-        message: "Giriş sırasında beklenmeyen bir hata oluştu.",
+        message: statusMessages.error,
       });
     }
   };
@@ -166,27 +209,27 @@ export function LoginForm(): JSX.Element {
   }, [formState.status]);
 
   return (
-    <form 
-      className={`mt-6 space-y-4 ${mounted ? 'animate-fade-up' : 'opacity-0'}`} 
-      onSubmit={handleSubmit} 
+    <form
+      className={`mt-6 space-y-4 ${mounted ? "animate-fade-up" : "opacity-0"}`}
+      onSubmit={handleSubmit}
       noValidate
     >
       <div className="animate-stagger stagger-delay-1">
         <label className="block text-[10px] sm:text-xs font-medium uppercase tracking-wider text-white/60">
-          E-posta
-          <div 
+          {t("fields.email.label")}
+          <div
             className={`mt-2 flex items-center gap-2.5 rounded-full border px-3.5 sm:px-4 py-2.5 sm:py-3 transition-all duration-300 ${
               inputFocus.email
-                ? 'border-[#7dcfff] bg-white/20 shadow-[0_0_20px_rgba(125,207,255,0.3)]'
-                : formErrors.email 
-                ? 'border-rose-400/60 bg-rose-500/10 animate-shake' 
-                : 'border-white/15 bg-white/10 hover:border-white/25 hover:bg-white/15'
+                ? "border-[#7dcfff] bg-white/20 shadow-[0_0_20px_rgba(125,207,255,0.3)]"
+                : formErrors.email
+                  ? "border-rose-400/60 bg-rose-500/10 animate-shake"
+                  : "border-white/15 bg-white/10 hover:border-white/25 hover:bg-white/15"
             }`}
           >
             <svg
               aria-hidden
               className={`size-3.5 sm:size-4 flex-shrink-0 transition-all duration-300 ${
-                inputFocus.email ? 'text-[#7dcfff] scale-110' : 'text-[#7dcfff]/70'
+                inputFocus.email ? "text-[#7dcfff] scale-110" : "text-[#7dcfff]/70"
               }`}
               viewBox="0 0 24 24"
               fill="none"
@@ -214,11 +257,11 @@ export function LoginForm(): JSX.Element {
               type="email"
               inputMode="email"
               autoComplete="email"
-              placeholder="ornek@aa.com.tr"
+              placeholder={t("fields.email.placeholder")}
               value={values.email}
               onChange={(event) => handleChange("email")(event.currentTarget.value)}
-              onFocus={() => setInputFocus(prev => ({ ...prev, email: true }))}
-              onBlur={() => setInputFocus(prev => ({ ...prev, email: false }))}
+              onFocus={() => setInputFocus((previous) => ({ ...previous, email: true }))}
+              onBlur={() => setInputFocus((previous) => ({ ...previous, email: false }))}
               className="w-full bg-transparent text-[13px] sm:text-sm text-white placeholder:text-white/40 focus:outline-none"
               aria-invalid={Boolean(formErrors.email)}
               aria-describedby={formErrors.email ? "login-email-error" : undefined}
@@ -233,20 +276,20 @@ export function LoginForm(): JSX.Element {
       </div>
       <div className="animate-stagger stagger-delay-2">
         <label className="block text-[10px] sm:text-xs font-medium uppercase tracking-wider text-white/60">
-          Şifre
-          <div 
+          {t("fields.password.label")}
+          <div
             className={`mt-2 flex items-center gap-2.5 rounded-full border px-3.5 sm:px-4 py-2.5 sm:py-3 transition-all duration-300 ${
               inputFocus.password
-                ? 'border-[#7dcfff] bg-white/20 shadow-[0_0_20px_rgba(125,207,255,0.3)]'
-                : formErrors.password 
-                ? 'border-rose-400/60 bg-rose-500/10 animate-shake' 
-                : 'border-white/15 bg-white/10 hover:border-white/25 hover:bg-white/15'
+                ? "border-[#7dcfff] bg-white/20 shadow-[0_0_20px_rgba(125,207,255,0.3)]"
+                : formErrors.password
+                  ? "border-rose-400/60 bg-rose-500/10 animate-shake"
+                  : "border-white/15 bg-white/10 hover:border-white/25 hover:bg-white/15"
             }`}
           >
             <svg
               aria-hidden
               className={`size-3.5 sm:size-4 flex-shrink-0 transition-all duration-300 ${
-                inputFocus.password ? 'text-[#7dcfff] scale-110' : 'text-[#7dcfff]/70'
+                inputFocus.password ? "text-[#7dcfff] scale-110" : "text-[#7dcfff]/70"
               }`}
               viewBox="0 0 24 24"
               fill="none"
@@ -272,11 +315,11 @@ export function LoginForm(): JSX.Element {
               required
               type="password"
               autoComplete="current-password"
-              placeholder="••••••••"
+              placeholder={t("fields.password.placeholder")}
               value={values.password}
               onChange={(event) => handleChange("password")(event.currentTarget.value)}
-              onFocus={() => setInputFocus(prev => ({ ...prev, password: true }))}
-              onBlur={() => setInputFocus(prev => ({ ...prev, password: false }))}
+              onFocus={() => setInputFocus((previous) => ({ ...previous, password: true }))}
+              onBlur={() => setInputFocus((previous) => ({ ...previous, password: false }))}
               className="w-full bg-transparent text-[13px] sm:text-sm text-white placeholder:text-white/40 focus:outline-none"
               aria-invalid={Boolean(formErrors.password)}
               aria-describedby={formErrors.password ? "login-password-error" : undefined}
@@ -298,24 +341,24 @@ export function LoginForm(): JSX.Element {
             className="size-3.5 sm:size-4 rounded border-white/20 bg-transparent text-[#7dcfff] focus:ring-1 focus:ring-[#7dcfff] transition-all duration-200 group-hover:scale-110"
           />
           <span className="transition-colors group-hover:text-white">
-            Beni hatırla
+            {t("fields.remember")}
           </span>
         </label>
-        <Link 
-          className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:translate-x-1 inline-block" 
+        <Link
+          className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:translate-x-1 inline-block"
           href="#"
         >
-          Şifremi unuttum
+          {t("fields.forgot")}
         </Link>
       </div>
       <button
         type="submit"
         className={`flex w-full items-center justify-center rounded-full px-5 sm:px-6 py-3 sm:py-3.5 text-[13px] sm:text-sm font-semibold transition-all duration-300 animate-stagger stagger-delay-4 mt-5 ${
-          isSubmitting 
-            ? 'bg-[#7dcfff]/70 text-[#062444]/80 cursor-wait animate-pulse' 
+          isSubmitting
+            ? "bg-[#7dcfff]/70 text-[#062444]/80 cursor-wait animate-pulse"
             : isSuccess
-            ? 'bg-emerald-500 text-white animate-bounce'
-            : 'bg-gradient-to-r from-[#7dcfff] to-[#5bb5f0] text-[#062444] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(125,207,255,0.5)] hover:from-[#9ae0ff] hover:to-[#7dcfff] active:scale-95'
+              ? "bg-emerald-500 text-white animate-bounce"
+              : "bg-gradient-to-r from-[#7dcfff] to-[#5bb5f0] text-[#062444] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(125,207,255,0.5)] hover:from-[#9ae0ff] hover:to-[#7dcfff] active:scale-95"
         } disabled:cursor-not-allowed disabled:opacity-60`}
         disabled={isSubmitting}
       >
@@ -342,44 +385,42 @@ export function LoginForm(): JSX.Element {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              Kontrol ediliyor...
+              {t("submit.loading")}
             </>
           ) : isSuccess ? (
             <>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Başarılı!
+              {t("submit.success")}
             </>
           ) : (
             <>
-              Giriş yap ve XP kazan
+              {t("submit.default")}
               <span className="inline-block ml-1.5 px-2 py-0.5 text-[10px] sm:text-xs bg-white/20 rounded-full animate-pulse">
-                +10 XP
+                {t("badges.xp")}
               </span>
             </>
           )}
         </span>
       </button>
-      <p className="text-center text-[11px] sm:text-xs text-white/70 animate-fade-up pt-2" style={{ animationDelay: '0.5s' }}>
-        Nexachron&apos;da yeni misin?{' '}
+      <p className="text-center text-[11px] sm:text-xs text-white/70 animate-fade-up pt-2" style={{ animationDelay: "0.5s" }}>
+        {t("links.registerPrompt")} {" "}
         <Link
           className="font-semibold text-[#7dcfff] transition-all duration-300 hover:text-white hover:underline underline-offset-2 inline-block hover:translate-y-[-1px]"
-          href="/register"
+          href={`/${locale}/register`}
         >
-          Hemen Kayıt Ol
+          {t("links.registerCta")}
         </Link>
       </p>
-      <p 
+      <p
         className={`text-center text-[10px] sm:text-xs font-medium transition-all duration-500 ${statusAccent} ${
-          formState.message ? 'animate-fade-in' : ''
-        } pt-3`} 
+          formState.message ? "animate-fade-in" : ""
+        } pt-3`}
         aria-live="polite"
       >
         {formState.message ?? (
-          <span className="text-glow-muted">
-            Nexachron&apos;a katıl, haberleri oyunlaştırılmış deneyimle yaşa
-          </span>
+          <span className="text-glow-muted">{statusMessages.default}</span>
         )}
       </p>
       {isSuccess ? (
@@ -388,7 +429,7 @@ export function LoginForm(): JSX.Element {
             <svg className="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Demo amaçlı olarak bilgiler kaydedilmedi. Supabase Auth devreye alındığında bu form direkt bağlanacak.
+            {t("messages.demo")}
           </div>
         </div>
       ) : null}

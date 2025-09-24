@@ -1,0 +1,354 @@
+{
+  "common": {
+    "localeSwitcher": {
+      "label": "Jezik"
+    }
+  },
+  "login": {
+    "hero": {
+      "badge": "Uz podršku Anadolu Ajansı",
+      "title": "Uđi u vijesti s Nexachronom i doživi <highlight>gamificirano</highlight> iskustvo.",
+      "description": "Nexachron se oslanja na provjerene izvještaje Anadolu Ajansı, nagrađuje naviku čitanja XP-om, jača znanje kvizovima i omogućava ti da zablistaš s kolekcionarskim karticama.",
+      "ctaPrimary": "Kreiraj račun",
+      "ctaBonus": "+10",
+      "ctaSecondary": "Pročitaj prvu vijest i preuzmi bonus XP.",
+      "highlights": [
+        {
+          "icon": "📈",
+          "title": "Čitanje uz streak",
+          "description": "Prati naslove vlastitim ritmom, osvoji XP za svaki članak i ne propusti dnevne nagrade."
+        },
+        {
+          "icon": "🧠",
+          "title": "Učvrsti kroz kvizove",
+          "description": "Provjeri vijesti Anadolu Ajansı kroz kvizove i osvoji dodatnih 25 XP za svaki tačan odgovor."
+        },
+        {
+          "icon": "📍",
+          "title": "Feed po gradu",
+          "description": "Osjeti puls svog grada – od Istanbula do Ankare – uz personalizirani feed."
+        },
+        {
+          "icon": "🎴",
+          "title": "Kolekcija kartica",
+          "description": "Skupljaj kartice novinara od Common do Legendary, ojačaj profil i penji se na ljestvici."
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Prijava na Nexachron",
+      "xpBadge": "+10 XP spremno",
+      "description": "Pristupi provjerenim vijestima, čuvaj svoj streak i napreduj na ljestvici.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "XP u stvarnom vremenu",
+          "description": "Korisnici upravo sada osvajaju XP. Pridruži se!",
+          "capture": "LIVE"
+        },
+        "topLeft": {
+          "title": "Kolekcija kartica",
+          "description": "Skupi rijetke kartice i pokaži ih u vitrini.",
+          "capture": "KOLEKCIJA"
+        },
+        "topRight": {
+          "title": "AI brifinzi",
+          "description": "Sadržaji prilagođeni baš tebi.",
+          "capture": "AI POWERED"
+        },
+        "middleLeft": {
+          "title": "Streak sistem",
+          "description": "Prijavljuj se bez pauze i osvajaj nagrade.",
+          "capture": "STREAK 7 DANA"
+        },
+        "middleRight": {
+          "title": "Dnevni kviz",
+          "description": "Novi izazovi i nagrade svakog dana.",
+          "capture": "QUIZ"
+        },
+        "bottomCenter": {
+          "title": "Dnevni ciljevi",
+          "description": "Ispuni dnevni cilj čitanja i ostani u formi.",
+          "capture": "CILJEVI"
+        },
+        "bottomLeft": {
+          "title": "Društvena interakcija",
+          "description": "Pridruži se zajednici i podijeli svoje mišljenje.",
+          "capture": "SOCIJALNO"
+        },
+        "bottomRight": {
+          "title": "Značke dostignuća",
+          "description": "Završi posebne zadatke i osvoji značke.",
+          "capture": "ZNAČKE"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "primjer@aa.com.tr"
+        },
+        "password": {
+          "label": "Lozinka",
+          "placeholder": "••••••••"
+        },
+        "remember": "Zapamti me",
+        "forgot": "Zaboravljena lozinka"
+      },
+      "submit": {
+        "loading": "Provjeravamo...",
+        "success": "Uspješno!",
+        "default": "Prijavi se i osvoji XP"
+      },
+      "badges": {
+        "xp": "+10 XP"
+      },
+      "links": {
+        "registerPrompt": "Prvi put na Nexachronu?",
+        "registerCta": "Kreiraj račun"
+      },
+      "status": {
+        "default": "Pridruži se Nexachronu i doživi gamificirane vijesti.",
+        "submitting": "Provjera podataka...",
+        "invalid": "Provjeri ispravnost obrasca",
+        "success": "Dobro došao nazad! Preusmjeravamo te na profil...",
+        "error": "Prijava nije uspjela."
+      },
+      "supabase": {
+        "invalidCredentials": "Email ili lozinka nisu tačni.",
+        "emailNotConfirmed": "Potvrdi svoju email adresu.",
+        "generic": "Došlo je do greške prilikom prijave."
+      },
+      "validation": {
+        "email": {
+          "required": "Email je obavezan",
+          "min": "Email mora imati najmanje 5 znakova",
+          "email": "Unesi validnu email adresu"
+        },
+        "password": {
+          "required": "Lozinka je obavezna",
+          "min": "Lozinka mora imati najmanje 8 znakova"
+        }
+      },
+      "messages": {
+        "demo": "Ovo je demo prikaz. Kada se Supabase Auth aktivira, obrazac će biti povezan direktno."
+      }
+    }
+  },
+  "register": {
+    "hero": {
+      "badge": "Besplatna registracija",
+      "title": "Pridruži se Nexachron porodici i <highlight>gamificiraj vijesti</highlight>",
+      "description": "Čitaj provjerene vijesti Anadolu Ajansı u gamificiranom toku, skupljaj XP, osvajaj značke i penji se na ljestvici. Registruj se besplatno odmah!",
+      "cta": {
+        "back": "Nazad na prijavu",
+        "badgeValue": "1K",
+        "badgeText": "Ekskluzivna značka za prvih 1.000 korisnika",
+        "free": "Besplatno"
+      },
+      "benefits": [
+        {
+          "icon": "🎯",
+          "title": "Start bonus 50 XP",
+          "description": "Kreiraj račun i odmah dobiješ 50 XP"
+        },
+        {
+          "icon": "🏆",
+          "title": "Early Bird značka",
+          "description": "Posebna značka za prve članove"
+        },
+        {
+          "icon": "🌟",
+          "title": "Postani lider grada",
+          "description": "Budi najaktivniji čitalac u svom gradu"
+        },
+        {
+          "icon": "🎮",
+          "title": "Gamificirano iskustvo",
+          "description": "Doživi vijesti kao interaktivnu igru"
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Kreiraj Nexachron račun",
+      "xpBadge": "+50 XP dobrodošlice",
+      "description": "Uđi u gamificiranu newsroom, skupljaj XP i napreduj."
+      ,
+      "floatingCards": {
+        "topCenter": {
+          "title": "Bonus registracije",
+          "description": "Registruj se i kreni sa 50 XP!",
+          "capture": "+50 XP"
+        },
+        "topLeft": {
+          "title": "Premium značka",
+          "description": "Posebna značka za prvih 1.000 korisnika.",
+          "capture": "EARLY BIRD"
+        },
+        "topRight": {
+          "title": "Lideri gradova",
+          "description": "Budi najaktivniji čitalac u gradu.",
+          "capture": "GRAD"
+        },
+        "middleLeft": {
+          "title": "Sigurna prijava",
+          "description": "Tvoji podaci su zaštićeni.",
+          "capture": "SIGURNOST"
+        },
+        "middleRight": {
+          "title": "Pozovi i osvoji",
+          "description": "Pozovi prijatelje i oboje osvojite nagrade.",
+          "capture": "POZIV"
+        },
+        "bottomCenter": {
+          "title": "Put ka vrhu",
+          "description": "Idi direktno prema vrhu ljestvice.",
+          "capture": "LIDERSTVO"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "username": {
+          "label": "Korisničko ime",
+          "placeholder": "nexauser"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "primjer@aa.com.tr"
+        },
+        "password": {
+          "label": "Lozinka",
+          "placeholder": "••••••••"
+        },
+        "confirmPassword": {
+          "label": "Potvrdi lozinku",
+          "placeholder": "••••••••"
+        },
+        "city": {
+          "label": "Grad",
+          "placeholder": "Izaberi grad"
+        },
+        "terms": {
+          "agreement": "Pročitao/la sam i prihvatam <terms>uslove korištenja</terms> i <privacy>politiku privatnosti</privacy>."
+        }
+      },
+      "cities": [
+        "Istanbul",
+        "Ankara",
+        "Izmir",
+        "Bursa",
+        "Antalija",
+        "Adana",
+        "Konja",
+        "Gazijantep",
+        "Mersin",
+        "Dijarbakir",
+        "Kajseri",
+        "Samsun",
+        "Denizli",
+        "Eskihir",
+        "Trabzon"
+      ],
+      "password": {
+        "strength": {
+          "1": "Vrlo slaba",
+          "2": "Slaba",
+          "3": "Srednja",
+          "4": "Jaka",
+          "5": "Vrlo jaka"
+        }
+      },
+      "submit": {
+        "loading": "Kreiranje računa...",
+        "success": "Račun je spreman!",
+        "default": "Registracija i start",
+        "badge": "+50 XP"
+      },
+      "links": {
+        "loginPrompt": "Već imaš račun?",
+        "loginCta": "Prijava"
+      },
+      "status": {
+        "default": "Pridruži se Nexachronu i doživi gamificirane vijesti.",
+        "submitting": "Pokrećemo registraciju...",
+        "invalid": "Provjeri obavezna polja",
+        "successEmail": "Registracija je uspjela! Provjeri email za potvrdu.",
+        "successRedirect": "Dobro došao! Preusmjeravamo te na profil...",
+        "error": "Registracija nije mogla biti završena."
+      },
+      "supabase": {
+        "exists": "Račun s ovom email adresom već postoji.",
+        "weakPassword": "Lozinka mora imati najmanje 6 znakova.",
+        "generic": "Registracija nije uspjela."
+      },
+      "validation": {
+        "username": {
+          "required": "Korisničko ime je obavezno",
+          "min": "Minimalno 3 znaka",
+          "max": "Maksimalno 20 znakova",
+          "pattern": "Dozvoljena su samo slova, brojevi i donja crta"
+        },
+        "email": {
+          "required": "Email je obavezan",
+          "email": "Unesi validan email"
+        },
+        "password": {
+          "required": "Lozinka je obavezna",
+          "min": "Lozinka mora imati najmanje 8 znakova",
+          "uppercase": "Dodaj barem jedno veliko slovo",
+          "lowercase": "Dodaj barem jedno malo slovo",
+          "digit": "Dodaj barem jednu cifru"
+        },
+        "confirmPassword": {
+          "required": "Potvrda lozinke je obavezna",
+          "match": "Lozinke se ne poklapaju"
+        },
+        "city": {
+          "required": "Odaberi grad",
+          "min": "Molimo izaberi grad"
+        },
+        "terms": {
+          "accept": "Moraš prihvatiti uslove"
+        }
+      },
+      "messages": {
+        "successCard": "Dobro došao! Račun je kreiran. Startuješ sa +50 XP! 🎉"
+      }
+    }
+  },
+  "profile": {
+    "heading": "Moj profil",
+    "subheading": "Prati ritam čitanja i XP napredak ovdje.",
+    "actions": {
+      "logout": "Odjava"
+    },
+    "loading": "Učitavanje podataka profila...",
+    "errors": {
+      "missingApi": "API adresa nije postavljena. Provjeri konfiguraciju.",
+      "generic": "Nismo mogli učitati informacije o profilu."
+    },
+    "account": {
+      "heading": "Info o računu",
+      "fields": {
+        "username": "Korisničko ime",
+        "email": "Email",
+        "city": "Grad",
+        "lastSeen": "Zadnja aktivnost"
+      },
+      "unknown": "Nije navedeno",
+      "unknownDate": "Nepoznato"
+    },
+    "stats": {
+      "heading": "Statistika",
+      "xp": "XP",
+      "streak": "Streak",
+      "rank": "Rank nivo"
+    },
+    "streak": {
+      "none": "Započni novi streak pregledom današnjih vijesti.",
+      "low": "Streak od {count} dana! Nastavi tako.",
+      "high": "Streak od {count} dana 🔥"
+    }
+  }
+}

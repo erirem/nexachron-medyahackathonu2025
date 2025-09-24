@@ -1,7 +1,9 @@
 import type { JSX } from "react";
+import { useMemo } from "react";
+import { useTranslations } from "next-intl";
+
 import { LoginHero } from "./login-hero";
 import { LoginForm } from "./login-form";
-import { onboardingHighlights } from "../_data/onboarding-highlights";
 
 export function LoginLanding(): JSX.Element {
   return (
@@ -9,7 +11,7 @@ export function LoginLanding(): JSX.Element {
       <BackgroundAnimations />
       <main className="relative z-10 mx-auto flex h-full w-full max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid w-full items-center gap-6 md:gap-8 lg:grid-cols-[1.2fr_1fr] lg:gap-10 xl:gap-12">
-          <LoginHero highlights={onboardingHighlights} className="animate-slide-in-left max-w-2xl lg:max-w-none" />
+          <LoginHero className="animate-slide-in-left max-w-2xl lg:max-w-none" />
           <AuthPanel className="animate-slide-in-right mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-center xl:justify-self-end" />
         </div>
       </main>
@@ -47,6 +49,28 @@ interface AuthPanelProps {
 function AuthPanel(props?: AuthPanelProps): JSX.Element {
   const { className } = props ?? {};
   const sectionClassName = className ? `relative ${className}` : "relative";
+  const t = useTranslations("login.panel");
+
+  type FloatingCardKey =
+    | "topCenter"
+    | "topLeft"
+    | "topRight"
+    | "middleLeft"
+    | "middleRight"
+    | "bottomCenter"
+    | "bottomLeft"
+    | "bottomRight";
+
+  type FloatingCardContent = {
+    readonly title: string;
+    readonly description: string;
+    readonly capture?: string;
+  };
+
+  const floatingCards = useMemo(
+    () => t.raw("floatingCards") as Record<FloatingCardKey, FloatingCardContent>,
+    [t],
+  );
 
   return (
     <section id="auth" className={sectionClassName}>
@@ -57,96 +81,80 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         {/* Floating cards - closer to form for better visual connection */}
         
         {/* Top card - centered above */}
-        <div className="absolute -top-10 lg:-top-12 xl:-top-14 left-1/2 -translate-x-1/2 hidden lg:block z-0">
-          <div className="float-card">
-            <FloatingKPICard2 
-              title="Canlı XP Akışı" 
-              description="Kullanıcılar anlık XP kazanıyor. Sen de katıl!"
-              variant="xp"
-              capture="CANLI"
-            />
-          </div>
-        </div>
+        <FloatingCardWrapper className="absolute -top-10 lg:-top-12 xl:-top-14 left-1/2 -translate-x-1/2 hidden lg:block z-0">
+          <FloatingKPICard2 
+            title={floatingCards.topCenter.title}
+            description={floatingCards.topCenter.description}
+            variant="xp"
+            capture={floatingCards.topCenter.capture}
+          />
+        </FloatingCardWrapper>
 
         {/* Top-left diagonal */}
-        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0">
-          <div className="float-card float-card-delay-1">
-            <FloatingKPICard2 
-              title="Kart Koleksiyonu" 
-              description="Nadir kartları topla, vitrininde sergile."
-              capture="KOLEKSİYON"
-              variant="card"
-            />
-          </div>
-        </div>
+        <FloatingCardWrapper className="absolute -top-6 lg:-top-8 xl:-top-10 -left-20 lg:-left-32 xl:-left-40 hidden xl:block z-0" delay="float-card-delay-1">
+          <FloatingKPICard2 
+            title={floatingCards.topLeft.title}
+            description={floatingCards.topLeft.description}
+            capture={floatingCards.topLeft.capture}
+            variant="card"
+          />
+        </FloatingCardWrapper>
 
         {/* Top-right diagonal */}
-        <div className="absolute -top-6 lg:-top-8 xl:-top-10 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0">
-          <div className="float-card float-card-delay-2">
-            <FloatingKPICard2 
-              title="AI Destekli Haberler" 
-              description="Senin için özel seçilmiş haberler."
-              capture="AI POWERED"
-              variant="ai"
-            />
-          </div>
-        </div>
+        <FloatingCardWrapper className="absolute -top-6 lg:-top-8 xl:-top-10 -right-20 lg:-right-32 xl:-right-40 hidden xl:block z-0" delay="float-card-delay-2">
+          <FloatingKPICard2 
+            title={floatingCards.topRight.title}
+            description={floatingCards.topRight.description}
+            capture={floatingCards.topRight.capture}
+            variant="ai"
+          />
+        </FloatingCardWrapper>
 
         {/* Left side - middle */}
-        <div className="absolute top-1/2 -translate-y-1/2 -left-36 xl:-left-44 2xl:-left-52 hidden 2xl:block z-0">
-          <div className="float-card float-card-delay-3">
-            <FloatingKPICard2 
-              title="Streak Sistemi" 
-              description="Kesintisiz giriş yap, ödüller kazan."
-              capture="7 GÜN STREAK"
-              variant="streak"
-            />
-          </div>
-        </div>
+        <FloatingCardWrapper className="absolute top-1/2 -translate-y-1/2 -left-36 xl:-left-44 2xl:-left-52 hidden 2xl:block z-0" delay="float-card-delay-3">
+          <FloatingKPICard2 
+            title={floatingCards.middleLeft.title}
+            description={floatingCards.middleLeft.description}
+            capture={floatingCards.middleLeft.capture}
+            variant="streak"
+          />
+        </FloatingCardWrapper>
 
         {/* Right side - middle */}
-        <div className="absolute top-1/2 -translate-y-1/2 -right-36 xl:-right-44 2xl:-right-52 hidden 2xl:block z-0">
-          <div className="float-card float-card-delay-4">
-            <FloatingKPICard2 
-              title="Günlük Quiz" 
-              description="Her gün yeni sorular ve ödüller."
-              capture="QUIZ"
-              variant="quiz"
-            />
-          </div>
-        </div>
+        <FloatingCardWrapper className="absolute top-1/2 -translate-y-1/2 -right-36 xl:-right-44 2xl:-right-52 hidden 2xl:block z-0" delay="float-card-delay-4">
+          <FloatingKPICard2 
+            title={floatingCards.middleRight.title}
+            description={floatingCards.middleRight.description}
+            capture={floatingCards.middleRight.capture}
+            variant="quiz"
+          />
+        </FloatingCardWrapper>
 
         {/* Bottom cards - strategically placed around form */}
-        <div className="absolute -bottom-36 lg:-bottom-40 xl:-bottom-44 left-1/2 -translate-x-1/2 hidden xl:block z-0">
-          <div className="float-card float-card-delay-5">
-            <FloatingKPICard2 
-              title="Günlük Hedefler" 
-              description="Günlük okuma hedefini tamamla."
-              capture="HEDEFLER"
-              variant="xp"
-            />
-          </div>
-        </div>
-        <div className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -left-24 lg:-left-36 xl:-left-44 hidden lg:block z-0">
-          <div className="float-card float-card-delay-6">
-            <FloatingKPICard2 
-              title="Sosyal Etkileşim" 
-              description="Topluluğa katıl, fikirlerini paylaş."
-              capture="SOSYAL"
-              variant="emoji"
-            />
-          </div>
-        </div>
-        <div className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -right-24 lg:-right-36 xl:-right-44 hidden xl:block z-0">
-          <div className="float-card float-card-delay-7">
-            <FloatingKPICard2 
-              title="Başarı Rozetleri" 
-              description="Özel görevleri tamamla, rozet kazan."
-              capture="ROZETLER"
-              variant="streak"
-            />
-          </div>
-        </div>
+        <FloatingCardWrapper className="absolute -bottom-36 lg:-bottom-40 xl:-bottom-44 left-1/2 -translate-x-1/2 hidden xl:block z-0" delay="float-card-delay-5">
+          <FloatingKPICard2 
+            title={floatingCards.bottomCenter.title}
+            description={floatingCards.bottomCenter.description}
+            capture={floatingCards.bottomCenter.capture}
+            variant="xp"
+          />
+        </FloatingCardWrapper>
+        <FloatingCardWrapper className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -left-24 lg:-left-36 xl:-left-44 hidden lg:block z-0" delay="float-card-delay-6">
+          <FloatingKPICard2 
+            title={floatingCards.bottomLeft.title}
+            description={floatingCards.bottomLeft.description}
+            capture={floatingCards.bottomLeft.capture}
+            variant="emoji"
+          />
+        </FloatingCardWrapper>
+        <FloatingCardWrapper className="absolute -bottom-24 lg:-bottom-28 xl:-bottom-32 -right-24 lg:-right-36 xl:-right-44 hidden xl:block z-0" delay="float-card-delay-7">
+          <FloatingKPICard2 
+            title={floatingCards.bottomRight.title}
+            description={floatingCards.bottomRight.description}
+            capture={floatingCards.bottomRight.capture}
+            variant="streak"
+          />
+        </FloatingCardWrapper>
         <div className="relative group">
           <div
             aria-hidden
@@ -159,13 +167,15 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
             
             <div className="relative">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-4">
-                <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">Nexachron&apos;a Giriş</h2>
+                <h2 className="text-lg sm:text-xl lg:text-[22px] font-semibold text-white animate-fade-in">
+                  {t("heading")}
+                </h2>
                 <span className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#133c66] to-[#1a4a7a] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#a5d8ff] shadow-sm animate-glow">
-                  +10 XP hazır
+                  {t("xpBadge")}
                 </span>
               </div>
               <p className="text-[13px] sm:text-sm leading-5 sm:leading-6 text-white/70 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                Güvenilir ajans haberlerine eriş, kişisel streak&apos;ini koru ve liderlik tablosunda yüksel.
+                {t("description")}
               </p>
               <LoginForm />
             </div>
@@ -173,6 +183,22 @@ function AuthPanel(props?: AuthPanelProps): JSX.Element {
         </div>
       </div>
     </section>
+  );
+}
+
+interface FloatingCardWrapperProps {
+  readonly className: string;
+  readonly children: JSX.Element;
+  readonly delay?: string;
+}
+
+function FloatingCardWrapper({ className, children, delay }: FloatingCardWrapperProps): JSX.Element {
+  const cardDelay = delay ? `float-card ${delay}` : "float-card";
+
+  return (
+    <div className={className}>
+      <div className={cardDelay}>{children}</div>
+    </div>
   );
 }
 
