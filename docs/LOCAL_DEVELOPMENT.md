@@ -64,6 +64,11 @@ curl http://localhost:4000/api/news
 
 # Detaylı hata için:
 curl -v http://localhost:4000/api/news
+
+# JWT korumalı /me endpoint'i test etmek için Supabase access token'ınızı kullanın:
+curl \\
+  -H "Authorization: Bearer <access_token>" \\
+  http://localhost:4000/me
 ```
 
 ### Database Debug:  
@@ -115,7 +120,14 @@ SUPABASE_ANON_KEY=eyJ...
 # Web için (.env.local):
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_SUPABASE_URL=https://tfqnfkyntjreanffixti.supabase.co
+# Mobile için (dart-define):
+flutter run \\
+  --dart-define=SUPABASE_URL=https://tfqnfkyntjreanffixti.supabase.co \\
+  --dart-define=SUPABASE_ANON_KEY=eyJ... \\
+  --dart-define=API_URL=http://localhost:4000
 ```
+
+> Not: Flutter komutuna verdiğiniz Supabase anahtarları `.env` ile uyumlu olmalıdır. Prod buildleri için `--dart-define-from-file` kullanabilirsiniz.
 
 ## 🚀 Production Testing:
 

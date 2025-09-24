@@ -3,6 +3,9 @@
 import { useMemo, useState, useEffect, type FormEvent, type JSX } from "react";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { getSupabaseClient, getAccessToken } from "@/lib/supabase/client";
 
 const RegisterSchema = z.object({
   username: z
@@ -64,7 +67,17 @@ const cities = [
   "Kayseri", "Samsun", "Denizli", "Eskişehir", "Trabzon"
 ];
 
+const supabaseRegisterErrorMap: Record<string, string> = {
+  "User already registered": "Bu e-posta ile kayıtlı bir hesap mevcut.",
+  "Password should be at least 6 characters": "Şifreniz en az 6 karakter olmalı.",
+};
+
+function mapSupabaseRegisterError(message: string): string {
+  return supabaseRegisterErrorMap[message] ?? "Kayıt sırasında bir hata oluştu.";
+}
+
 export function RegisterForm(): JSX.Element {
+  const router = useRouter();
   const [values, setValues] = useState<RegisterSchemaInput>(initialValues);
   const [formState, setFormState] = useState<FormState>({ status: "idle" });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -83,6 +96,21 @@ export function RegisterForm(): JSX.Element {
   }, []);
 
   useEffect(() => {
+    void router.prefetch("/profile");
+  }, [router]);
+
+  useEffect(() => {
+    const detectExistingSession = async () => {
+      const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
+      if (token) {
+        router.replace("/profile");
+      }
+    };
+
+    void detectExistingSession();
+  }, [router]);
+
+  useEffect(() => {
     // Calculate password strength
     let strength = 0;
     if (values.password.length >= 8) strength++;
@@ -96,7 +124,7 @@ export function RegisterForm(): JSX.Element {
   const isSubmitting = formState.status === "submitting";
   const isSuccess = formState.status === "success";
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormState({ status: "submitting", message: "Kayıt işlemi başlatılıyor..." });
 
@@ -119,14 +147,51 @@ export function RegisterForm(): JSX.Element {
 
     setFormErrors({});
 
-    const fakeLatencyMs = 1500;
+    try {
+      const supabase = getSupabaseClient(true);
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            username: values.username,
+            city: values.city,
+          },
+          emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/profile` : undefined,
+        },
+      });
 
-    window.setTimeout(() => {
+      if (error) {
+        setFormState({
+          status: "error",
+          message: mapSupabaseRegisterError(error.message),
+        });
+        return;
+      }
+
+      if (!data.session) {
+        setFormState({
+          status: "success",
+          message: "Kayıt tamam! E-postanı kontrol ederek üyeliğini doğrula.",
+        });
+        return;
+      }
+
       setFormState({
         status: "success",
-        message: "Başarıyla Kayıt Oldun! 🎉 +50 XP kazandın!",
+        message: "Hoş geldin! Profiline yönlendiriliyorsun...",
       });
-    }, fakeLatencyMs);
+
+      window.setTimeout(() => {
+        router.push("/profile");
+      }, 500);
+    } catch (error) {
+      console.error("Supabase sign up failed", error);
+      setFormState({
+        status: "error",
+        message: "Kayıt sırasında beklenmeyen bir hata oluştu.",
+      });
+    }
   };
 
   const handleChange = <Field extends keyof RegisterSchemaInput>(field: Field) =>

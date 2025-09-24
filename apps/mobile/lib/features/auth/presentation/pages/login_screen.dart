@@ -41,6 +41,13 @@ class _LoginScreenState extends State<LoginScreen>
     ).push(MaterialPageRoute(builder: (_) => const RegisterScreen()));
   }
 
+  void _handleLoginSuccess() {
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,6 +116,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   1,
                                 ),
                                 onRegisterTap: _openRegister,
+                                onLoginSubmitted: _handleLoginSuccess,
                               ),
                             ),
                           ),

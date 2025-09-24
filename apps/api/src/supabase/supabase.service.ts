@@ -10,10 +10,12 @@ export class SupabaseService implements OnModuleInit {
 
   onModuleInit() {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+    const serviceRoleKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+    const anonKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+    const supabaseKey = serviceRoleKey ?? anonKey;
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase configuration. Please check SUPABASE_URL and SUPABASE_ANON_KEY environment variables.');
+      throw new Error('Missing Supabase configuration. Please check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/SUPABASE_ANON_KEY environment variables.');
     }
 
     this.client = createClient(
@@ -21,8 +23,8 @@ export class SupabaseService implements OnModuleInit {
       supabaseKey,
       {
         auth: {
-          autoRefreshToken: true,
-          persistSession: true,
+          autoRefreshToken: false,
+          persistSession: false,
         },
         db: {
           schema: 'public',

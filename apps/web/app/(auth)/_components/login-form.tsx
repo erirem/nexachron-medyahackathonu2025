@@ -2,7 +2,10 @@
 
 import { useMemo, useState, useEffect, type FormEvent, type JSX } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
+
+import { getSupabaseClient, getAccessToken } from "@/lib/supabase/client";
 
 const LoginSchema = z.object({
   email: z
@@ -35,7 +38,17 @@ const initialValues: LoginSchemaInput = {
   remember: true,
 };
 
+const supabaseErrorMap: Record<string, string> = {
+  "Invalid login credentials": "E-posta veya şifre hatalı.",
+  "Email not confirmed": "E-posta adresini onaylaman gerekiyor.",
+};
+
+function mapSupabaseAuthError(message: string): string {
+  return supabaseErrorMap[message] ?? "Giriş işlemi sırasında bir hata oluştu.";
+}
+
 export function LoginForm(): JSX.Element {
+  const router = useRouter();
   const [values, setValues] = useState<LoginSchemaInput>(initialValues);
   const [formState, setFormState] = useState<FormState>({ status: "idle" });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -49,10 +62,25 @@ export function LoginForm(): JSX.Element {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    void router.prefetch("/profile");
+  }, [router]);
+
+  useEffect(() => {
+    const detectExistingSession = async () => {
+      const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
+      if (token) {
+        router.replace("/profile");
+      }
+    };
+
+    void detectExistingSession();
+  }, [router]);
+
   const isSubmitting = formState.status === "submitting";
   const isSuccess = formState.status === "success";
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormState({ status: "submitting", message: "Bilgiler kontrol ediliyor..." });
 
@@ -75,14 +103,36 @@ export function LoginForm(): JSX.Element {
 
     setFormErrors({});
 
-    const fakeLatencyMs = 650;
+    try {
+      const supabase = getSupabaseClient(values.remember);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
 
-    window.setTimeout(() => {
+      if (error) {
+        setFormState({
+          status: "error",
+          message: mapSupabaseAuthError(error.message),
+        });
+        return;
+      }
+
       setFormState({
         status: "success",
-        message: "Demo: Giriş için Supabase bağlantısı bekleniyor",
+        message: "Hoş geldin! Profiline yönlendiriliyorsun...",
       });
-    }, fakeLatencyMs);
+
+      window.setTimeout(() => {
+        router.push("/profile");
+      }, 400);
+    } catch (error) {
+      console.error("Supabase login failed", error);
+      setFormState({
+        status: "error",
+        message: "Giriş sırasında beklenmeyen bir hata oluştu.",
+      });
+    }
   };
 
   const handleChange = <Field extends keyof LoginSchemaInput>(field: Field) =>

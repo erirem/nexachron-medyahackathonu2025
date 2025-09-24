@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../controllers/login_status.dart';
 import '../controllers/register_controller.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/register_form_card.dart';
@@ -20,7 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   void initState() {
     super.initState();
-    _controller = RegisterController();
+    _controller = RegisterController()
+      ..addListener(_handleStatusChange);
     _backgroundController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 14),
@@ -29,6 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   @override
   void dispose() {
+    _controller.removeListener(_handleStatusChange);
     _controller.dispose();
     _backgroundController.dispose();
     super.dispose();
@@ -36,6 +39,15 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   void _openLogin() {
     Navigator.of(context).pop();
+  }
+
+  void _handleStatusChange() {
+    if (!mounted) {
+      return;
+    }
+    if (_controller.status == LoginStatus.success && _controller.sessionCreated) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   @override

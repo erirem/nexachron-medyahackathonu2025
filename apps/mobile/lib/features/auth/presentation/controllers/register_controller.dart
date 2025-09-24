@@ -1,15 +1,31 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/services/register_validator.dart';
+import '../../domain/services/supabase_auth_gateway.dart';
 import 'login_status.dart';
 
+const Map<String, String> _supabaseRegisterErrorMap = {
+  'User already registered': 'Bu e-posta ile kayıtlı bir hesap mevcut.',
+  'Password should be at least 6 characters': 'Şifren en az 6 karakter olmalı.',
+};
+
+String _mapSupabaseRegisterError(String message) {
+  return _supabaseRegisterErrorMap[message] ??
+      'Kayıt işlemi sırasında bir hata oluştu.';
+}
+
 class RegisterController extends ChangeNotifier {
-  RegisterController({RegisterValidator? validator})
-    : _validator = validator ?? const RegisterValidator();
+  RegisterController({
+    RegisterValidator? validator,
+    SupabaseAuthGateway? authGateway,
+  }) : _validator = validator ?? const RegisterValidator(),
+       _authGateway = authGateway ?? SupabaseAuthGateway();
 
   final RegisterValidator _validator;
+  final SupabaseAuthGateway _authGateway;
 
   String _displayName = '';
   String _email = '';
@@ -25,6 +41,7 @@ class RegisterController extends ChangeNotifier {
 
   LoginStatus status = LoginStatus.idle;
   String? statusMessage;
+  bool sessionCreated = false;
 
   void updateDisplayName(String value) {
     _displayName = value;
@@ -61,7 +78,7 @@ class RegisterController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> submit() async {
+  Future<void> submit({String? fcmToken}) async {
     if (status == LoginStatus.submitting) {
       return;
     }
@@ -80,12 +97,39 @@ class RegisterController extends ChangeNotifier {
 
     status = LoginStatus.submitting;
     statusMessage = 'Bilgiler doğrulanıyor...';
+    sessionCreated = false;
     notifyListeners();
 
-    await Future<void>.delayed(const Duration(milliseconds: 750));
+    try {
+      final response = await _authGateway.signUp(
+        email: _email,
+        password: _password,
+        data: {'username': _displayName},
+        emailRedirectTo: null,
+      );
 
-    status = LoginStatus.success;
-    statusMessage = 'Demo: Kayıt işlemi için Supabase bağlantısı bekleniyor';
+      // FCM entegrasyonu devre dışı (ileride yeniden eklenecek)
+
+      if (response.session == null) {
+        status = LoginStatus.success;
+        statusMessage =
+            'Kayıt tamam! E-posta kutunu kontrol ederek üyeliğini doğrula.';
+        sessionCreated = false;
+      } else {
+        status = LoginStatus.success;
+        statusMessage = 'Hoş geldin! Profil ekranına yönlendiriliyorsun...';
+        sessionCreated = true;
+      }
+    } on AuthException catch (error) {
+      status = LoginStatus.error;
+      statusMessage = _mapSupabaseRegisterError(error.message);
+      sessionCreated = false;
+    } catch (_) {
+      status = LoginStatus.error;
+      statusMessage = 'Kayıt sırasında beklenmeyen bir hata oluştu.';
+      sessionCreated = false;
+    }
+
     notifyListeners();
   }
 
