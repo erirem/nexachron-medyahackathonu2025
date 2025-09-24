@@ -1,8 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:mobile/l10n/gen/app_localizations.dart';
+
 import 'core/config/app_config.dart';
+import 'core/config/locales.dart';
+import 'core/l10n/l10n.dart';
+import 'core/services/locale_controller.dart';
+import 'core/services/locale_scope.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/pages/landing_page.dart';
 import 'features/auth/presentation/pages/profile_screen.dart';
@@ -10,24 +17,59 @@ import 'features/auth/presentation/pages/profile_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final localeController = LocaleController();
+  await localeController.loadSavedLocale();
+
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
 
-  runApp(const NexachronApp());
+  runApp(NexachronApp(localeController: localeController));
 }
 
 class NexachronApp extends StatelessWidget {
-  const NexachronApp({super.key});
+  const NexachronApp({super.key, required this.localeController});
+
+  final LocaleController localeController;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Nexachron',
-      theme: buildAppTheme(),
-      home: const _AuthRoot(),
+    return AnimatedBuilder(
+      animation: localeController,
+      builder: (context, _) {
+        return LocaleScope(
+          controller: localeController,
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Nexachron',
+            theme: buildAppTheme(),
+            onGenerateTitle: (context) => context.l10n.appTitle,
+            locale: localeController.locale,
+            supportedLocales: buildSupportedLocales(),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            localeResolutionCallback: (deviceLocale, supportedLocales) {
+              if (localeController.locale != null) {
+                return localeController.locale;
+              }
+              if (deviceLocale != null) {
+                for (final locale in supportedLocales) {
+                  if (locale.languageCode == deviceLocale.languageCode) {
+                    return locale;
+                  }
+                }
+              }
+              return Locale(defaultLocaleCode);
+            },
+            home: const _AuthRoot(),
+          ),
+        );
+      },
     );
   }
 }

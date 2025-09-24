@@ -3,18 +3,31 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../domain/services/login_validator.dart';
 import '../../domain/services/register_validator.dart';
 import '../../domain/services/supabase_auth_gateway.dart';
 import 'login_status.dart';
 
-const Map<String, String> _supabaseRegisterErrorMap = {
-  'User already registered': 'Bu e-posta ile kayıtlı bir hesap mevcut.',
-  'Password should be at least 6 characters': 'Şifren en az 6 karakter olmalı.',
-};
+enum RegisterMessageCode {
+  invalidForm,
+  submitting,
+  successEmailVerification,
+  successRedirect,
+  emailExists,
+  weakPassword,
+  genericError,
+  unexpectedError,
+}
 
-String _mapSupabaseRegisterError(String message) {
-  return _supabaseRegisterErrorMap[message] ??
-      'Kayıt işlemi sırasında bir hata oluştu.';
+RegisterMessageCode _mapSupabaseRegisterError(String message) {
+  switch (message) {
+    case 'User already registered':
+      return RegisterMessageCode.emailExists;
+    case 'Password should be at least 6 characters':
+      return RegisterMessageCode.weakPassword;
+    default:
+      return RegisterMessageCode.genericError;
+  }
 }
 
 class RegisterController extends ChangeNotifier {
@@ -33,14 +46,14 @@ class RegisterController extends ChangeNotifier {
   String _confirmation = '';
   bool acceptTerms = false;
 
-  String? nameError;
-  String? emailError;
-  String? passwordError;
-  String? confirmationError;
-  String? termsError;
+  RegisterNameError? nameError;
+  LoginEmailError? emailError;
+  LoginPasswordError? passwordError;
+  RegisterConfirmationError? confirmationError;
+  RegisterTermsError? termsError;
 
   LoginStatus status = LoginStatus.idle;
-  String? statusMessage;
+  RegisterMessageCode? messageCode;
   bool sessionCreated = false;
 
   void updateDisplayName(String value) {
@@ -90,13 +103,13 @@ class RegisterController extends ChangeNotifier {
         confirmationError != null ||
         termsError != null) {
       status = LoginStatus.error;
-      statusMessage = 'Formu kontrol et';
+      messageCode = RegisterMessageCode.invalidForm;
       notifyListeners();
       return;
     }
 
     status = LoginStatus.submitting;
-    statusMessage = 'Bilgiler doğrulanıyor...';
+    messageCode = RegisterMessageCode.submitting;
     sessionCreated = false;
     notifyListeners();
 
@@ -112,21 +125,20 @@ class RegisterController extends ChangeNotifier {
 
       if (response.session == null) {
         status = LoginStatus.success;
-        statusMessage =
-            'Kayıt tamam! E-posta kutunu kontrol ederek üyeliğini doğrula.';
+        messageCode = RegisterMessageCode.successEmailVerification;
         sessionCreated = false;
       } else {
         status = LoginStatus.success;
-        statusMessage = 'Hoş geldin! Profil ekranına yönlendiriliyorsun...';
+        messageCode = RegisterMessageCode.successRedirect;
         sessionCreated = true;
       }
     } on AuthException catch (error) {
       status = LoginStatus.error;
-      statusMessage = _mapSupabaseRegisterError(error.message);
+      messageCode = _mapSupabaseRegisterError(error.message);
       sessionCreated = false;
     } catch (_) {
       status = LoginStatus.error;
-      statusMessage = 'Kayıt sırasında beklenmeyen bir hata oluştu.';
+      messageCode = RegisterMessageCode.unexpectedError;
       sessionCreated = false;
     }
 
@@ -147,7 +159,7 @@ class RegisterController extends ChangeNotifier {
   void _clearStatusIfNeeded() {
     if (status == LoginStatus.error || status == LoginStatus.success) {
       status = LoginStatus.idle;
-      statusMessage = null;
+      messageCode = null;
     }
   }
 }

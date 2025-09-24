@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent, type JSX } from "react";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations, type TranslationValues } from "next-intl";
 
 import { getSupabaseClient, getAccessToken } from "@/lib/supabase/client";
 
@@ -32,7 +32,7 @@ type InputFocus = {
   city: boolean;
 };
 
-type TranslateFn = (key: string, values?: Record<string, unknown>) => string;
+type TranslateFn = (key: string, values?: TranslationValues) => string;
 
 type SupabaseErrorKey = "userExists" | "weakPassword";
 
@@ -54,24 +54,31 @@ function createRegisterSchema(t: TranslateFn) {
   return z
     .object({
       username: z
-        .string({ required_error: t("validation.username.required") })
-        .min(3, t("validation.username.min"))
-        .max(20, t("validation.username.max"))
+        .string()
+        .min(1, { message: t("validation.username.required") })
+        .min(3, { message: t("validation.username.min") })
+        .max(20, { message: t("validation.username.max") })
         .regex(/^[a-zA-Z0-9_]+$/, t("validation.username.pattern")),
       email: z
-        .string({ required_error: t("validation.email.required") })
-        .email(t("validation.email.email")),
+        .string()
+        .min(1, { message: t("validation.email.required") })
+        .email({ message: t("validation.email.email") }),
       password: z
-        .string({ required_error: t("validation.password.required") })
-        .min(8, t("validation.password.min"))
+        .string()
+        .min(1, { message: t("validation.password.required") })
+        .min(8, { message: t("validation.password.min") })
         .regex(/[A-Z]/, t("validation.password.uppercase"))
         .regex(/[a-z]/, t("validation.password.lowercase"))
         .regex(/[0-9]/, t("validation.password.digit")),
       confirmPassword: z
-        .string({ required_error: t("validation.confirmPassword.required") }),
+        .string()
+        .min(1, { message: t("validation.confirmPassword.required") }),
       city: z
-        .string({ required_error: t("validation.city.required") })
-        .min(1, t("validation.city.min")),
+        .string()
+        .min(1, { message: t("validation.city.required") })
+        .refine((value) => value.trim().length > 0, {
+          message: t("validation.city.min"),
+        }),
       terms: z.boolean().refine((value) => value === true, {
         message: t("validation.terms.accept"),
       }),

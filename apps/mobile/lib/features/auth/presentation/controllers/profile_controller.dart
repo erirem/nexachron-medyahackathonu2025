@@ -12,12 +12,12 @@ class ProfileController extends ChangeNotifier {
   final ProfileService _service;
 
   ProfileStatus status = ProfileStatus.idle;
-  String? errorMessage;
+  ProfileErrorCode? errorCode;
   UserProfile? profile;
 
   Future<void> loadProfile() async {
     status = ProfileStatus.loading;
-    errorMessage = null;
+    errorCode = null;
     notifyListeners();
 
     try {
@@ -25,11 +25,11 @@ class ProfileController extends ChangeNotifier {
       status = ProfileStatus.loaded;
     } on ProfileException catch (error) {
       status = ProfileStatus.error;
-      errorMessage = error.message;
+      errorCode = error.code;
       profile = null;
     } catch (_) {
       status = ProfileStatus.error;
-      errorMessage = 'Profil bilgileri yüklenemedi.';
+      errorCode = ProfileErrorCode.unknown;
       profile = null;
     }
 

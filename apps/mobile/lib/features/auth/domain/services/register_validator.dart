@@ -1,32 +1,41 @@
 import 'login_validator.dart';
 
+enum RegisterNameError { requiredField, minLength }
+
+enum RegisterConfirmationError { requiredField, mismatch }
+
+enum RegisterTermsError { notAccepted }
+
 class RegisterValidator extends LoginValidator {
   const RegisterValidator();
 
-  String? validateDisplayName(String value) {
+  RegisterNameError? validateDisplayName(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
-      return 'İsim zorunlu';
+      return RegisterNameError.requiredField;
     }
     if (trimmed.length < 3) {
-      return 'İsmin en az 3 karakter olmalı';
+      return RegisterNameError.minLength;
     }
     return null;
   }
 
-  String? validatePasswordConfirmation(String password, String confirmation) {
+  RegisterConfirmationError? validatePasswordConfirmation(
+    String password,
+    String confirmation,
+  ) {
     if (confirmation.isEmpty) {
-      return 'Şifre tekrarını gir';
+      return RegisterConfirmationError.requiredField;
     }
     if (password != confirmation) {
-      return 'Şifreler eşleşmiyor';
+      return RegisterConfirmationError.mismatch;
     }
     return null;
   }
 
-  String? validateTerms(bool accepted) {
+  RegisterTermsError? validateTerms(bool accepted) {
     if (!accepted) {
-      return 'Koşulları onaylaman gerekiyor';
+      return RegisterTermsError.notAccepted;
     }
     return null;
   }

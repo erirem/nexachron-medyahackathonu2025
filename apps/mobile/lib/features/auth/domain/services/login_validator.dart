@@ -1,27 +1,31 @@
+enum LoginEmailError { requiredField, minLength, invalidFormat }
+
+enum LoginPasswordError { requiredField, minLength }
+
 class LoginValidator {
   const LoginValidator();
 
-  String? validateEmail(String value) {
+  LoginEmailError? validateEmail(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
-      return 'E-posta zorunlu';
+      return LoginEmailError.requiredField;
     }
     if (trimmed.length < 5) {
-      return 'E-posta en az 5 karakter olmalı';
+      return LoginEmailError.minLength;
     }
     final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     if (!regex.hasMatch(trimmed)) {
-      return 'Geçerli bir e-posta gir';
+      return LoginEmailError.invalidFormat;
     }
     return null;
   }
 
-  String? validatePassword(String value) {
+  LoginPasswordError? validatePassword(String value) {
     if (value.isEmpty) {
-      return 'Şifre zorunlu';
+      return LoginPasswordError.requiredField;
     }
     if (value.trim().length < 8) {
-      return 'Şifren en az 8 karakter olmalı';
+      return LoginPasswordError.minLength;
     }
     return null;
   }

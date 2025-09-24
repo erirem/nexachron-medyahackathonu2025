@@ -21,9 +21,9 @@ export function LoginHero({ className }: LoginHeroProps): JSX.Element {
 
   return (
     <section className={sectionClassName}>
-      <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.35em] sm:tracking-[0.45em] text-[#a5d8ff]/90 animate-fade-in">
-        <span className="hero-accent-line h-[1px] w-6 sm:w-9" aria-hidden /> 
-        {t("badge")}
+      <span className="inline-flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.35em] text-[#a5d8ff]/90 animate-fade-in max-w-full overflow-hidden">
+        <span className="hero-accent-line h-[1px] w-4 sm:w-9 shrink-0" aria-hidden /> 
+        <span className="truncate whitespace-nowrap">{t("badge")}</span>
       </span>
       <div className="space-y-3 md:space-y-5">
         <h1

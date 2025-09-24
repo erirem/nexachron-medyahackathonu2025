@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'package:intl/intl.dart';
+
+import '../../../../core/l10n/l10n.dart';
+import '../../../../core/l10n/language_switcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
 import '../controllers/profile_controller.dart';
+import '../l10n/auth_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -43,15 +48,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.midnight,
       appBar: AppBar(
-        title: const Text('Profil'),
+        title: Text(context.l10n.profileAppBarTitle),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: LanguageSwitcher(
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
           IconButton(
             onPressed: () => _logout(),
             icon: const Icon(Icons.logout),
-            tooltip: 'Çıkış yap',
+            tooltip: context.l10n.profileLogoutTooltip,
           ),
         ],
       ),
@@ -73,26 +84,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             switch (_controller.status) {
               case ProfileStatus.idle:
               case ProfileStatus.loading:
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
+                return const Center(child: CircularProgressIndicator());
               case ProfileStatus.error:
                 return _ErrorView(
-                  message: _controller.errorMessage ?? 'Profil bilgileri yüklenemedi.',
+                  message: context.l10n.profileError(_controller.errorCode),
                   onRetry: _controller.loadProfile,
                 );
               case ProfileStatus.loaded:
                 final profile = _controller.profile;
                 if (profile == null) {
                   return _ErrorView(
-                    message: 'Profil bulunamadı.',
+                    message: context.l10n.profileErrorMissing,
                     onRetry: _controller.loadProfile,
                   );
                 }
                 return RefreshIndicator(
                   onRefresh: _refresh,
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 24,
+                    ),
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: [
                       _ProfileHeader(profile: profile),
@@ -130,7 +142,7 @@ class _ErrorView extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Tekrar dene'),
+            label: Text(context.l10n.commonRetry),
           ),
         ],
       ),
@@ -175,7 +187,7 @@ class _ProfileHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile.username ?? 'Kullanıcı',
+                      profile.username ?? context.l10n.profileFallbackUsername,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -184,8 +196,11 @@ class _ProfileHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      profile.email ?? 'E-posta tanımlı değil',
-                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                      profile.email ?? context.l10n.profileFallbackEmail,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -195,10 +210,14 @@ class _ProfileHeader extends StatelessWidget {
           const SizedBox(height: 20),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined, color: Colors.white70, size: 18),
+              const Icon(
+                Icons.location_on_outlined,
+                color: Colors.white70,
+                size: 18,
+              ),
               const SizedBox(width: 6),
               Text(
-                profile.city ?? 'Şehir seçilmedi',
+                profile.city ?? context.l10n.profileFallbackCity,
                 style: const TextStyle(color: Colors.white70),
               ),
             ],
@@ -217,7 +236,14 @@ class _StatsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stats = profile.stats;
-    final lastSeenText = _formatLastSeen(stats.lastSeen);
+    final l10n = context.l10n;
+    final lastSeen = stats.lastSeen;
+    final lastSeenText = lastSeen == null
+        ? l10n.profileLastSeenNever
+        : l10n.profileLastSeen(
+            DateFormat.yMd(l10n.localeName).format(lastSeen),
+            DateFormat.Hm(l10n.localeName).format(lastSeen),
+          );
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -233,9 +259,9 @@ class _StatsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'User Stats',
-            style: TextStyle(
+          Text(
+            l10n.profileStatsTitle,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -245,9 +271,15 @@ class _StatsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _StatCard(label: 'XP', value: stats.xp.toString()),
-              _StatCard(label: 'Streak', value: stats.streak.toString()),
-              _StatCard(label: 'Rank', value: stats.rankLevel.toString()),
+              _StatCard(label: l10n.profileStatsXp, value: stats.xp.toString()),
+              _StatCard(
+                label: l10n.profileStatsStreak,
+                value: stats.streak.toString(),
+              ),
+              _StatCard(
+                label: l10n.profileStatsRank,
+                value: stats.rankLevel.toString(),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -302,15 +334,4 @@ class _StatCard extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatLastSeen(DateTime? value) {
-  if (value == null) {
-    return 'Son giriş kaydı bulunmuyor';
-  }
-
-  final local = value.toLocal();
-  final date = '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}.${local.year}';
-  final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
-  return 'Son giriş: $date • $time';
 }

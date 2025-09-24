@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/l10n/l10n.dart';
+import '../../../../core/l10n/language_switcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/login_status.dart';
 import '../controllers/register_controller.dart';
@@ -21,8 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   void initState() {
     super.initState();
-    _controller = RegisterController()
-      ..addListener(_handleStatusChange);
+    _controller = RegisterController()..addListener(_handleStatusChange);
     _backgroundController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 14),
@@ -45,7 +46,8 @@ class _RegisterScreenState extends State<RegisterScreen>
     if (!mounted) {
       return;
     }
-    if (_controller.status == LoginStatus.success && _controller.sessionCreated) {
+    if (_controller.status == LoginStatus.success &&
+        _controller.sessionCreated) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
@@ -57,7 +59,15 @@ class _RegisterScreenState extends State<RegisterScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Kayıt Ol'),
+        title: Text(context.l10n.registerAppBarTitle),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: LanguageSwitcher(
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+        ],
       ),
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: true,
@@ -91,7 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Profilini oluştur, XP akışına katıl ve ilk rozetini kazan.',
+                      context.l10n.registerTagline,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.75),
                       ),

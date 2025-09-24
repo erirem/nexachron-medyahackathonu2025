@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/l10n/l10n.dart';
+import '../../../../core/l10n/language_switcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/hero_section.dart';
@@ -88,7 +90,7 @@ class _LandingPageState extends State<LandingPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Nexachron\'a katıl',
+                context.l10n.landingAuthSheetTitle,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -100,11 +102,11 @@ class _LandingPageState extends State<LandingPage>
                   Icons.person_add_alt_1_rounded,
                   color: AppColors.glowCyan,
                 ),
-                title: const Text(
-                  'Hesap oluştur',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                title: Text(
+                  context.l10n.landingAuthSheetCreate,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text('XP akışına katıl, ilk bonusunu kazan.'),
+                subtitle: Text(context.l10n.landingAuthSheetCreateSubtitle),
                 onTap: () {
                   Navigator.of(context).pop();
                   _openRegister();
@@ -112,13 +114,11 @@ class _LandingPageState extends State<LandingPage>
               ),
               ListTile(
                 leading: const Icon(Icons.login_rounded, color: Colors.white70),
-                title: const Text(
-                  'Giriş yap',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                title: Text(
+                  context.l10n.landingAuthSheetLogin,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text(
-                  'Kaldığın yerden devam et, streak\'ini koru.',
-                ),
+                subtitle: Text(context.l10n.landingAuthSheetLoginSubtitle),
                 onTap: () {
                   Navigator.of(context).pop();
                   _openLogin();
@@ -163,50 +163,66 @@ class _LandingPageState extends State<LandingPage>
                     220.0,
                   );
 
-                  return Padding(
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 28,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        HeroSection(
-                          badgeAnimation: _badgeAnimation,
-                          headlineAnimation: _headlineAnimation,
-                          descriptionAnimation: _descriptionAnimation,
-                          actionsAnimation: _actionsAnimation,
-                          onPrimaryTap: _showAuthSheet,
-                          primaryLabel: 'Hemen başla',
-                          onSecondaryTap: _openLogin,
-                          secondaryLabel: 'Zaten üyeyim',
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Nexachron dünyasına dal',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: carouselHeight,
-                          child: const ShowcaseCarousel(),
-                        ),
-                        const SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            'Gamification, haberleri okurken seni motive eder. Kart koleksiyonunu tamamla, XP kazan ve liderlik tablosunda parılda.',
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [LanguageSwitcher()],
+                          ),
+                          const SizedBox(height: 24),
+                          HeroSection(
+                            badgeAnimation: _badgeAnimation,
+                            headlineAnimation: _headlineAnimation,
+                            descriptionAnimation: _descriptionAnimation,
+                            actionsAnimation: _actionsAnimation,
+                            onPrimaryTap: _showAuthSheet,
+                            primaryLabel: context.l10n.landingPrimaryCtaLabel,
+                            badgeLabel: context.l10n.landingHeroBadge,
+                            title: context.l10n.landingHeroTitle,
+                            description: context.l10n.landingHeroDescription,
+                            onSecondaryTap: _openLogin,
+                            secondaryLabel:
+                                context.l10n.landingSecondaryCtaLabel,
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            context.l10n.landingShowcaseHeading,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: carouselHeight,
+                            child: ShowcaseCarousel(
+                              data: ShowcaseCardData.localize(context.l10n),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            context.l10n.landingShowcaseDescription,
                             style: TextStyle(
                               fontSize: 13,
                               height: 1.5,
                               color: Colors.white.withValues(alpha: 0.72),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 36),
+                        ],
+                      ),
                     ),
                   );
                 },

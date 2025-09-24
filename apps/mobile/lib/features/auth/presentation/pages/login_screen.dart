@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/l10n/l10n.dart';
+import '../../../../core/l10n/language_switcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/login_controller.dart';
 import '../widgets/animated_background.dart';
@@ -55,7 +57,15 @@ class _LoginScreenState extends State<LoginScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Giriş Yap'),
+        title: Text(context.l10n.loginAppBarTitle),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: LanguageSwitcher(
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+        ],
       ),
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: true,
@@ -99,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tek tıkla oyunlaştırılmış haber deneyimine geri dön.',
+                          context.l10n.loginTagline,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.75),

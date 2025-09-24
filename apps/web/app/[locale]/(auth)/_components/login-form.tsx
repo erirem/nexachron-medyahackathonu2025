@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent, type JSX } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations, type TranslationValues } from "next-intl";
 
 import { getSupabaseClient, getAccessToken } from "@/lib/supabase/client";
 
@@ -26,7 +26,7 @@ type InputFocus = {
   password: boolean;
 };
 
-type TranslateFn = (key: string, values?: Record<string, unknown>) => string;
+type TranslateFn = (key: string, values?: TranslationValues) => string;
 
 type SupabaseErrorKey = "invalidCredentials" | "emailNotConfirmed";
 
@@ -44,12 +44,14 @@ const initialValues: LoginSchemaInput = {
 function createLoginSchema(t: TranslateFn) {
   return z.object({
     email: z
-      .string({ required_error: t("validation.email.required") })
-      .min(5, t("validation.email.min"))
-      .email(t("validation.email.email")),
+      .string()
+      .min(1, { message: t("validation.email.required") })
+      .min(5, { message: t("validation.email.min") })
+      .email({ message: t("validation.email.email") }),
     password: z
-      .string({ required_error: t("validation.password.required") })
-      .min(8, t("validation.password.min")),
+      .string()
+      .min(1, { message: t("validation.password.required") })
+      .min(8, { message: t("validation.password.min") }),
     remember: z.boolean().default(true),
   });
 }

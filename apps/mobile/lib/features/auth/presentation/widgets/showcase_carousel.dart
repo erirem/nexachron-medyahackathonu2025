@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:mobile/l10n/gen/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
 class ShowcaseCarousel extends StatefulWidget {
-  const ShowcaseCarousel({super.key});
+  const ShowcaseCarousel({super.key, required this.data});
+
+  final List<ShowcaseCardData> data;
 
   @override
   State<ShowcaseCarousel> createState() => _ShowcaseCarouselState();
@@ -21,11 +24,14 @@ class _ShowcaseCarouselState extends State<ShowcaseCarousel> {
     super.initState();
     _controller = PageController(viewportFraction: 0.82);
     _autoTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!_controller.hasClients || !_controller.position.haveDimensions) {
+      final totalCards = widget.data.length;
+      if (totalCards < 2 ||
+          !_controller.hasClients ||
+          !_controller.position.haveDimensions) {
         return;
       }
       final currentPage = _controller.page?.round() ?? _controller.initialPage;
-      final nextPage = (currentPage + 1) % _cards.length;
+      final nextPage = (currentPage + 1) % totalCards;
       _controller.animateToPage(
         nextPage,
         duration: const Duration(milliseconds: 650),
@@ -43,11 +49,15 @@ class _ShowcaseCarouselState extends State<ShowcaseCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.data.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return SizedBox(
       height: 220,
       child: PageView.builder(
         controller: _controller,
-        itemCount: _cards.length,
+        itemCount: widget.data.length,
         physics: const BouncingScrollPhysics(),
         itemBuilder: (context, index) {
           return AnimatedBuilder(
@@ -67,7 +77,7 @@ class _ShowcaseCarouselState extends State<ShowcaseCarousel> {
                 child: Transform.scale(scale: scale, child: child),
               );
             },
-            child: _ShowcaseCard(data: _cards[index]),
+            child: _ShowcaseCard(data: widget.data[index]),
           );
         },
       ),
@@ -179,49 +189,68 @@ class ShowcaseCardData {
   final List<Color> gradient;
   final Color borderColor;
   final Color badgeColor;
+  static List<ShowcaseCardData> localize(AppLocalizations l10n) {
+    return [
+      ShowcaseCardData(
+        badge: l10n.landingShowcaseLiveBadge,
+        title: l10n.landingShowcaseLiveTitle,
+        description: l10n.landingShowcaseLiveDescription,
+        gradient: const [
+          Color(0x1A9AD7FF),
+          Color(0x15123F7A),
+          Color(0x0A051937),
+        ],
+        borderColor: AppColors.glowCyan,
+        badgeColor: AppColors.glowCyan,
+      ),
+      ShowcaseCardData(
+        badge: l10n.landingShowcaseDailyBadge,
+        title: l10n.landingShowcaseDailyTitle,
+        description: l10n.landingShowcaseDailyDescription,
+        gradient: const [
+          Color(0x1A86FFC4),
+          Color(0x101F6034),
+          Color(0x080B2F1C),
+        ],
+        borderColor: AppColors.glowEmerald,
+        badgeColor: AppColors.glowEmerald,
+      ),
+      ShowcaseCardData(
+        badge: l10n.landingShowcaseAiBadge,
+        title: l10n.landingShowcaseAiTitle,
+        description: l10n.landingShowcaseAiDescription,
+        gradient: const [
+          Color(0x1AC9A6FF),
+          Color(0x101B2F5A),
+          Color(0x080A1F3C),
+        ],
+        borderColor: AppColors.glowPurple,
+        badgeColor: AppColors.glowPurple,
+      ),
+      ShowcaseCardData(
+        badge: l10n.landingShowcaseCommunityBadge,
+        title: l10n.landingShowcaseCommunityTitle,
+        description: l10n.landingShowcaseCommunityDescription,
+        gradient: const [
+          Color(0x1AFFC8E2),
+          Color(0x1057113A),
+          Color(0x08190514),
+        ],
+        borderColor: AppColors.glowRose,
+        badgeColor: AppColors.glowRose,
+      ),
+      ShowcaseCardData(
+        badge: l10n.landingShowcaseRewardsBadge,
+        title: l10n.landingShowcaseRewardsTitle,
+        description: l10n.landingShowcaseRewardsDescription,
+        gradient: const [
+          Color(0x1AFFF0A5),
+          Color(0x10665022),
+          Color(0x081F1504),
+        ],
+        borderColor: AppColors.glowAmber,
+        badgeColor: AppColors.glowAmber,
+      ),
+    ];
+  }
 }
-
-const _cards = <ShowcaseCardData>[
-  ShowcaseCardData(
-    badge: 'XP AKIŞI',
-    title: 'Canlı ödüller',
-    description: 'Okudukça XP çarpanı artar. Gündemle yarışta avantaj kazan.',
-    gradient: [Color(0x1A9AD7FF), Color(0x15123F7A), Color(0x0A051937)],
-    borderColor: AppColors.glowCyan,
-    badgeColor: AppColors.glowCyan,
-  ),
-  ShowcaseCardData(
-    badge: 'GÜNLÜK GÖREV',
-    title: 'Süreklilik bonusu',
-    description:
-        'Her gününü tamamla, kart desteni güçlendir ve ekstra XP yakala.',
-    gradient: [Color(0x1A86FFC4), Color(0x101F6034), Color(0x080B2F1C)],
-    borderColor: AppColors.glowEmerald,
-    badgeColor: AppColors.glowEmerald,
-  ),
-  ShowcaseCardData(
-    badge: 'AI ÖNERİLERİ',
-    title: 'Sezgisel akış',
-    description: 'Yapay zeka sana merak ettiğin başlıkları öne çıkarır.',
-    gradient: [Color(0x1AC9A6FF), Color(0x101B2F5A), Color(0x080A1F3C)],
-    borderColor: AppColors.glowPurple,
-    badgeColor: AppColors.glowPurple,
-  ),
-  ShowcaseCardData(
-    badge: 'TOPLULUK',
-    title: 'Sosyal etkileşim',
-    description: 'Yorum yap, paylaş ve topluluk görevleriyle bonus XP kazan.',
-    gradient: [Color(0x1AFFC8E2), Color(0x1057113A), Color(0x08190514)],
-    borderColor: AppColors.glowRose,
-    badgeColor: AppColors.glowRose,
-  ),
-  ShowcaseCardData(
-    badge: 'ÖDÜL MAĞAZASI',
-    title: 'Kart pazarı',
-    description:
-        'Kartlarını takas et, desteni güçlendir ve nadir rozetler topla.',
-    gradient: [Color(0x1AFFF0A5), Color(0x10665022), Color(0x081F1504)],
-    borderColor: AppColors.glowAmber,
-    badgeColor: AppColors.glowAmber,
-  ),
-];

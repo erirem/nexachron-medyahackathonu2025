@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/l10n/l10n.dart';
 import '../../../../core/presentation/widgets/fade_slide_up.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/login_controller.dart';
 import '../controllers/login_status.dart';
+import '../l10n/auth_localizations.dart';
 
 class LoginFormCard extends StatefulWidget {
   const LoginFormCard({
@@ -108,7 +110,7 @@ class _LoginFormCardState extends State<LoginFormCard> {
                   _HeaderRow(),
                   SizedBox(height: _compact ? 8 : 12),
                   Text(
-                    'Güvenilir ajans haberlerine eriş, ritmini koru ve liderlik tablosunda yüksel.',
+                    context.l10n.loginPanelDescription,
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.6,
@@ -116,20 +118,28 @@ class _LoginFormCardState extends State<LoginFormCard> {
                     ),
                   ),
                   SizedBox(height: _compact ? 12 : 20),
-                  _FieldLabel(text: 'E-POSTA'),
+                  _FieldLabel(text: context.l10n.loginFieldEmailLabel),
                   const SizedBox(height: 8),
                   _buildEmailField(controller),
                   if (controller.emailError != null) ...[
                     const SizedBox(height: 6),
-                    _ErrorMessage(message: controller.emailError!),
+                    _ErrorMessage(
+                      message: context.l10n.loginEmailValidation(
+                        controller.emailError!,
+                      ),
+                    ),
                   ],
                   SizedBox(height: _compact ? 10 : 16),
-                  _FieldLabel(text: 'ŞİFRE'),
+                  _FieldLabel(text: context.l10n.loginFieldPasswordLabel),
                   const SizedBox(height: 8),
                   _buildPasswordField(controller),
                   if (controller.passwordError != null) ...[
                     const SizedBox(height: 6),
-                    _ErrorMessage(message: controller.passwordError!),
+                    _ErrorMessage(
+                      message: context.l10n.loginPasswordValidation(
+                        controller.passwordError!,
+                      ),
+                    ),
                   ],
                   SizedBox(height: _compact ? 8 : 12),
                   _buildOptionsRow(controller),
@@ -155,9 +165,9 @@ class _LoginFormCardState extends State<LoginFormCard> {
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
       onChanged: controller.updateEmail,
-      decoration: const InputDecoration(
-        prefixIcon: Icon(Icons.mail_outline),
-        hintText: 'ornek@aa.com.tr',
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.mail_outline),
+        hintText: context.l10n.loginFieldEmailPlaceholder,
       ),
     );
   }
@@ -171,7 +181,7 @@ class _LoginFormCardState extends State<LoginFormCard> {
       obscureText: _obscurePassword,
       decoration: InputDecoration(
         prefixIcon: const Icon(Icons.lock_outline),
-        hintText: '••••••••',
+        hintText: context.l10n.loginFieldPasswordPlaceholder,
         suffixIcon: IconButton(
           onPressed: () {
             setState(() {
@@ -197,7 +207,7 @@ class _LoginFormCardState extends State<LoginFormCard> {
         ),
         const SizedBox(width: 10),
         Text(
-          'Beni hatırla',
+          context.l10n.loginRememberMe,
           style: TextStyle(
             fontSize: 13,
             color: Colors.white.withValues(alpha: 0.8),
@@ -207,7 +217,7 @@ class _LoginFormCardState extends State<LoginFormCard> {
         TextButton(
           onPressed: () {},
           child: Text(
-            'Şifremi unuttum?',
+            context.l10n.loginForgotPassword,
             style: TextStyle(color: Colors.white.withValues(alpha: 0.78)),
           ),
         ),
@@ -237,7 +247,9 @@ class _LoginFormCardState extends State<LoginFormCard> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              isSubmitting ? 'Kontrol ediliyor' : 'Giriş yap',
+              isSubmitting
+                  ? context.l10n.loginSubmitLoading
+                  : context.l10n.loginSubmit,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             if (isSubmitting) ...[
@@ -270,12 +282,12 @@ class _Badge extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.bolt_rounded, size: 16, color: AppColors.glowAmber),
-          SizedBox(width: 8),
+        children: [
+          const Icon(Icons.bolt_rounded, size: 16, color: AppColors.glowAmber),
+          const SizedBox(width: 8),
           Text(
-            'Anadolu Ajansı ile güçlendirildi',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            context.l10n.loginBadge,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -288,10 +300,10 @@ class _HeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Text(
-            'Nexachron\'a Giriş',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            context.l10n.loginHeading,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
         ),
         Container(
@@ -302,9 +314,9 @@ class _HeaderRow extends StatelessWidget {
               colors: [Color(0xFF163860), Color(0xFF295383)],
             ),
           ),
-          child: const Text(
-            '+10 XP hazır',
-            style: TextStyle(
+          child: Text(
+            context.l10n.loginXpReady,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: AppColors.glowCyan,
@@ -360,8 +372,8 @@ class _StatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final message = controller.statusMessage;
-    if (message == null) {
+    final code = controller.messageCode;
+    if (controller.status == LoginStatus.idle || code == null) {
       return const SizedBox.shrink();
     }
 
@@ -398,7 +410,7 @@ class _StatusBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              message,
+              context.l10n.loginStatusMessage(code),
               style: TextStyle(
                 fontSize: 12,
                 color: accent,
@@ -423,7 +435,7 @@ class _FooterLinks extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Hesabın yok mu?',
+          context.l10n.loginNoAccountPrompt,
           style: TextStyle(
             fontSize: 13,
             color: Colors.white.withValues(alpha: 0.75),
@@ -431,7 +443,7 @@ class _FooterLinks extends StatelessWidget {
         ),
         TextButton(
           onPressed: onRegisterTap,
-          child: const Text('Hemen Kayıt Ol'),
+          child: Text(context.l10n.loginRegisterCta),
         ),
       ],
     );

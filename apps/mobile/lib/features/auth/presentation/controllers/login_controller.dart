@@ -7,13 +7,25 @@ import '../../domain/services/login_validator.dart';
 import '../../domain/services/supabase_auth_gateway.dart';
 import 'login_status.dart';
 
-const Map<String, String> _supabaseLoginErrorMap = {
-  'Invalid login credentials': 'E-posta veya şifre hatalı.',
-  'Email not confirmed': 'E-posta adresini onaylaman gerekiyor.',
-};
+enum LoginMessageCode {
+  invalidForm,
+  submitting,
+  successRedirect,
+  invalidCredentials,
+  emailNotConfirmed,
+  genericError,
+  unexpectedError,
+}
 
-String _mapSupabaseLoginError(String message) {
-  return _supabaseLoginErrorMap[message] ?? 'Giriş sırasında bir hata oluştu.';
+LoginMessageCode _mapSupabaseLoginError(String message) {
+  switch (message) {
+    case 'Invalid login credentials':
+      return LoginMessageCode.invalidCredentials;
+    case 'Email not confirmed':
+      return LoginMessageCode.emailNotConfirmed;
+    default:
+      return LoginMessageCode.genericError;
+  }
 }
 
 class LoginController extends ChangeNotifier {
@@ -28,11 +40,11 @@ class LoginController extends ChangeNotifier {
   String _password = '';
   bool rememberMe = true;
 
-  String? emailError;
-  String? passwordError;
+  LoginEmailError? emailError;
+  LoginPasswordError? passwordError;
 
   LoginStatus status = LoginStatus.idle;
-  String? statusMessage;
+  LoginMessageCode? messageCode;
 
   void updateEmail(String value) {
     _email = value;
@@ -61,13 +73,13 @@ class LoginController extends ChangeNotifier {
     _validateFields();
     if (emailError != null || passwordError != null) {
       status = LoginStatus.error;
-      statusMessage = 'Formu kontrol et';
+      messageCode = LoginMessageCode.invalidForm;
       notifyListeners();
       return;
     }
 
     status = LoginStatus.submitting;
-    statusMessage = 'Bilgiler kontrol ediliyor...';
+    messageCode = LoginMessageCode.submitting;
     notifyListeners();
 
     try {
@@ -76,13 +88,13 @@ class LoginController extends ChangeNotifier {
       // FCM entegrasyonu devre dışı (ileride yeniden eklenecek)
 
       status = LoginStatus.success;
-      statusMessage = 'Hoş geldin! Profil ekranına yönlendiriliyorsun...';
+      messageCode = LoginMessageCode.successRedirect;
     } on AuthException catch (error) {
       status = LoginStatus.error;
-      statusMessage = _mapSupabaseLoginError(error.message);
+      messageCode = _mapSupabaseLoginError(error.message);
     } catch (_) {
       status = LoginStatus.error;
-      statusMessage = 'Beklenmeyen bir hata oluştu. Lütfen tekrar dene.';
+      messageCode = LoginMessageCode.unexpectedError;
     }
 
     notifyListeners();
@@ -96,7 +108,7 @@ class LoginController extends ChangeNotifier {
   void _clearStatusIfNeeded() {
     if (status == LoginStatus.error || status == LoginStatus.success) {
       status = LoginStatus.idle;
-      statusMessage = null;
+      messageCode = null;
     }
   }
 }

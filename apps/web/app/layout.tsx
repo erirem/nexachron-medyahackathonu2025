@@ -21,12 +21,13 @@ export const metadata: Metadata = {
   description: "Gamified news platform powered by Anadolu Ajansı.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = headers().get("x-next-intl-locale") ?? defaultLocale;
+  const headersList = await headers();
+  const locale = headersList.get("x-next-intl-locale") ?? defaultLocale;
 
   return (
     <html lang={locale} suppressHydrationWarning>

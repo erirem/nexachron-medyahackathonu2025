@@ -12,6 +12,9 @@ class HeroSection extends StatelessWidget {
     required this.actionsAnimation,
     required this.onPrimaryTap,
     required this.primaryLabel,
+    required this.badgeLabel,
+    required this.title,
+    required this.description,
     this.onSecondaryTap,
     this.secondaryLabel,
   });
@@ -22,6 +25,9 @@ class HeroSection extends StatelessWidget {
   final Animation<double> actionsAnimation;
   final VoidCallback onPrimaryTap;
   final String primaryLabel;
+  final String badgeLabel;
+  final String title;
+  final String description;
   final VoidCallback? onSecondaryTap;
   final String? secondaryLabel;
 
@@ -47,7 +53,7 @@ class HeroSection extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Anadolu Ajansı İçin Özel',
+                badgeLabel.toUpperCase(),
                 style: TextStyle(
                   fontSize: 11,
                   letterSpacing: 4,
@@ -62,25 +68,7 @@ class HeroSection extends StatelessWidget {
         FadeSlideUp(
           animation: headlineAnimation,
           child: Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'Nexachron ile habere giriş yap, haberi '),
-                TextSpan(
-                  text: 'oyunlaştırılmış',
-                  style: TextStyle(
-                    foreground: Paint()
-                      ..shader = const LinearGradient(
-                        colors: [
-                          Color(0xFF9AD7FF),
-                          Color(0xFF63B3FF),
-                          Color(0xFFA5D8FF),
-                        ],
-                      ).createShader(const Rect.fromLTWH(0, 0, 240, 40)),
-                  ),
-                ),
-                const TextSpan(text: ' bir deneyimle yaşa.'),
-              ],
-            ),
+            TextSpan(children: _buildTitleSpans(title)),
             style: const TextStyle(
               fontSize: 30,
               height: 1.25,
@@ -92,7 +80,7 @@ class HeroSection extends StatelessWidget {
         FadeSlideUp(
           animation: descriptionAnimation,
           child: Text(
-            'Anadolu Ajansı\'nın güvenilir haberlerinden beslenen Nexachron, okuma ritmini XP ile ödüllendirir, quiz\'lerle gündemi pekiştirir ve kart koleksiyonu ile gazetecilik kariyerini parlatır.',
+            description,
             style: TextStyle(
               fontSize: 14,
               height: 1.6,
@@ -151,6 +139,47 @@ class HeroSection extends StatelessWidget {
       ],
     );
   }
+}
+
+List<InlineSpan> _buildTitleSpans(String value) {
+  const startTag = '<highlight>';
+  const endTag = '</highlight>';
+  final spans = <InlineSpan>[];
+
+  var remaining = value;
+  while (remaining.contains(startTag) && remaining.contains(endTag)) {
+    final startIndex = remaining.indexOf(startTag);
+    final endIndex = remaining.indexOf(endTag);
+    if (startIndex < 0 || endIndex < 0 || endIndex <= startIndex) {
+      break;
+    }
+    final prefix = remaining.substring(0, startIndex);
+    if (prefix.isNotEmpty) {
+      spans.add(TextSpan(text: prefix));
+    }
+    final highlight = remaining.substring(
+      startIndex + startTag.length,
+      endIndex,
+    );
+    spans.add(
+      TextSpan(
+        text: highlight,
+        style: TextStyle(
+          foreground: Paint()
+            ..shader = const LinearGradient(
+              colors: [Color(0xFF9AD7FF), Color(0xFF63B3FF), Color(0xFFA5D8FF)],
+            ).createShader(const Rect.fromLTWH(0, 0, 240, 40)),
+        ),
+      ),
+    );
+    remaining = remaining.substring(endIndex + endTag.length);
+  }
+
+  if (remaining.isNotEmpty) {
+    spans.add(TextSpan(text: remaining));
+  }
+
+  return spans.isEmpty ? [TextSpan(text: value)] : spans;
 }
 
 class _PrimaryCtaButton extends StatelessWidget {

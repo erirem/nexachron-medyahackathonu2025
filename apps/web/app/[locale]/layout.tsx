@@ -8,9 +8,7 @@ import { LocaleSwitcher } from "./_components/locale-switcher";
 
 type LayoutProps = {
   readonly children: ReactNode;
-  readonly params: {
-    readonly locale: string;
-  };
+  readonly params: Promise<{ readonly locale: string }>;
 };
 
 export function generateStaticParams(): Array<{ locale: string }> {
@@ -21,7 +19,7 @@ export default async function LocaleLayout({
   children,
   params,
 }: LayoutProps) {
-  const { locale } = params;
+  const { locale } = await params;
 
   unstable_setRequestLocale(locale);
 
