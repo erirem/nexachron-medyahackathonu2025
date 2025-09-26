@@ -125,11 +125,12 @@ export class AppController {
             : '📋 Supabase şemasını ve RLS/Policy ayarlarını kontrol edin',
         timestamp: new Date().toISOString(),
       };
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       return {
         status: 'error',
         message: 'Supabase connection failed',
-        error: err?.message ?? String(err),
+        error: errorMessage,
         supabaseUrl: process.env.SUPABASE_URL,
         hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
         timestamp: new Date().toISOString(),

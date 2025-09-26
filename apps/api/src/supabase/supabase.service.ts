@@ -2,10 +2,12 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+import type { Database } from './database.types';
+
 @Injectable()
 export class SupabaseService implements OnModuleInit {
-  private anonClient!: SupabaseClient<any, 'public', any>;
-  private serviceClient?: SupabaseClient<any, 'public', any>;
+  private anonClient!: SupabaseClient<Database, 'public', any>;
+  private serviceClient?: SupabaseClient<Database, 'public', any>;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -23,13 +25,13 @@ export class SupabaseService implements OnModuleInit {
       );
     }
 
-    // Varsayılan (RLS’e tabi) client — önce ANON, yoksa SERVICE
+    // Varsayılan (RLS'e tabi) client — önce ANON, yoksa SERVICE
     const keyForDefault = anonKey ?? serviceKey!;
     if (!anonKey && serviceKey) {
       // İsteğe bağlı: log/uyarı – default client service key ile kuruluyor
       // console.warn('[Supabase] ANON key missing; default client is using SERVICE_ROLE key.');
     }
-    this.anonClient = createClient(supabaseUrl, keyForDefault, {
+    this.anonClient = createClient<Database>(supabaseUrl, keyForDefault, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -39,7 +41,7 @@ export class SupabaseService implements OnModuleInit {
 
     // Admin (RLS bypass) client — yalnızca SERVICE_ROLE mevcutsa
     if (serviceKey) {
-      this.serviceClient = createClient(supabaseUrl, serviceKey, {
+      this.serviceClient = createClient<Database>(supabaseUrl, serviceKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -50,7 +52,7 @@ export class SupabaseService implements OnModuleInit {
   }
 
   // Varsayılan client (tercihen ANON; yoksa SERVICE ile oluşturulmuş olabilir)
-  get supabase(): SupabaseClient<any, 'public', any> {
+  get supabase(): SupabaseClient<Database, 'public', any> {
     if (!this.anonClient) {
       throw new Error('Supabase client not initialized.');
     }
@@ -58,7 +60,7 @@ export class SupabaseService implements OnModuleInit {
   }
 
   // Admin client (SERVICE_ROLE gerekir)
-  get adminSupabase(): SupabaseClient<any, 'public', any> {
+  get adminSupabase(): SupabaseClient<Database, 'public', any> {
     if (!this.serviceClient) {
       throw new Error(
         'Service role key not configured. Cannot perform admin operations.',

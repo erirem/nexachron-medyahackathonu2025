@@ -22,9 +22,21 @@ export class UsersController {
   async getMe(@Req() request: AuthenticatedRequest) {
     const user = request.user;
     const acceptLanguage = request.headers['accept-language'];
-    const locale = resolveLocale(
-      Array.isArray(acceptLanguage) ? acceptLanguage[0] : acceptLanguage,
-    );
+    let localeParam: string | undefined;
+
+    if (
+      Array.isArray(acceptLanguage) &&
+      acceptLanguage.length > 0 &&
+      typeof acceptLanguage[0] === 'string'
+    ) {
+      localeParam = acceptLanguage[0];
+    } else if (typeof acceptLanguage === 'string') {
+      localeParam = acceptLanguage;
+    } else {
+      localeParam = undefined;
+    }
+
+    const locale = resolveLocale(localeParam);
 
     if (!user) {
       throw new UnauthorizedException(translate(locale, 'errors.unauthorized'));
