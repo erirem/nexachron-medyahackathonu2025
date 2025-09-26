@@ -41,6 +41,9 @@ importers:
       cheerio:
         specifier: ^1.1.2
         version: 1.1.2
+      openai:
+        specifier: ^5.23.0
+        version: 5.23.0(ws@8.18.3)(zod@4.1.9)
       pino:
         specifier: ^9.10.0
         version: 9.11.0
@@ -3471,6 +3474,18 @@ packages:
   onetime@5.1.2:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
     engines: {node: '>=6'}
+
+  openai@5.23.0:
+    resolution: {integrity: sha512-Cfq155NHzI7VWR67LUNJMIgPZy2oSh7Fld/OKhxq648BiUjELAvcge7g30xJ6vAfwwXf6TVK0KKuN+3nmIJG/A==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -8325,6 +8340,11 @@ snapshots:
   onetime@5.1.2:
     dependencies:
       mimic-fn: 2.1.0
+
+  openai@5.23.0(ws@8.18.3)(zod@4.1.9):
+    optionalDependencies:
+      ws: 8.18.3
+      zod: 4.1.9
 
   optionator@0.9.4:
     dependencies:

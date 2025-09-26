@@ -8,13 +8,17 @@ import {
   Logger,
 } from '@nestjs/common';
 import { NewsIngestService } from './news-ingest.service';
+import { MediaStorageService } from './services/media-storage.service';
 import { AACategory } from './dto/news-item.dto';
 
 @Controller('news-ingest')
 export class NewsIngestController {
   private readonly logger = new Logger(NewsIngestController.name);
 
-  constructor(private readonly newsIngestService: NewsIngestService) {}
+  constructor(
+    private readonly newsIngestService: NewsIngestService,
+    private readonly mediaStorageService: MediaStorageService,
+  ) {}
 
   /**
    * Manuel tüm kategorilerden haber çekme
@@ -174,6 +178,70 @@ export class NewsIngestController {
         pubDate: item.pubDate,
         hasImage: !!item.enclosure?.url,
       })),
+    };
+  }
+
+  /**
+   * Get AI usage statistics for budget monitoring
+   * GET /api/news-ingest/ai-usage
+   */
+  @Get('ai-usage')
+  getAiUsage() {
+    const stats = this.newsIngestService.getAiUsageStats();
+
+    return {
+      message: 'AI usage statistics',
+      ...stats,
+      budgetStatus:
+        stats.remainingDailyRequests > 10
+          ? 'healthy'
+          : stats.remainingDailyRequests > 0
+            ? 'warning'
+            : 'exceeded',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get media statistics for monitoring
+   * GET /api/news-ingest/media-stats
+   */
+  @Get('media-stats')
+  async getMediaStats() {
+    const stats = await this.mediaStorageService.getMediaStats();
+    
+    return {
+      message: 'Media statistics',
+      ...stats,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get recent media statistics to see improvement
+   * GET /api/news-ingest/recent-media/:limit
+   * GET /api/news-ingest/recent-media (defaults to 10)
+   */
+  @Get('recent-media/:limit')
+  async getRecentMediaStatsWithLimit(@Param('limit') limit: string) {
+    const numLimit = parseInt(limit) || 10;
+    const stats = await this.mediaStorageService.getRecentMediaStats(numLimit);
+    
+    return {
+      message: `Recent media statistics for last ${numLimit} articles`,
+      ...stats,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('recent-media')
+  async getRecentMediaStats() {
+    const stats = await this.mediaStorageService.getRecentMediaStats(10);
+    
+    return {
+      message: 'Recent media statistics for last 10 articles',
+      ...stats,
+      timestamp: new Date().toISOString(),
     };
   }
 }
