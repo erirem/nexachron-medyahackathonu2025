@@ -1,6 +1,7 @@
-import type { JSX } from "react";
-import { LoginLanding } from "./(auth)/_components/login-landing";
+import { redirect } from "next/navigation";
 
-export default function Home(): JSX.Element {
-  return <LoginLanding />;
+import { defaultLocale } from "@/i18n/locales";
+
+export default function RootPage(): never {
+  redirect(`/${defaultLocale}`);
 }

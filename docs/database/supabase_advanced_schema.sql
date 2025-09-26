@@ -33,6 +33,9 @@ CREATE TYPE notify_type_enum AS ENUM ('TOPIC_UPDATE', 'DAILY_BRIEF', 'SYSTEM');
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT UNIQUE NOT NULL,
+    username TEXT UNIQUE,
+    city TEXT,
+    avatar_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -46,6 +49,71 @@ CREATE TABLE user_stats (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Keep auth.users in sync with public profile tables
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_updated ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_auth_user_changed;
+
+CREATE OR REPLACE FUNCTION public.handle_auth_user_changed()
+RETURNS TRIGGER AS $$
+DECLARE
+    username_hint TEXT;
+BEGIN
+    username_hint := COALESCE(
+        NEW.raw_user_meta_data->>'username',
+        split_part(COALESCE(NEW.email, ''), '@', 1)
+    );
+
+    INSERT INTO public.users (id, email, username, avatar_url)
+    VALUES (NEW.id, NEW.email, username_hint, NEW.raw_user_meta_data->>'avatar_url')
+    ON CONFLICT (id) DO UPDATE
+        SET email = EXCLUDED.email,
+            username = COALESCE(EXCLUDED.username, public.users.username),
+            avatar_url = COALESCE(EXCLUDED.avatar_url, public.users.avatar_url),
+            updated_at = NOW();
+
+    INSERT INTO public.user_stats (user_id)
+    VALUES (NEW.id)
+    ON CONFLICT (user_id) DO NOTHING;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_auth_user_changed();
+
+CREATE TRIGGER on_auth_user_updated
+    AFTER UPDATE ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_auth_user_changed();
+
+-- Maintain updated_at timestamps
+DROP FUNCTION IF EXISTS public.set_updated_at;
+
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_users_updated_at ON public.users;
+DROP TRIGGER IF EXISTS set_user_stats_updated_at ON public.user_stats;
+
+CREATE TRIGGER set_users_updated_at
+    BEFORE UPDATE ON public.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_user_stats_updated_at
+    BEFORE UPDATE ON public.user_stats
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
 
 -- NEWS / FEED
 CREATE TABLE news (
