@@ -1,8 +1,9 @@
 'use client';
 
-import type { JSX } from 'react';
+import { useState, type JSX } from 'react';
 import Image from 'next/image';
 import type { DashboardNewsItem } from './types';
+import { DashboardNewsModal } from './dashboard-news-modal';
 
 interface DashboardNewsCardProps {
   readonly item: DashboardNewsItem;
@@ -113,6 +114,7 @@ const sentimentColors = {
 } as const;
 
 export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const normalized = normalizeCategory(item.category);
   const theme = categoryThemes[normalized] ?? categoryThemes.default;
 
@@ -121,8 +123,10 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
   const tagline = getTagline(item);
 
   return (
+    <>
     <article
-      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/8 ${theme.surface} text-white shadow-[0_22px_48px_rgba(2,8,20,0.45)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:border-white/15 hover:shadow-[0_32px_68px_rgba(2,10,28,0.55)]`}
+      onClick={() => setIsModalOpen(true)}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/8 ${theme.surface} text-white shadow-[0_22px_48px_rgba(2,8,20,0.45)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:border-white/15 hover:shadow-[0_32px_68px_rgba(2,10,28,0.55)] cursor-pointer`}
     >
       <div className="absolute inset-0 bg-white/6 mix-blend-overlay" aria-hidden />
 
@@ -252,20 +256,20 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         <div className="mt-auto pt-4 border-t border-white/10">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <button className="group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-400/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:from-blue-600/30 hover:to-blue-500/30 hover:scale-105">
+              <button onClick={(e) => e.stopPropagation()} className="group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-400/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:from-blue-600/30 hover:to-blue-500/30 hover:scale-105">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
                 </svg>
                 Kaydet
               </button>
-              <button className="group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-400/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:from-green-600/30 hover:to-green-500/30 hover:scale-105">
+              <button onClick={(e) => e.stopPropagation()} className="group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-400/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:from-green-600/30 hover:to-green-500/30 hover:scale-105">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/>
                   <polygon points="10 8 16 12 10 16 10 8"/>
                 </svg>
                 Dinle
               </button>
-              <button className="group/btn flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:scale-105">
+              <button onClick={(e) => e.stopPropagation()} className="group/btn flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:scale-105">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="18" cy="5" r="3"/>
                   <circle cx="6" cy="12" r="3"/>
@@ -308,5 +312,12 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         </div>
       </div>
     </article>
+    
+    <DashboardNewsModal
+      item={item}
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+    />
+  </>
   );
 }
