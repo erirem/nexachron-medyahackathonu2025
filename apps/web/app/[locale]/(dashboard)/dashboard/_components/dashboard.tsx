@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, type JSX } from "react";
 
-import { SpotifyNewsGrid } from "./spotify-news-grid";
+import { DashboardNewsGrid } from "./dashboard-news-grid";
 import type { DashboardNewsItem, DashboardTopic } from "./types";
 
 type DashboardProps = {
@@ -154,7 +154,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
                 </div>
 
                 <div className="mb-8">
-                  <SpotifyNewsGrid 
+                  <DashboardNewsGrid 
                     items={getFilteredNews()}
                     title={getCategoryInfo().title}
                     subtitle={getCategoryInfo().subtitle}
@@ -449,7 +449,7 @@ function DashboardHeader(): JSX.Element {
           <p className="text-xs uppercase tracking-[0.42em] text-white/60">AA panoraması</p>
           <h1 className="text-[2rem] font-semibold leading-[1.15] text-white">Günün Akışına Anında Erişim</h1>
           <p className="mt-2 max-w-xl text-sm text-white/70">
-            Spotify akış deneyimini Anadolu Ajansı tonlarıyla buluşturan panoda gündem, piyasa ve saha haberlerini tek
+            Modern akış deneyimini Anadolu Ajansı tonlarıyla buluşturan panoda gündem, piyasa ve saha haberlerini tek
             ekrandan yönetin.
           </p>
         </div>

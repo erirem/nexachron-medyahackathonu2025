@@ -1,22 +1,22 @@
 'use client';
 
 import type { JSX } from 'react';
-import { SpotifyNewsCard } from './spotify-news-card';
+import { DashboardNewsCard } from './dashboard-news-card';
 import type { DashboardNewsItem } from './types';
 
-interface SpotifyNewsGridProps {
+interface DashboardNewsGridProps {
   readonly items: DashboardNewsItem[];
   readonly title?: string;
   readonly subtitle?: string;
   readonly showAll?: boolean;
 }
 
-export function SpotifyNewsGrid({
+export function DashboardNewsGrid({
   items,
-  title = "Popular with listeners of Deep Dive with Ali Abdaal",
+  title = 'Öne çıkan haberler',
   subtitle,
   showAll = false
-}: SpotifyNewsGridProps): JSX.Element {
+}: DashboardNewsGridProps): JSX.Element {
   return (
     <section className="w-full">
       <div className="mb-6 flex items-baseline justify-between">
@@ -44,7 +44,7 @@ export function SpotifyNewsGrid({
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
         {items.map((item) => (
-          <SpotifyNewsCard key={item.id} item={item} />
+          <DashboardNewsCard key={item.id} item={item} />
         ))}
       </div>
     </section>

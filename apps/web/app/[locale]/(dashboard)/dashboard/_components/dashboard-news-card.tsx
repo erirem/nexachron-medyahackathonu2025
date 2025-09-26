@@ -4,7 +4,7 @@ import type { JSX } from 'react';
 import Image from 'next/image';
 import type { DashboardNewsItem } from './types';
 
-interface SpotifyNewsCardProps {
+interface DashboardNewsCardProps {
   readonly item: DashboardNewsItem;
 }
 
@@ -112,7 +112,7 @@ const sentimentColors = {
   negative: 'bg-[#d23b57]'
 } as const;
 
-export function SpotifyNewsCard({ item }: SpotifyNewsCardProps): JSX.Element {
+export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element {
   const normalized = normalizeCategory(item.category);
   const theme = categoryThemes[normalized] ?? categoryThemes.default;
 
