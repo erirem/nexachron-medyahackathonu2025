@@ -21,6 +21,7 @@ export class AppController {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
+      message: 'Nexachron News Ingest API is running',
     };
   }
 
@@ -33,32 +34,33 @@ export class AppController {
         throw new Error('Supabase client not initialized');
       }
 
-      // Test advanced schema tables
-      const tableTests = await Promise.allSettled([
-        client.from('users').select('*').limit(1),
-        client.from('news').select('*').limit(1), 
-        client.from('cards').select('*').limit(1),
-        client.from('quizzes').select('*').limit(1),
-        client.from('user_stats').select('*').limit(1),
-      ]);
+      // Test your news table specifically using admin client
+      const adminClient = this.supabaseService.adminSupabase;
+      const { data: newsTest, error: newsError } = await adminClient
+        .from('news')
+        .select('id, title, mode, created_at')
+        .limit(5);
 
-      const results = {
-        users: tableTests[0].status === 'fulfilled' ? (tableTests[0].value.error?.message || 'OK') : 'Failed',
-        news: tableTests[1].status === 'fulfilled' ? (tableTests[1].value.error?.message || 'OK') : 'Failed',
-        cards: tableTests[2].status === 'fulfilled' ? (tableTests[2].value.error?.message || 'OK') : 'Failed',
-        quizzes: tableTests[3].status === 'fulfilled' ? (tableTests[3].value.error?.message || 'OK') : 'Failed',
-        user_stats: tableTests[4].status === 'fulfilled' ? (tableTests[4].value.error?.message || 'OK') : 'Failed',
-      };
-
-      const allTablesExist = Object.values(results).every(result => result === 'OK');
+      const { count: totalNews } = await adminClient
+        .from('news')
+        .select('id', { count: 'exact' });
 
       return {
-        status: allTablesExist ? 'success' : 'partial',
-        message: allTablesExist ? 'Advanced schema working!' : 'Some tables missing - run SQL setup',
+        status: newsError ? 'error' : 'success',
+        message: newsError 
+          ? `News table error: ${newsError.message}` 
+          : `News table working! ${totalNews || 0} items found`,
         supabaseUrl: process.env.SUPABASE_URL,
         hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
-        tableTests: results,
-        hint: allTablesExist ? '🎉 Ready for development!' : '📋 Run supabase_advanced_schema.sql in Supabase Dashboard',
+        newsTable: {
+          totalCount: totalNews || 0,
+          sampleItems: newsTest?.map(item => ({
+            title: item.title?.substring(0, 50) + '...',
+            mode: item.mode,
+            created: item.created_at,
+          })) || [],
+          error: newsError?.message || null,
+        },
         timestamp: new Date().toISOString(),
       };
     } catch (err) {

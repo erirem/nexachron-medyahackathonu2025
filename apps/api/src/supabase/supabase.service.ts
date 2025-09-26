@@ -4,21 +4,24 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class SupabaseService implements OnModuleInit {
-  private client: SupabaseClient;
+  private anonClient: SupabaseClient;
+  private serviceClient: SupabaseClient;
 
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+    const anonKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+    const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl || !anonKey) {
       throw new Error('Missing Supabase configuration. Please check SUPABASE_URL and SUPABASE_ANON_KEY environment variables.');
     }
 
-    this.client = createClient(
+    // Anon client for regular operations (respects RLS)
+    this.anonClient = createClient(
       supabaseUrl,
-      supabaseKey,
+      anonKey,
       {
         auth: {
           autoRefreshToken: true,
@@ -29,9 +32,35 @@ export class SupabaseService implements OnModuleInit {
         },
       },
     );
+
+    // Service role client for backend operations (bypasses RLS)
+    if (serviceKey) {
+      this.serviceClient = createClient(
+        supabaseUrl,
+        serviceKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+          db: {
+            schema: 'public',
+          },
+        },
+      );
+    }
   }
 
+  // Default client (anon) for frontend-like operations
   get supabase(): SupabaseClient {
-    return this.client;
+    return this.anonClient;
+  }
+
+  // Service role client for backend operations (bypasses RLS)
+  get adminSupabase(): SupabaseClient {
+    if (!this.serviceClient) {
+      throw new Error('Service role key not configured. Cannot perform admin operations.');
+    }
+    return this.serviceClient;
   }
 }
