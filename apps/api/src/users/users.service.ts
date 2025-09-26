@@ -5,25 +5,29 @@ import {
 } from '@nestjs/common';
 import type { PostgrestError, User } from '@supabase/supabase-js';
 
+import type { Database } from '../supabase/database.types';
 import { SupabaseService } from '../supabase/supabase.service';
 
-interface UserRow {
-  id: string;
-  email: string | null;
-  username: string | null;
-  city: string | null;
-  created_at: string;
-  updated_at: string;
-}
+type UserRow = Database['public']['Tables']['users']['Row'];
+type UserStatsRow = Database['public']['Tables']['user_stats']['Row'];
 
-interface UserStatsRow {
-  user_id: string;
-  xp: number;
-  streak: number;
-  rank_level: number;
-  last_seen: string | null;
-  created_at: string;
-  updated_at: string;
+interface ProfileWithStats {
+  user: {
+    id: string;
+    email: string | null;
+    username: string | null;
+    city: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  stats: {
+    xp: number;
+    streak: number;
+    rankLevel: number;
+    lastSeen: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 @Injectable()
@@ -32,7 +36,7 @@ export class UsersService {
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async getProfileWithStats(user: User) {
+  async getProfileWithStats(user: User): Promise<ProfileWithStats> {
     const profile = await this.ensureProfileRow(user);
     const stats = await this.ensureStatsRow(user.id);
 
@@ -66,24 +70,26 @@ export class UsersService {
       .maybeSingle();
 
     if (profileResponse.error) {
-      throw this.handleSupabaseError('users.select', profileResponse.error);
+      this.handleSupabaseError('users.select', profileResponse.error);
     }
 
     if (profileResponse.data) {
-      return profileResponse.data;
+      return profileResponse.data as UserRow;
     }
 
     const fallbackUsername = this.deriveUsername(user);
-    const city = this.extractMetadata<string | null>(user, 'city');
+    const city = this.extractMetadataString(user, 'city');
+
+    const insertPayload: Database['public']['Tables']['users']['Insert'] = {
+      id: user.id,
+      email: user.email,
+      username: fallbackUsername,
+      city,
+    };
 
     const insertResponse = await supabase
       .from('users')
-      .insert({
-        id: user.id,
-        email: user.email,
-        username: fallbackUsername,
-        city,
-      })
+      .insert(insertPayload)
       .select('*')
       .single();
 
@@ -97,19 +103,28 @@ export class UsersService {
           .single();
 
         if (retryResponse.error) {
-          throw this.handleSupabaseError(
-            'users.select-retry',
-            retryResponse.error,
+          this.handleSupabaseError('users.select-retry', retryResponse.error);
+        }
+
+        if (!retryResponse.data) {
+          throw new InternalServerErrorException(
+            'Kullanıcı profili yeniden okunamadı.',
           );
         }
 
-        return retryResponse.data;
+        return retryResponse.data as UserRow;
       }
 
-      throw this.handleSupabaseError('users.insert', insertResponse.error);
+      this.handleSupabaseError('users.insert', insertResponse.error);
     }
 
-    return insertResponse.data;
+    if (!insertResponse.data) {
+      throw new InternalServerErrorException(
+        'Kullanıcı profili oluşturulamadı.',
+      );
+    }
+
+    return insertResponse.data as UserRow;
   }
 
   private async ensureStatsRow(userId: string): Promise<UserStatsRow> {
@@ -128,23 +143,25 @@ export class UsersService {
       .single();
 
     if (upsertResponse.error) {
-      throw this.handleSupabaseError('user_stats.upsert', upsertResponse.error);
+      this.handleSupabaseError('user_stats.upsert', upsertResponse.error);
     }
 
-    return upsertResponse.data;
+    if (!upsertResponse.data) {
+      throw new InternalServerErrorException(
+        'Kullanıcı istatistikleri oluşturulamadı.',
+      );
+    }
+
+    return upsertResponse.data as UserStatsRow;
   }
 
   private deriveUsername(user: User): string | null {
-    const metadataUsername = this.extractMetadata<string | null>(
-      user,
-      'username',
-    );
+    const metadataUsername = this.extractMetadataString(user, 'username');
     if (metadataUsername) {
       return metadataUsername;
     }
 
-    const email =
-      user.email ?? this.extractMetadata<string | null>(user, 'email');
+    const email = user.email ?? this.extractMetadataString(user, 'email');
     if (!email) {
       return null;
     }
@@ -152,16 +169,28 @@ export class UsersService {
     return email.split('@')[0];
   }
 
-  private extractMetadata<T>(user: User, key: string): T | null {
-    const value = user.user_metadata?.[key] ?? user.app_metadata?.[key];
-    return (value as T | undefined) ?? null;
+  private extractMetadataString(user: User, key: string): string | null {
+    const metadataSources: Array<Record<string, unknown> | null | undefined> = [
+      user.user_metadata as Record<string, unknown> | null | undefined,
+      user.app_metadata as Record<string, unknown> | null | undefined,
+    ];
+
+    for (const source of metadataSources) {
+      if (!source) {
+        continue;
+      }
+
+      const value = source[key];
+      if (typeof value === 'string') {
+        return value;
+      }
+    }
+
+    return null;
   }
 
-  private handleSupabaseError(
-    scope: string,
-    error: PostgrestError,
-  ): InternalServerErrorException {
+  private handleSupabaseError(scope: string, error: PostgrestError): never {
     this.logger.error(`${scope} failed`, JSON.stringify(error));
-    return new InternalServerErrorException('Supabase isteği başarısız oldu.');
+    throw new InternalServerErrorException('Supabase isteği başarısız oldu.');
   }
 }
