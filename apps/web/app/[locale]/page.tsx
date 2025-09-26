@@ -1,6 +1,5 @@
-import type { JSX } from "react";
-import { LoginLanding } from "./(auth)/_components/login-landing";
+import { redirect } from "next/navigation";
 
-export default function Home(): JSX.Element {
-  return <LoginLanding />;
+export default function Home({ params }: { params: { locale: string } }): never {
+  redirect(`/${params.locale}/dashboard`);
 }
