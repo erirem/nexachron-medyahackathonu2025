@@ -19,7 +19,11 @@ export class NewsIngestService {
   /**
    * Manuel haber çekme
    */
-  async ingestNews(): Promise<{ success: boolean; processed: number; errors: number }> {
+  async ingestNews(): Promise<{
+    success: boolean;
+    processed: number;
+    errors: number;
+  }> {
     if (this.isProcessing) {
       this.logger.warn('News ingestion already in progress, skipping...');
       return { success: false, processed: 0, errors: 0 };
@@ -31,7 +35,7 @@ export class NewsIngestService {
     try {
       // 1. RSS feed'lerini çek
       const rawNewsMap = await this.rssParserService.fetchAllCategories();
-      
+
       let totalFetched = 0;
       rawNewsMap.forEach((items) => {
         totalFetched += items.length;
@@ -44,15 +48,16 @@ export class NewsIngestService {
       }
 
       // 2. İçerikleri işle
-      const processedItems = await this.contentProcessorService.processBatch(rawNewsMap);
-      
+      const processedItems =
+        await this.contentProcessorService.processBatch(rawNewsMap);
+
       this.logger.log(`Processed ${processedItems.length} news items`);
 
       // 3. Veritabanına kaydet
       const saveResult = await this.saveToDatabase(processedItems);
 
       this.logger.log(
-        `News ingestion completed: ${saveResult.saved} saved, ${saveResult.errors} errors`
+        `News ingestion completed: ${saveResult.saved} saved, ${saveResult.errors} errors`,
       );
 
       return {
@@ -60,7 +65,6 @@ export class NewsIngestService {
         processed: saveResult.saved,
         errors: saveResult.errors,
       };
-
     } catch (error) {
       this.logger.error('News ingestion failed:', error);
       return { success: false, processed: 0, errors: 1 };
@@ -78,7 +82,7 @@ export class NewsIngestService {
     try {
       // RSS'den çek
       const rawItems = await this.rssParserService.fetchCategoryFeed(category);
-      
+
       if (rawItems.length === 0) {
         this.logger.warn(`No items found for category: ${category}`);
         return [];
@@ -86,9 +90,12 @@ export class NewsIngestService {
 
       // İşle
       const processedItems: ProcessedNewsItem[] = [];
-      
+
       for (const rawItem of rawItems) {
-        const processed = await this.contentProcessorService.processNewsItem(rawItem, category);
+        const processed = await this.contentProcessorService.processNewsItem(
+          rawItem,
+          category,
+        );
         if (processed) {
           processedItems.push(processed);
         }
@@ -98,7 +105,6 @@ export class NewsIngestService {
       await this.saveToDatabase(processedItems);
 
       return processedItems;
-
     } catch (error) {
       this.logger.error(`Failed to ingest from category ${category}:`, error);
       return [];
@@ -118,7 +124,7 @@ export class NewsIngestService {
    * Veritabanına kaydet
    */
   private async saveToDatabase(
-    items: ProcessedNewsItem[]
+    items: ProcessedNewsItem[],
   ): Promise<{ saved: number; errors: number }> {
     let saved = 0;
     let errors = 0;
@@ -162,7 +168,6 @@ export class NewsIngestService {
           saved++;
           this.logger.debug(`Saved news item: ${item.title}`);
         }
-
       } catch (error) {
         this.logger.error(`Error saving news item: ${item.title}`, error);
         errors++;
@@ -190,7 +195,7 @@ export class NewsIngestService {
       // Today's news
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const { count: todayNews } = await this.supabaseService.adminSupabase
         .from('news')
         .select('id', { count: 'exact' })
@@ -204,7 +209,7 @@ export class NewsIngestService {
 
       const categoryCounts: Record<string, number> = {};
       if (modeData) {
-        modeData.forEach(item => {
+        modeData.forEach((item) => {
           categoryCounts[item.mode] = (categoryCounts[item.mode] || 0) + 1;
         });
       }
@@ -216,7 +221,7 @@ export class NewsIngestService {
         .order('created_at', { ascending: false })
         .limit(1);
 
-      const lastIngestion = lastNews?.[0]?.created_at 
+      const lastIngestion = lastNews?.[0]?.created_at
         ? new Date(lastNews[0].created_at)
         : null;
 
@@ -226,7 +231,6 @@ export class NewsIngestService {
         lastIngestion,
         categoryCounts,
       };
-
     } catch (error) {
       this.logger.error('Failed to get ingestion stats:', error);
       return {
@@ -238,4 +242,3 @@ export class NewsIngestService {
     }
   }
 }
-

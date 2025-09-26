@@ -2,12 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import * as cheerio from 'cheerio';
-import { 
-  RawNewsItem, 
-  ProcessedNewsItem, 
+import {
+  RawNewsItem,
+  ProcessedNewsItem,
   AACategory,
-  MoodType,
-  DEFAULT_MODE 
+  DEFAULT_MODE,
 } from '../dto/news-item.dto';
 
 @Injectable()
@@ -20,13 +19,13 @@ export class ContentProcessorService {
    * Processes raw news data and extracts full content
    */
   async processNewsItem(
-    rawItem: RawNewsItem, 
-    category: AACategory
+    rawItem: RawNewsItem,
+    category: AACategory,
   ): Promise<ProcessedNewsItem | null> {
     try {
       // Extract full content with web scraping
       const fullContent = await this.extractFullContent(rawItem.link);
-      
+
       // Skip if no content
       if (!fullContent.trim()) {
         this.logger.warn(`No content extracted from: ${rawItem.link}`);
@@ -51,7 +50,6 @@ export class ContentProcessorService {
         original_url: rawItem.link,
         published_at: publishedAt,
       };
-
     } catch (error) {
       this.logger.error(`Failed to process news item: ${rawItem.link}`, error);
       return null;
@@ -69,11 +67,11 @@ export class ContentProcessorService {
           headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; Nexachron/1.0)',
           },
-        })
+        }),
       );
 
       const $ = cheerio.load(response.data);
-      
+
       // AA'nın içerik yapısına göre selector'lar
       const contentSelectors = [
         '.detay-spot-category',
@@ -96,14 +94,16 @@ export class ContentProcessorService {
 
       // Fallback: tüm p tag'lerini topla
       if (!content) {
-        content = $('p').map((_, el) => $(el).text()).get().join('\n');
+        content = $('p')
+          .map((_, el) => $(el).text())
+          .get()
+          .join('\n');
       }
 
       // Temizle
       content = this.cleanContent(content);
 
       return content;
-
     } catch (error) {
       this.logger.warn(`Failed to extract content from ${url}:`, error.message);
       return '';
@@ -114,28 +114,58 @@ export class ContentProcessorService {
    * İçeriği temizler
    */
   private cleanContent(content: string): string {
-    return content
-      // Çok fazla whitespace'i temizle
-      .replace(/\s+/g, ' ')
-      // Başındaki ve sonundaki boşlukları temizle
-      .trim()
+    return (
       // Çok kısa içerikleri filtrele
-      .length > 50 ? content.trim() : '';
+      content
+        // Çok fazla whitespace'i temizle
+        .replace(/\s+/g, ' ')
+        // Başındaki ve sonundaki boşlukları temizle
+        .trim().length > 50
+        ? content.trim()
+        : ''
+    );
   }
 
   /**
    * İçerikten şehir bilgisini çıkarır
    */
-  private extractCityFromContent(content: string, title: string): string | undefined {
+  private extractCityFromContent(
+    content: string,
+    title: string,
+  ): string | undefined {
     const text = `${title} ${content}`.toLowerCase();
-    
+
     // Türkiye'nin büyük şehirleri
     const cities = [
-      'istanbul', 'ankara', 'izmir', 'bursa', 'antalya', 'adana', 'konya',
-      'şanlıurfa', 'gaziantep', 'kocaeli', 'mersin', 'diyarbakır', 'hatay',
-      'sakarya', 'manisa', 'kayseri', 'balıkesir', 'van', 'aydın', 'denizli',
-      'muğla', 'tekirdağ', 'elazığ', 'erzurum', 'sivas', 'çorum', 'batman',
-      'sanliurfa', 'urfa'
+      'istanbul',
+      'ankara',
+      'izmir',
+      'bursa',
+      'antalya',
+      'adana',
+      'konya',
+      'şanlıurfa',
+      'gaziantep',
+      'kocaeli',
+      'mersin',
+      'diyarbakır',
+      'hatay',
+      'sakarya',
+      'manisa',
+      'kayseri',
+      'balıkesir',
+      'van',
+      'aydın',
+      'denizli',
+      'muğla',
+      'tekirdağ',
+      'elazığ',
+      'erzurum',
+      'sivas',
+      'çorum',
+      'batman',
+      'sanliurfa',
+      'urfa',
     ];
 
     for (const city of cities) {
@@ -164,16 +194,18 @@ export class ContentProcessorService {
    * Toplu işlem için
    */
   async processBatch(
-    items: Map<AACategory, RawNewsItem[]>
+    items: Map<AACategory, RawNewsItem[]>,
   ): Promise<ProcessedNewsItem[]> {
     const processedItems: ProcessedNewsItem[] = [];
 
     for (const [category, rawItems] of items.entries()) {
-      this.logger.log(`Processing ${rawItems.length} items from category: ${category}`);
+      this.logger.log(
+        `Processing ${rawItems.length} items from category: ${category}`,
+      );
 
       // Her kategoriden paralel olarak işle (ama tüm kategoriler sequential)
-      const categoryPromises = rawItems.map(item => 
-        this.processNewsItem(item, category)
+      const categoryPromises = rawItems.map((item) =>
+        this.processNewsItem(item, category),
       );
 
       const categoryResults = await Promise.allSettled(categoryPromises);
@@ -182,16 +214,19 @@ export class ContentProcessorService {
         if (result.status === 'fulfilled' && result.value) {
           processedItems.push(result.value);
         } else {
-          this.logger.warn(`Failed to process item ${index} from category ${category}`);
+          this.logger.warn(
+            `Failed to process item ${index} from category ${category}`,
+          );
         }
       });
 
       // Rate limiting için kısa bekle
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    this.logger.log(`Successfully processed ${processedItems.length} news items`);
+    this.logger.log(
+      `Successfully processed ${processedItems.length} news items`,
+    );
     return processedItems;
   }
 }
-

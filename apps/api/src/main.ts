@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable CORS for frontend
   app.enableCors({
     origin: process.env.FRONTEND_URL || [
@@ -22,8 +22,8 @@ async function bootstrap() {
 
   const port = process.env.PORT || 4000;
   await app.listen(port, '0.0.0.0');
-  
+
   console.log(`🚀 API server running on port ${port}`);
   console.log(`📍 Health check: http://localhost:${port}/health`);
 }
-bootstrap();
+void bootstrap();

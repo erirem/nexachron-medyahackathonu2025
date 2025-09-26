@@ -1,11 +1,11 @@
-import { 
-  Controller, 
-  Post, 
-  Get, 
-  Param, 
-  Body, 
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
   BadRequestException,
-  Logger 
+  Logger,
 } from '@nestjs/common';
 import { NewsIngestService } from './news-ingest.service';
 import { AACategory } from './dto/news-item.dto';
@@ -32,7 +32,7 @@ export class NewsIngestController {
     const result = await this.newsIngestService.ingestNews();
 
     return {
-      message: result.success 
+      message: result.success
         ? `Successfully processed ${result.processed} news items`
         : 'News ingestion failed',
       success: result.success,
@@ -46,9 +46,7 @@ export class NewsIngestController {
    * POST /api/news-ingest/category/:category
    */
   @Post('category/:category')
-  async ingestFromCategory(
-    @Param('category') category: string
-  ): Promise<{
+  async ingestFromCategory(@Param('category') category: string): Promise<{
     message: string;
     category: string;
     processed: number;
@@ -57,19 +55,21 @@ export class NewsIngestController {
     // Kategori validasyonu
     if (!Object.values(AACategory).includes(category as AACategory)) {
       throw new BadRequestException(
-        `Invalid category. Valid categories: ${Object.values(AACategory).join(', ')}`
+        `Invalid category. Valid categories: ${Object.values(AACategory).join(', ')}`,
       );
     }
 
     this.logger.log(`Category-specific ingestion requested: ${category}`);
 
-    const items = await this.newsIngestService.ingestFromCategory(category as AACategory);
+    const items = await this.newsIngestService.ingestFromCategory(
+      category as AACategory,
+    );
 
     return {
       message: `Successfully processed ${items.length} items from ${category}`,
       category,
       processed: items.length,
-      items: items.map(item => ({
+      items: items.map((item) => ({
         title: item.title,
         category: item.category,
         mode: item.mode,
@@ -104,21 +104,41 @@ export class NewsIngestController {
    * GET /api/news-ingest/categories
    */
   @Get('categories')
-  async getCategories(): Promise<{
+  getCategories(): {
     categories: Array<{
       key: string;
       name: string;
       description: string;
     }>;
-  }> {
+  } {
     const categoryInfo = [
-      { key: AACategory.GUNCEL, name: 'Güncel', description: 'Current/General news' },
-      { key: AACategory.EKONOMI, name: 'Ekonomi', description: 'Economy and finance' },
+      {
+        key: AACategory.GUNCEL,
+        name: 'Güncel',
+        description: 'Current/General news',
+      },
+      {
+        key: AACategory.EKONOMI,
+        name: 'Ekonomi',
+        description: 'Economy and finance',
+      },
       { key: AACategory.SPOR, name: 'Spor', description: 'Sports news' },
       { key: AACategory.DUNYA, name: 'Dünya', description: 'World news' },
-      { key: AACategory.TEKNOLOJI, name: 'Teknoloji', description: 'Technology and innovation' },
-      { key: AACategory.YASAM, name: 'Yaşam', description: 'Lifestyle and living' },
-      { key: AACategory.SAGLIK, name: 'Sağlık', description: 'Health and medical' },
+      {
+        key: AACategory.TEKNOLOJI,
+        name: 'Teknoloji',
+        description: 'Technology and innovation',
+      },
+      {
+        key: AACategory.YASAM,
+        name: 'Yaşam',
+        description: 'Lifestyle and living',
+      },
+      {
+        key: AACategory.SAGLIK,
+        name: 'Sağlık',
+        description: 'Health and medical',
+      },
     ];
 
     return { categories: categoryInfo };
@@ -140,14 +160,15 @@ export class NewsIngestController {
     }
 
     // Sadece RSS parse et, veritabanına kaydetme
-    const items = await this.newsIngestService['rssParserService']
-      .fetchCategoryFeed(category as AACategory);
+    const items = await this.newsIngestService[
+      'rssParserService'
+    ].fetchCategoryFeed(category as AACategory);
 
     return {
       category,
       rssUrl: `https://www.aa.com.tr/tr/rss/default?cat=${category}`,
       itemCount: items.length,
-      sample: items.slice(0, 3).map(item => ({
+      sample: items.slice(0, 3).map((item) => ({
         title: item.title,
         description: item.description?.substring(0, 100) + '...',
         pubDate: item.pubDate,
@@ -156,4 +177,3 @@ export class NewsIngestController {
     };
   }
 }
-

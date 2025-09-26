@@ -2,10 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import Parser from 'rss-parser';
-import { 
-  AACategory, 
-  RawNewsItem, 
-  RawNewsItemSchema 
+import {
+  AACategory,
+  RawNewsItem,
+  RawNewsItemSchema,
 } from '../dto/news-item.dto';
 
 @Injectable()
@@ -17,11 +17,7 @@ export class RssParserService {
   constructor(private readonly httpService: HttpService) {
     this.parser = new Parser({
       customFields: {
-        item: [
-          'enclosure',
-          'media:content',
-          'media:thumbnail',
-        ],
+        item: ['enclosure', 'media:content', 'media:thumbnail'],
       },
     });
   }
@@ -40,16 +36,21 @@ export class RssParserService {
           headers: {
             'User-Agent': 'Nexachron News Bot 1.0',
           },
-        })
+        }),
       );
 
       const feed = await this.parser.parseString(response.data);
-      
-      this.logger.log(`Fetched ${feed.items?.length || 0} items from ${category} category`);
+
+      this.logger.log(
+        `Fetched ${feed.items?.length || 0} items from ${category} category`,
+      );
 
       return this.validateAndTransformItems(feed.items || [], category);
     } catch (error) {
-      this.logger.error(`Failed to fetch RSS feed for category ${category}:`, error);
+      this.logger.error(
+        `Failed to fetch RSS feed for category ${category}:`,
+        error,
+      );
       return [];
     }
   }
@@ -59,9 +60,9 @@ export class RssParserService {
    */
   async fetchAllCategories(): Promise<Map<AACategory, RawNewsItem[]>> {
     const results = new Map<AACategory, RawNewsItem[]>();
-    
+
     const categories = Object.values(AACategory);
-    
+
     // Fetch all categories in parallel
     const promises = categories.map(async (category) => {
       const items = await this.fetchCategoryFeed(category);
@@ -74,7 +75,10 @@ export class RssParserService {
       if (result.status === 'fulfilled') {
         results.set(result.value.category, result.value.items);
       } else {
-        this.logger.error(`Failed to fetch category ${categories[index]}:`, result.reason);
+        this.logger.error(
+          `Failed to fetch category ${categories[index]}:`,
+          result.reason,
+        );
         results.set(categories[index], []);
       }
     });
@@ -85,7 +89,10 @@ export class RssParserService {
   /**
    * Validates and transforms RSS items
    */
-  private validateAndTransformItems(items: any[], category: AACategory): RawNewsItem[] {
+  private validateAndTransformItems(
+    items: any[],
+    category: AACategory,
+  ): RawNewsItem[] {
     const validItems: RawNewsItem[] = [];
 
     for (const item of items) {
@@ -99,7 +106,9 @@ export class RssParserService {
       }
     }
 
-    this.logger.debug(`Validated ${validItems.length}/${items.length} items for category ${category}`);
+    this.logger.debug(
+      `Validated ${validItems.length}/${items.length} items for category ${category}`,
+    );
     return validItems;
   }
 
@@ -109,26 +118,28 @@ export class RssParserService {
   private transformRssItem(item: any, category: AACategory): RawNewsItem {
     // Extract image URL
     let imageUrl: string | undefined;
-    
+
     if (item.enclosure?.url) {
-      imageUrl = item.enclosure.url;
+      imageUrl = String(item.enclosure.url);
     } else if (item['media:content']?.url) {
-      imageUrl = item['media:content'].url;
+      imageUrl = String(item['media:content'].url);
     } else if (item['media:thumbnail']?.url) {
-      imageUrl = item['media:thumbnail'].url;
+      imageUrl = String(item['media:thumbnail'].url);
     }
 
     return {
-      title: item.title?.trim() || '',
-      link: item.link || '',
-      description: item.contentSnippet || item.description || '',
-      pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
+      title: String(item.title || '').trim(),
+      link: String(item.link || ''),
+      description: String(item.contentSnippet || item.description || ''),
+      pubDate: String(item.pubDate || item.isoDate || new Date().toISOString()),
       category: [category],
-      guid: item.guid || item.link,
-      enclosure: imageUrl ? {
-        url: imageUrl,
-        type: item.enclosure?.type || 'image/jpeg',
-      } : undefined,
+      guid: String(item.guid || item.link || ''),
+      enclosure: imageUrl
+        ? {
+            url: imageUrl,
+            type: String(item.enclosure?.type || 'image/jpeg'),
+          }
+        : undefined,
     };
   }
 }

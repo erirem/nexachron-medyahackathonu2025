@@ -8,7 +8,8 @@ export class NewsService {
   async getAllNews(limit = 20, mode?: string, city?: string) {
     let query = this.supabaseService.supabase
       .from('news')
-      .select(`
+      .select(
+        `
         id,
         title,
         summary,
@@ -20,7 +21,8 @@ export class NewsService {
         created_at,
         comments(count),
         reactions(emoji)
-      `)
+      `,
+      )
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -38,7 +40,8 @@ export class NewsService {
   async getNewsById(id: string) {
     return this.supabaseService.supabase
       .from('news')
-      .select(`
+      .select(
+        `
         *,
         comments(
           id,
@@ -57,7 +60,8 @@ export class NewsService {
           options,
           correct_index
         )
-      `)
+      `,
+      )
       .eq('id', id)
       .single();
   }
@@ -81,22 +85,18 @@ export class NewsService {
   }
 
   async addComment(newsId: string, userId: string, body: string) {
-    return this.supabaseService.supabase
-      .from('comments')
-      .insert({
-        news_id: newsId,
-        user_id: userId,
-        body: body
-      });
+    return this.supabaseService.supabase.from('comments').insert({
+      news_id: newsId,
+      user_id: userId,
+      body: body,
+    });
   }
 
   async addReaction(newsId: string, userId: string, emoji: string) {
-    return this.supabaseService.supabase
-      .from('reactions')
-      .upsert({
-        news_id: newsId,
-        user_id: userId,
-        emoji: emoji
-      });
+    return this.supabaseService.supabase.from('reactions').upsert({
+      news_id: newsId,
+      user_id: userId,
+      emoji: emoji,
+    });
   }
 }

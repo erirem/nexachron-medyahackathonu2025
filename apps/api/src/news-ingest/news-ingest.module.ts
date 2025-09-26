@@ -9,11 +9,7 @@ import { MoodCalculatorService } from './services/mood-calculator.service';
 import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
-  imports: [
-    HttpModule,
-    ScheduleModule.forRoot(),
-    SupabaseModule,
-  ],
+  imports: [HttpModule, ScheduleModule.forRoot(), SupabaseModule],
   controllers: [NewsIngestController],
   providers: [
     NewsIngestService,
@@ -24,4 +20,3 @@ import { SupabaseModule } from '../supabase/supabase.module';
   exports: [NewsIngestService, MoodCalculatorService],
 })
 export class NewsIngestModule {}
-

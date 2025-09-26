@@ -27,10 +27,12 @@ export const RawNewsItemSchema = z.object({
   pubDate: z.string(),
   category: z.array(z.string()).optional(),
   guid: z.string().optional(),
-  enclosure: z.object({
-    url: z.string().url().optional(),
-    type: z.string().optional(),
-  }).optional(),
+  enclosure: z
+    .object({
+      url: z.string().url().optional(),
+      type: z.string().optional(),
+    })
+    .optional(),
 });
 
 export type RawNewsItem = z.infer<typeof RawNewsItemSchema>;
@@ -53,4 +55,3 @@ export type ProcessedNewsItem = z.infer<typeof ProcessedNewsItemSchema>;
 
 // Default mood for new articles (before user feedback)
 export const DEFAULT_MODE = MoodType.WORLD;
-
