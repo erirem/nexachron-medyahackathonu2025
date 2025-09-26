@@ -272,12 +272,12 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
                   key={item.id}
                   type="button"
                   onClick={() => onCategoryChange(item.id)}
-                  className={`group flex h-12 items-center rounded-2xl px-3 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8bc4ff] ${
+                  className={`group flex h-12 items-center rounded-2xl px-3 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 ${
                     isCollapsed ? 'justify-center gap-0' : 'justify-start gap-3'
                   } ${
                     isActive
-                      ? 'bg-[#0f6acd] text-white shadow-[0_16px_40px_rgba(15,106,205,0.28)]'
-                      : 'bg-white/10 text-white/75 shadow-[0_14px_36px_rgba(15,72,142,0.12)] hover:bg-[#0f6acd] hover:text-white'
+                      ? 'bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-[0_12px_32px_rgba(15,106,205,0.35)]'
+                      : 'bg-white/5 text-white/70 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
                   }`}
                   aria-label={item.label}
                   title={isCollapsed ? item.label : undefined}
@@ -301,19 +301,19 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
 
           {!isCollapsed && (
             <>
-              <div className="px-6 pt-5">
-                <div className="flex items-center gap-2 rounded-full border border-[#d8e4f7] bg-white px-5 py-2.5 text-sm text-[#4c6587] shadow-[0_14px_36px_rgba(20,74,140,0.12)]">
+                <div className="px-6 pt-5">
+                <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]">
                   <SearchIcon />
                   <input
                     placeholder="Koleksiyonlarda ara"
-                    className="w-full bg-transparent text-sm text-[#1a2d45] placeholder:text-[#8ca0bf] focus:outline-none"
+                    className="w-full bg-transparent text-sm text-white placeholder:text-white/60 focus:outline-none"
                     type="search"
                   />
                 </div>
-                <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#5f799d]">
-                  <button type="button" className="rounded-full bg-[#0f6acd] px-3 py-1.5 text-white shadow-[0_12px_30px_rgba(12,94,178,0.25)]">Listeler</button>
-                  <button type="button" className="rounded-full px-3 py-1.5 text-[#3b5273] transition hover:bg-[#e6eef9]">Kayıtlar</button>
-                  <button type="button" className="rounded-full px-3 py-1.5 text-[#3b5273] transition hover:bg-[#e6eef9]">Sesler</button>
+                <div className="mt-3 flex items-center gap-2 text-xs font-semibold">
+                  <button type="button" className="rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] px-3 py-1.5 text-white shadow-[0_10px_24px_rgba(15,106,205,0.3)]">Listeler</button>
+                  <button type="button" className="rounded-full px-3 py-1.5 text-white/70 bg-white/5 border border-white/10 transition hover:bg-white/10 hover:text-white hover:border-white/20">Kayıtlar</button>
+                  <button type="button" className="rounded-full px-3 py-1.5 text-white/70 bg-white/5 border border-white/10 transition hover:bg-white/10 hover:text-white hover:border-white/20">Sesler</button>
                 </div>
               </div>
 
@@ -388,7 +388,7 @@ function SidebarTopicItem({ topic }: SidebarTopicItemProps): JSX.Element {
     <li>
       <button
         type="button"
-        className="group relative flex w-full items-center gap-3.5 overflow-hidden rounded-2xl border border-transparent bg-white/75 px-4 py-3.5 text-left shadow-[0_18px_46px_rgba(17,76,140,0.08)] transition hover:border-[#bcd7ff] hover:bg-[#ecf4ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#88c4ff]"
+        className="group relative flex w-full items-center gap-3.5 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3.5 text-left shadow-[0_12px_32px_rgba(0,0,0,0.15)] transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:shadow-[0_16px_40px_rgba(0,0,0,0.2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
       >
         {highlightLabel && (
           <span className="pointer-events-none absolute -left-8 top-4 origin-left -rotate-45 bg-gradient-to-r from-[#ff6a3d] to-[#f97316] px-7 py-[0.2rem] text-[0.55rem] font-semibold uppercase tracking-[0.22em] text-white shadow-[0_8px_18px_rgba(228,96,48,0.35)]">
@@ -399,8 +399,8 @@ function SidebarTopicItem({ topic }: SidebarTopicItemProps): JSX.Element {
           {topic.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white group-hover:text-[#9dd1ff]">{topic.title}</p>
-          <p className="truncate text-xs text-white/70">{topic.description}</p>
+          <p className="truncate text-sm font-semibold text-white/90 group-hover:text-white">{topic.title}</p>
+          <p className="truncate text-xs text-white/60 group-hover:text-white/80">{topic.description}</p>
         </div>
       </button>
     </li>

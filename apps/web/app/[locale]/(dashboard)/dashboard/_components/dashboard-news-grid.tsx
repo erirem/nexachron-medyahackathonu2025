@@ -11,6 +11,24 @@ interface DashboardNewsGridProps {
   readonly showAll?: boolean;
 }
 
+function getCategoryLabel(category: string): string {
+  const categoryLabels: Record<string, string> = {
+    'Finans': 'SICAK HABER • FİNANS',
+    'Diplomasi': 'GÜNDEMDE • DİPLOMASİ', 
+    'Savunma': 'SICAK HABER • SAVUNMA',
+    'Teknoloji': 'GÜNDEMDE • TEKNOLOJİ',
+    'Sağlık': 'ŞU SIRALAR POPÜLER • SAĞLIK',
+    'Ekonomi': 'SICAK HABER • EKONOMİ',
+    'Enerji': 'GÜNDEMDE • ENERJİ',
+    'Çevre': 'GÜNDEMDE • ENERJİ', 
+    'Turizm': 'ŞU SIRALAR POPÜLER • TURİZM',
+    'Spor': 'SICAK HABER • SPOR',
+    'Tarım': 'GÜNDEMDE • TARIM'
+  };
+  
+  return categoryLabels[category] || `GÜNDEMDE • ${category.toUpperCase()}`;
+}
+
 export function DashboardNewsGrid({
   items,
   title = 'Öne çıkan haberler',
@@ -44,7 +62,14 @@ export function DashboardNewsGrid({
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
         {items.map((item) => (
-          <DashboardNewsCard key={item.id} item={item} />
+          <div key={item.id} className="flex flex-col">
+            <div className="mb-2">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.15em] text-white/50">
+                {getCategoryLabel(item.category)}
+              </p>
+            </div>
+            <DashboardNewsCard item={item} />
+          </div>
         ))}
       </div>
     </section>
