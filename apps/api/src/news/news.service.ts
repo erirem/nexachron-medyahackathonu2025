@@ -99,4 +99,39 @@ export class NewsService {
       emoji: emoji,
     });
   }
+// feed-api upgrade
+  async getFeed(params: {
+    limit?: number;
+    mode?: string;
+    cursor?: string | null;
+  }) {
+    const { limit = 20, mode, cursor } = params;
+
+    let query = this.supabaseService.supabase
+      .from('news')
+      .select(
+        `
+        id,
+        title,
+        summary,
+        image_url,
+        tts_url,
+        mode,
+        created_at
+      `,
+      )
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (mode) {
+      query = query.eq('mode', mode);
+    }
+
+    if (cursor) {
+      // Infinite scroll: fetch items older than the cursor timestamp
+      query = query.lt('created_at', cursor);
+    }
+
+    return query;
+  }
 }
