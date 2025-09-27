@@ -159,14 +159,14 @@ export function RegisterForm(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    void router.prefetch(`/${locale}/profile`);
+    void router.prefetch(`/${locale}/dashboard`);
   }, [locale, router]);
 
   useEffect(() => {
     const detectExistingSession = async () => {
       const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
       if (token) {
-        router.replace(`/${locale}/profile`);
+        router.replace(`/${locale}/dashboard`);
       }
     };
 
@@ -220,7 +220,7 @@ export function RegisterForm(): JSX.Element {
             city: values.city,
           },
           emailRedirectTo:
-            typeof window !== "undefined" ? `${window.location.origin}/${locale}/profile` : undefined,
+            typeof window !== "undefined" ? `${window.location.origin}/${locale}/dashboard` : undefined,
         },
       });
 
@@ -250,7 +250,7 @@ export function RegisterForm(): JSX.Element {
       });
 
       window.setTimeout(() => {
-        router.push(`/${locale}/profile`);
+        router.push(`/${locale}/dashboard`);
       }, 500);
     } catch (error) {
       console.error("Supabase sign up failed", error);

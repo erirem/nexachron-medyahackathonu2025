@@ -26,4 +26,4 @@ async function bootstrap() {
   console.log(`🚀 API server running on port ${port}`);
   console.log(`📍 Health check: http://localhost:${port}/health`);
 }
-bootstrap();
+void bootstrap();

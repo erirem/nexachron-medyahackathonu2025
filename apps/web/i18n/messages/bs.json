@@ -111,7 +111,7 @@
         "default": "Pridruži se Nexachronu i doživi gamificirane vijesti.",
         "submitting": "Provjera podataka...",
         "invalid": "Provjeri ispravnost obrasca",
-        "success": "Dobro došao nazad! Preusmjeravamo te na profil...",
+      "success": "Dobro došao nazad! Preusmjeravamo te na nadzornu ploču...",
         "error": "Prijava nije uspjela."
       },
       "supabase": {
@@ -274,7 +274,7 @@
         "submitting": "Pokrećemo registraciju...",
         "invalid": "Provjeri obavezna polja",
         "successEmail": "Registracija je uspjela! Provjeri email za potvrdu.",
-        "successRedirect": "Dobro došao! Preusmjeravamo te na profil...",
+      "successRedirect": "Dobro došao! Preusmjeravamo te na nadzornu ploču...",
         "error": "Registracija nije mogla biti završena."
       },
       "supabase": {

@@ -111,7 +111,7 @@
         "default": "Nexachron'a katıl, haberleri oyunlaştırılmış deneyimle yaşa",
         "submitting": "Bilgiler kontrol ediliyor...",
         "invalid": "Formu kontrol et",
-        "success": "Hoş geldin! Profiline yönlendiriliyorsun...",
+      "success": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
         "error": "Giriş sırasında beklenmeyen bir hata oluştu."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Kayıt işlemi başlatılıyor...",
         "invalid": "Lütfen tüm alanları kontrol edin",
         "successEmail": "Kayıt tamam! E-postanı kontrol ederek üyeliğini doğrula.",
-        "successRedirect": "Hoş geldin! Profiline yönlendiriliyorsun...",
+      "successRedirect": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
         "error": "Kayıt sırasında beklenmeyen bir hata oluştu."
       },
       "supabase": {

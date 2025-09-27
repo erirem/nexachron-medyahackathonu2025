@@ -104,14 +104,14 @@ export function LoginForm(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    void router.prefetch(`/${locale}/profile`);
+    void router.prefetch(`/${locale}/dashboard`);
   }, [locale, router]);
 
   useEffect(() => {
     const detectExistingSession = async () => {
       const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
       if (token) {
-        router.replace(`/${locale}/profile`);
+        router.replace(`/${locale}/dashboard`);
       }
     };
 
@@ -169,7 +169,7 @@ export function LoginForm(): JSX.Element {
       });
 
       window.setTimeout(() => {
-        router.push(`/${locale}/profile`);
+        router.push(`/${locale}/dashboard`);
       }, 400);
     } catch (error) {
       console.error("Supabase login failed", error);

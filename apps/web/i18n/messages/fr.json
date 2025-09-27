@@ -111,7 +111,7 @@
         "default": "Rejoignez Nexachron et découvrez l'actualité gamifiée.",
         "submitting": "Nous vérifions vos informations...",
         "invalid": "Veuillez vérifier le formulaire",
-        "success": "Bon retour ! Redirection vers votre profil...",
+      "success": "Bon retour ! Redirection vers votre tableau de bord...",
         "error": "Impossible de vous connecter pour le moment."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Démarrage de l'inscription...",
         "invalid": "Veuillez vérifier les champs requis",
         "successEmail": "Inscription réussie ! Vérifiez votre boîte mail pour confirmer.",
-        "successRedirect": "Bienvenue ! Redirection vers votre profil...",
+      "successRedirect": "Bienvenue ! Redirection vers votre tableau de bord...",
         "error": "Une erreur est survenue lors de l'inscription."
       },
       "supabase": {

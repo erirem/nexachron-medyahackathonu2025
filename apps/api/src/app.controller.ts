@@ -21,6 +21,7 @@ export class AppController {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
+      message: 'Nexachron News Ingest API is running',
     };
   }
 
@@ -28,12 +29,13 @@ export class AppController {
   async testSupabase() {
     try {
       const client = this.supabaseService.supabase;
+      const adminClient = this.supabaseService.adminSupabase;
 
       if (!client) {
         throw new Error('Supabase client not initialized');
       }
 
-      // Test advanced schema tables
+      // ---- feat/auth-improvements: gelişmiş tablo kontrolleri (anon/public client) ----
       const tableTests = await Promise.allSettled([
         client.from('users').select('*').limit(1),
         client.from('news').select('*').limit(1),
@@ -42,7 +44,7 @@ export class AppController {
         client.from('user_stats').select('*').limit(1),
       ]);
 
-      const results = {
+      const tableResults = {
         users:
           tableTests[0].status === 'fulfilled'
             ? tableTests[0].value.error?.message || 'OK'
@@ -65,28 +67,70 @@ export class AppController {
             : 'Failed',
       };
 
-      const allTablesExist = Object.values(results).every(
-        (result) => result === 'OK',
-      );
+      const allTablesOK = Object.values(tableResults).every((r) => r === 'OK');
+
+      // ---- main: admin client ile news tablosu testi ----
+      let newsSummary: {
+        totalCount: number;
+        sampleItems: Array<{ title: string; mode: string | null; created: string | null }>;
+        error: string | null;
+      } = { totalCount: 0, sampleItems: [], error: null };
+
+      if (adminClient) {
+        const { data: newsTest, error: newsError } = await adminClient
+          .from('news')
+          .select('id, title, mode, created_at')
+          .limit(5);
+
+        const { count: totalNews, error: countError } = await adminClient
+          .from('news')
+          .select('id', { count: 'exact', head: true });
+
+        newsSummary = {
+          totalCount: totalNews || 0,
+          sampleItems:
+            newsTest?.map((item: any) => ({
+              title: (item.title ?? '').slice(0, 50) + (item.title?.length > 50 ? '...' : ''),
+              mode: item.mode ?? null,
+              created: item.created_at ?? null,
+            })) || [],
+          error: newsError?.message || countError?.message || null,
+        };
+      } else {
+        newsSummary = {
+          totalCount: 0,
+          sampleItems: [],
+          error: 'Admin Supabase client not initialized',
+        };
+      }
+
+      const hasNewsError = !!newsSummary.error;
+      const status = allTablesOK && !hasNewsError ? 'success' : (allTablesOK || !hasNewsError ? 'partial' : 'error');
 
       return {
-        status: allTablesExist ? 'success' : 'partial',
-        message: allTablesExist
-          ? 'Advanced schema working!'
-          : 'Some tables missing - run SQL setup',
+        status,
+        message:
+          status === 'success'
+            ? 'All checks passed!'
+            : status === 'partial'
+            ? 'Some checks failed or are missing configuration'
+            : 'Checks failed',
         supabaseUrl: process.env.SUPABASE_URL,
         hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
-        tableTests: results,
-        hint: allTablesExist
-          ? '🎉 Ready for development!'
-          : '📋 Run supabase_advanced_schema.sql in Supabase Dashboard',
+        tableTests: tableResults,
+        newsTable: newsSummary,
+        hint:
+          allTablesOK && !hasNewsError
+            ? '🎉 Ready for development!'
+            : '📋 Supabase şemasını ve RLS/Policy ayarlarını kontrol edin',
         timestamp: new Date().toISOString(),
       };
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       return {
         status: 'error',
         message: 'Supabase connection failed',
-        error: err.message,
+        error: errorMessage,
         supabaseUrl: process.env.SUPABASE_URL,
         hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
         timestamp: new Date().toISOString(),

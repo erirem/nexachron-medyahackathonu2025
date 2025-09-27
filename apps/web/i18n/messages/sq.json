@@ -112,7 +112,7 @@
         "default": "Bëhu pjesë e Nexachron dhe përjeto lajmet e gamifikuara.",
         "submitting": "Po verifikojmë të dhënat...",
         "invalid": "Kontrollo formularin",
-        "success": "Mirë se u ktheve! Po të ridrejtojmë te profili...",
+      "success": "Mirë se u ktheve! Po të ridrejtojmë te pulti...",
         "error": "Pati një problem gjatë hyrjes."
       },
       "supabase": {
@@ -274,7 +274,7 @@
         "submitting": "Po nisim regjistrimin...",
         "invalid": "Kontrollo fushat e detyrueshme",
         "successEmail": "Regjistrimi u krye! Kontrollo email-in për konfirmim.",
-        "successRedirect": "Mirësevjen! Po të ridrejtojmë te profili...",
+      "successRedirect": "Mirësevjen! Po të ridrejtojmë te pulti...",
         "error": "Nuk mundëm të përfundojmë regjistrimin."
       },
       "supabase": {

@@ -111,7 +111,7 @@
         "default": "Bergabunglah dengan Nexachron dan nikmati berita yang bergamifikasi.",
         "submitting": "Sedang memverifikasi data...",
         "invalid": "Periksa kembali formulir",
-        "success": "Selamat datang kembali! Mengarahkan ke profil Anda...",
+      "success": "Selamat datang kembali! Mengarahkan ke dasbor Anda...",
         "error": "Terjadi kesalahan saat masuk."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Memulai pendaftaran...",
         "invalid": "Periksa kolom wajib",
         "successEmail": "Registrasi sukses! Cek email Anda untuk verifikasi.",
-        "successRedirect": "Selamat datang! Mengarahkan ke profil...",
+      "successRedirect": "Selamat datang! Mengarahkan ke dasbor...",
         "error": "Terjadi kesalahan saat membuat akun."
       },
       "supabase": {
