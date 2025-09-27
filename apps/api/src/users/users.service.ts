@@ -11,7 +11,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 type UserRow = Database['public']['Tables']['users']['Row'];
 type UserStatsRow = Database['public']['Tables']['user_stats']['Row'];
 
-interface ProfileWithStats {
+export interface ProfileWithStats {
   user: {
     id: string;
     email: string | null;

@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QuizType {
+  DAILY
+  REELS
+  ARTICLE
+  TREND
+  BRIEF
+}
+
+enum QuizStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum QuizAttemptState {
+  CREATED
+  ANSWERED
+}
+
+model Quiz {
+  id          String        @id @default(cuid())
+  type        QuizType
+  newsId      String?       @map("news_id")
+  question    String
+  explanation String?
+  activeUntil DateTime?     @map("active_until")
+  status      QuizStatus    @default(ACTIVE)
+  difficulty  String?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  options  QuizOption[]
+  attempts QuizAttempt[]
+
+  @@map("quizzes")
+  @@index([newsId])
+  @@index([status, activeUntil])
+}
+
+model QuizOption {
+  id           String       @id @default(cuid())
+  quizId       String       @map("quiz_id")
+  text         String
+  isCorrect    Boolean      @map("is_correct")
+  explanation  String?
+  displayOrder Int          @map("display_order")
+
+  quiz     Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  attempts QuizAttempt[] @relation("QuizAttemptSelectedOption")
+
+  @@map("quiz_options")
+  @@index([quizId])
+  @@unique([quizId, displayOrder])
+}
+
+model QuizAttempt {
+  id                String           @id @default(cuid())
+  userId            String           @map("user_id")
+  quizId            String           @map("quiz_id")
+  state             QuizAttemptState @default(CREATED)
+  selectedOptionId  String?          @map("selected_option_id")
+  isCorrect         Boolean?         @map("is_correct")
+  awardedXp         Int              @default(0) @map("awarded_xp")
+  streakIncremented Boolean          @default(false) @map("streak_incremented")
+  shuffleSeed       Int?             @map("shuffle_seed")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  answeredAt        DateTime?        @map("answered_at")
+
+  quiz           Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  selectedOption QuizOption?   @relation("QuizAttemptSelectedOption", fields: [selectedOptionId], references: [id])
+  userProgress   UserProgress? @relation(fields: [userId], references: [userId])
+
+  @@map("quiz_attempts")
+  @@index([quizId])
+  @@index([userId])
+  @@unique([userId, quizId])
+}
+
+model UserProgress {
+  userId        String        @id @map("user_id")
+  xp            Int           @default(0)
+  currentStreak Int           @default(0) @map("current_streak")
+  lastSeenDate  DateTime?     @map("last_seen_date")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  attempts QuizAttempt[]
+
+  @@map("user_progress")
+}

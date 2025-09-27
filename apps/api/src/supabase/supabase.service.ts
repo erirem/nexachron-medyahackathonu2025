@@ -14,10 +14,14 @@ export class SupabaseService implements OnModuleInit {
   onModuleInit() {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const anonKey = this.configService.get<string>('SUPABASE_ANON_KEY');
-    const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+    const serviceKey = this.configService.get<string>(
+      'SUPABASE_SERVICE_ROLE_KEY',
+    );
 
     if (!supabaseUrl) {
-      throw new Error('Missing Supabase configuration: SUPABASE_URL is required.');
+      throw new Error(
+        'Missing Supabase configuration: SUPABASE_URL is required.',
+      );
     }
     if (!anonKey && !serviceKey) {
       throw new Error(

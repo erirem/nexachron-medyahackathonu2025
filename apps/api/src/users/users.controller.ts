@@ -11,7 +11,7 @@ import {
   type AuthenticatedRequest,
 } from '../auth/supabase-auth.guard';
 import { resolveLocale, translate } from '../i18n/i18n';
-import { UsersService } from './users.service';
+import { UsersService, type ProfileWithStats } from './users.service';
 
 @Controller()
 export class UsersController {
@@ -19,7 +19,7 @@ export class UsersController {
 
   @UseGuards(SupabaseAuthGuard)
   @Get('me')
-  async getMe(@Req() request: AuthenticatedRequest) {
+  async getMe(@Req() request: AuthenticatedRequest): Promise<ProfileWithStats> {
     const user = request.user;
     const acceptLanguage = request.headers['accept-language'];
     let localeParam: string | undefined;
