@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, unstable_setRequestLocale } from "next-intl/server";
 
 import { locales } from "@/i18n/locales";
+import { GamificationProvider } from "@/contexts/gamification-context";
 
 import { LocaleSwitcher } from "./_components/locale-switcher";
 
@@ -27,8 +28,10 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <LocaleSwitcher />
-      {children}
+      <GamificationProvider>
+        <LocaleSwitcher />
+        {children}
+      </GamificationProvider>
     </NextIntlClientProvider>
   );
 }
