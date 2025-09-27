@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, type JSX } from 'react';
+import { type JSX } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { DashboardNewsItem } from './types';
-import { DashboardNewsModal } from './dashboard-news-modal';
 
 interface DashboardNewsCardProps {
   readonly item: DashboardNewsItem;
@@ -114,7 +114,6 @@ const sentimentColors = {
 } as const;
 
 export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const normalized = normalizeCategory(item.category);
   const theme = categoryThemes[normalized] ?? categoryThemes.default;
 
@@ -123,58 +122,64 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
   const tagline = getTagline(item);
 
   return (
-    <>
-    <article
-      onClick={() => setIsModalOpen(true)}
-      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/8 ${theme.surface} text-white shadow-[0_22px_48px_rgba(2,8,20,0.45)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:border-white/15 hover:shadow-[0_32px_68px_rgba(2,10,28,0.55)] cursor-pointer`}
-    >
-      <div className="absolute inset-0 bg-white/6 mix-blend-overlay" aria-hidden />
+    <Link href={`/haber/${item.id}`} className="block h-full">
+      <article className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 ${theme.surface} text-white shadow-[0_24px_56px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-white/20 hover:shadow-[0_36px_80px_rgba(0,0,0,0.65)] cursor-pointer`}>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent mix-blend-overlay" aria-hidden />
+      <div className="absolute inset-0 opacity-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
 
       <div className="relative flex flex-1 flex-col gap-6 p-6">
         <header className="flex items-start gap-4">
-          <div className={`flex h-12 w-12 items-center justify-center rounded-xl text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_12px_28px_rgba(0,0,0,0.35)] ${theme.icon}`}>
+          <div className={`flex h-14 w-14 items-center justify-center rounded-2xl text-sm font-bold uppercase tracking-[0.2em] text-white shadow-[0_16px_36px_rgba(0,0,0,0.4)] transform transition-transform duration-300 group-hover:scale-110 ${theme.icon}`}>
             {item.category.substring(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center rounded-full px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.3em] ${theme.brief}`}>
+              <span className={`inline-flex items-center rounded-full px-3.5 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.35em] backdrop-blur-sm ${theme.brief}`}>
                 {briefLabel}
               </span>
-              <span className="text-[0.62rem] font-semibold uppercase tracking-[0.28em] text-white/55">
+              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-white/60 transition-colors duration-300 group-hover:text-white/80">
                 {item.category}
               </span>
             </div>
-            <h3 className="text-xl font-semibold leading-snug text-white line-clamp-3">{item.title}</h3>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
-              <span className="flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-70">
-                  <circle cx="12" cy="12" r="7" />
+            <h3 className="text-[1.35rem] font-bold leading-[1.3] text-white line-clamp-3 transition-colors duration-300 group-hover:text-white/95">
+              {item.title}
+            </h3>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-white/65">
+              <span className="flex items-center gap-1.5 transition-all duration-300 group-hover:text-white/80">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-80">
+                  <circle cx="12" cy="12" r="9" strokeDasharray="4 2" />
                   <path d="M12 7v5l3 2" />
                 </svg>
                 {item.readingTime}
               </span>
-              <span className="h-1 w-1 rounded-full bg-white/30" aria-hidden />
-              <span>{item.dateline}</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-white/40" aria-hidden />
+              <span className="transition-all duration-300 group-hover:text-white/80">{item.dateline}</span>
             </div>
           </div>
         </header>
 
-        <div className={`relative overflow-hidden rounded-xl border border-white/10 ${theme.imageTint} aspect-video`}>
+        <div className={`relative overflow-hidden rounded-[20px] border border-white/10 ${theme.imageTint} aspect-[16/10] group`}>
           <Image
             src={item.imageUrl}
             alt={item.title}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
           />
-          <div className="absolute bottom-3 left-3 flex items-center gap-2">
-            <div className="rounded px-2 py-1 bg-black/65 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
+          
+          {/* Floating elements with animation */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-2 transform transition-all duration-300 group-hover:translate-y-[-4px]">
+            <div className="rounded-full px-3 py-1.5 bg-black/70 backdrop-blur-md border border-white/10">
               <span className="text-white text-xs font-medium">{item.timestamp}</span>
             </div>
           </div>
-          <div className={`absolute top-3 right-3 h-2 w-2 rounded-full ${sentimentColors[item.sentiment]} animate-pulse`} />
-          <div className="absolute bottom-3 right-3 rounded-full bg-black/55 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-white">
-            {tagline}
+          
+          <div className={`absolute top-3 right-3 flex items-center gap-2`}>
+            <div className={`h-2.5 w-2.5 rounded-full ${sentimentColors[item.sentiment]} shadow-lg animate-pulse`} />
+            <div className="rounded-full bg-black/60 backdrop-blur-md px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-white border border-white/10">
+              {tagline}
+            </div>
           </div>
         </div>
 
@@ -312,12 +317,6 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         </div>
       </div>
     </article>
-    
-    <DashboardNewsModal
-      item={item}
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
-    />
-  </>
+    </Link>
   );
 }

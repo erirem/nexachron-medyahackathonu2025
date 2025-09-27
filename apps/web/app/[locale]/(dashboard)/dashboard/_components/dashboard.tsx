@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, type JSX } from "react";
+import { useRouter } from 'next/navigation';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
+import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
 import type { DashboardNewsItem, DashboardTopic } from "./types";
 
 type DashboardProps = {
@@ -10,7 +12,7 @@ type DashboardProps = {
   readonly topics: readonly DashboardTopic[];
 };
 
-const filters = [
+const filters: readonly { readonly id: string; readonly label: string; readonly active?: boolean }[] = [
   { id: "all", label: "Tümü", active: true },
   { id: "gundem", label: "Gündem" },
   { id: "finans", label: "Finans" },
@@ -29,6 +31,8 @@ const sideRailItems: readonly SideRailItem[] = [
   { id: "overview", label: "Genel Akış", icon: <HomeIcon /> },
   { id: "saved", label: "Kaydedilenler", icon: <BookmarkFillIcon /> },
   { id: "watch", label: "Takip", icon: <BellIcon /> },
+  { id: "profile", label: "Profilim", icon: <UserIcon /> },
+  { id: "leaderboard", label: "Liderlik", icon: <TrophyIcon /> },
   { id: "audio", label: "Sesler", icon: <HeadphoneIcon /> },
   { id: "reports", label: "Raporlar", icon: <DocumentIcon /> },
   { id: "briefs", label: "Günlük", icon: <LightningIcon /> },
@@ -53,6 +57,7 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
 };
 
 export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
+  const router = useRouter();
   const [sidebarWidth, setSidebarWidth] = useState(320); // Başlangıç genişliği
   const [activeCategory, setActiveCategory] = useState('overview'); // Aktif kategori
   const MIN_WIDTH = 80; // Minimum genişlik (sadece iconlar)
@@ -115,6 +120,17 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
     }
   };
 
+  // Kategori değiştirme handler'ı
+  const handleCategoryChange = (categoryId: string) => {
+    if (categoryId === 'profile' || categoryId === 'leaderboard') {
+      // Bu kategoriler için yeni sayfaya yönlendir
+      router.push(`/${categoryId}`);
+    } else {
+      // Diğer kategoriler için mevcut sayfada kategori değiştir
+      setActiveCategory(categoryId);
+    }
+  };
+
   return (
     <div className="relative flex min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
       <BackdropDecor />
@@ -126,7 +142,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
         maxWidth={MAX_WIDTH}
         isCollapsed={isCollapsed}
         activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
+        onCategoryChange={handleCategoryChange}
         topics={topics}
       />
 
@@ -299,9 +315,14 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
             })}
           </nav>
 
+          {/* Mini Profile - Always visible */}
+          <div className={`${isCollapsed ? 'px-3 pt-4' : 'px-6 pt-4'}`}>
+            <MiniProfileWidget isCollapsed={isCollapsed} />
+          </div>
+
           {!isCollapsed && (
             <>
-                <div className="px-6 pt-5">
+              <div className="px-6 pt-5">
                 <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm shadow-[0_12px_28px_rgba(0,0,0,0.2)]">
                   <SearchIcon />
                   <input
@@ -632,6 +653,24 @@ function CloseIcon(): JSX.Element {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
       <line x1="18" y1="6" x2="6" y2="18"/>
       <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  );
+}
+
+function UserIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 19a4 4 0 118 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TrophyIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path d="M6 9H4.5a2.5 2.5 0 010-5H6M14 9h1.5a2.5 2.5 0 000-5H14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 15v-1a5 5 0 00-8 0v1M14 15a2 2 0 11-4 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 4v10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }

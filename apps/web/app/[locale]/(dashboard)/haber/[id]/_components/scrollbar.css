@@ -1,0 +1,74 @@
+/* Dinamik scroll çubukları - başlangıçta gizli, kaydırma başladığında görünür */
+
+.dynamic-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.dynamic-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dynamic-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.dynamic-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.dynamic-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+/* Scrolling sırasında görünür hale gelir */
+.dynamic-scrollbar.scrolling {
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.dynamic-scrollbar.scrolling::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.dynamic-scrollbar.scrolling::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
+/* Sidebar için özel dinamik scrollbar */
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-scrollbar.scrolling {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.sidebar-scrollbar.scrolling::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+}
+
+.sidebar-scrollbar.scrolling::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
