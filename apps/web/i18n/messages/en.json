@@ -111,7 +111,7 @@
         "default": "Join Nexachron and experience gamified news.",
         "submitting": "Verifying your details...",
         "invalid": "Please review the form",
-        "success": "Welcome back! Redirecting to your profile...",
+      "success": "Welcome back! Redirecting to your dashboard...",
         "error": "Something went wrong during sign-in."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Starting your registration...",
         "invalid": "Please check the required fields",
         "successEmail": "All set! Check your inbox to verify your email.",
-        "successRedirect": "Welcome aboard! Redirecting to your profile...",
+      "successRedirect": "Welcome aboard! Redirecting to your dashboard...",
         "error": "Something went wrong while creating your account."
       },
       "supabase": {

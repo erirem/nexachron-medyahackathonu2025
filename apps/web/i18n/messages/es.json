@@ -111,7 +111,7 @@
         "default": "Únete a Nexachron y vive las noticias gamificadas.",
         "submitting": "Validando tus datos...",
         "invalid": "Revisa el formulario",
-        "success": "¡Bienvenido de nuevo! Redirigiendo a tu perfil...",
+      "success": "¡Bienvenido de nuevo! Redirigiendo a tu panel...",
         "error": "No pudimos completar el inicio de sesión."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Iniciando tu registro...",
         "invalid": "Revisa los campos obligatorios",
         "successEmail": "¡Registro completado! Revisa tu correo para confirmar.",
-        "successRedirect": "¡Bienvenido! Te llevamos a tu perfil...",
+      "successRedirect": "¡Bienvenido! Te llevamos a tu panel...",
         "error": "No se pudo completar el registro."
       },
       "supabase": {

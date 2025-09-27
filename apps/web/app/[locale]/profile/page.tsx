@@ -75,6 +75,13 @@ export default function ProfilePage(): JSX.Element {
           return;
         }
 
+        if (response.status === 404) {
+          setProfile(null);
+          setState("error");
+          setError(t("errors.generic"));
+          return;
+        }
+
         if (!response.ok) {
           throw new Error(`Failed to fetch profile (${response.status}).`);
         }
