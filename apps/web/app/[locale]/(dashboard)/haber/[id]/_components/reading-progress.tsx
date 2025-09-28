@@ -105,15 +105,15 @@ export function ReadingProgress({ articleTitle, articleUrl }: ReadingProgressPro
     <>
       {/* Reading Progress Bar */}
       <div className={`fixed top-0 left-0 right-0 z-30 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg">
+        <div className="h-1 bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-pink-500/50 shadow-lg">
           <div 
-            className="h-full bg-white shadow-sm transition-all duration-150"
+            className="h-full bg-white/80 shadow-sm transition-all duration-150"
             style={{ width: `${progress}%` }}
           />
         </div>
         
         {/* Mini article info */}
-        <div className="bg-black/90 backdrop-blur-sm text-white px-6 py-3 border-b border-white/10">
+        <div className="bg-black/30 backdrop-blur-sm text-white px-6 py-3 border-b border-white/10">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white text-sm font-bold">

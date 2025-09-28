@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type ChangeEvent, type JSX } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent, type JSX } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -15,6 +15,50 @@ export function LocaleSwitcher(): JSX.Element {
     ? (resolvedLocale as Locale)
     : defaultLocale;
   const t = useTranslations("common.localeSwitcher");
+  
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolling(true);
+      
+      // Clear existing timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      
+      // Set new timeout to hide after scrolling stops
+      const newTimeout = setTimeout(() => {
+        setIsScrolling(false);
+      }, 150);
+      
+      setScrollTimeout(newTimeout);
+    };
+
+    // Check if we're on a news page (has article-scroll-container)
+    const articleContainer = document.getElementById('article-scroll-container');
+    
+    if (articleContainer) {
+      // Listen to article container scroll
+      articleContainer.addEventListener('scroll', handleScroll, { passive: true });
+    } else {
+      // Listen to window scroll for other pages
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    return () => {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      if (articleContainer) {
+        articleContainer.removeEventListener('scroll', handleScroll);
+      } else {
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [scrollTimeout]);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
@@ -43,7 +87,9 @@ export function LocaleSwitcher(): JSX.Element {
 
   return (
     <div
-      className="pointer-events-none fixed left-4 right-4 z-50 flex justify-end"
+      className={`pointer-events-none fixed left-4 right-4 z-50 flex justify-end transition-opacity duration-300 ${
+        isScrolling ? 'opacity-0' : 'opacity-100'
+      }`}
       style={{
         top: "calc(env(safe-area-inset-top, 0px) + 1rem)",
         paddingRight: "env(safe-area-inset-right, 0px)",

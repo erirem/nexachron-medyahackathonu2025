@@ -9,7 +9,9 @@ import {
   XPAction, 
   StreakInfo,
   XP_VALUES,
-  RANK_THRESHOLDS
+  RANK_THRESHOLDS,
+  BADGE_INFO,
+  BadgeType
 } from '@/lib/types/gamification';
 
 interface GamificationContextType {
@@ -20,6 +22,7 @@ interface GamificationContextType {
   unfollowTopic: (topic: string) => void;
   useStreakProtection: () => boolean;
   getStreakInfo: () => StreakInfo;
+  completeQuiz: (quizId: string, score: number, totalQuestions: number) => void;
 }
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
@@ -36,6 +39,17 @@ const MOCK_USER_PROFILE: UserProfile = {
   currentStreak: 5,
   longestStreak: 12,
   badges: [Badge.STREAK_3, Badge.STREAK_7],
+  badgeInfo: BADGE_INFO.map(badge => ({
+    ...badge,
+    isEarned: [
+      'streak_3', 'streak_7', 'quiz_master', 'trending_follower', // Genel rozetler
+      'first_1000', 'perfect_week', 'news_explorer' // Nadir rozetler
+    ].includes(badge.id),
+    earnedDate: [
+      'streak_3', 'streak_7', 'quiz_master', 'trending_follower',
+      'first_1000', 'perfect_week', 'news_explorer'
+    ].includes(badge.id) ? new Date('2024-01-20') : undefined
+  })),
   streakProtection: 2,
   joinDate: new Date('2024-01-15'),
   lastActive: new Date(),
@@ -257,6 +271,57 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     };
   };
 
+  // Quiz tamamlama
+  const completeQuiz = useCallback((quizId: string, score: number, totalQuestions: number) => {
+    if (!userProfile) return;
+
+    const correctRatio = score / totalQuestions;
+    
+    // Minimum %50 doğru cevap gerekli
+    if (correctRatio < 0.5) {
+      console.log('Quiz başarısız: %50\'den az doğru cevap');
+      return;
+    }
+
+    // XP hesaplama - doğru cevap oranına göre
+    const baseXP = XP_VALUES.QUIZ_COMPLETE;
+    const xpEarned = Math.floor(baseXP * correctRatio);
+    
+    // Bonus XP - mükemmel skor için
+    let bonusXP = 0;
+    if (correctRatio === 1) {
+      bonusXP = Math.floor(baseXP * 0.5); // %50 bonus
+    } else if (correctRatio >= 0.8) {
+      bonusXP = Math.floor(baseXP * 0.25); // %25 bonus
+    }
+
+    const totalXP = xpEarned + bonusXP;
+
+    // XP ekle
+    addXP('QUIZ_COMPLETE', totalXP);
+
+    // Quiz ustası rozetini kontrol et
+    setUserProfile(prev => {
+      if (!prev) return prev;
+
+      const newBadges = [...prev.badges];
+      
+      // Quiz ustası rozeti için 10 quiz tamamlama gerekli
+      // Bu gerçek uygulamada veritabanından kontrol edilecek
+      const completedQuizzes = 5; // Mock data - gerçekte veritabanından gelecek
+      if (completedQuizzes >= 10 && !newBadges.includes(Badge.QUIZ_MASTER)) {
+        newBadges.push(Badge.QUIZ_MASTER);
+      }
+
+      return {
+        ...prev,
+        badges: newBadges
+      };
+    });
+
+    console.log(`Quiz tamamlandı: ${quizId}, Skor: ${score}/${totalQuestions}, XP: ${totalXP}`);
+  }, [userProfile, addXP]);
+
   // Component mount olduğunda streak kontrol et
   useEffect(() => {
     checkStreak();
@@ -270,7 +335,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       followTopic,
       unfollowTopic,
       useStreakProtection,
-      getStreakInfo
+      getStreakInfo,
+      completeQuiz
     }}>
       {children}
       {/* XP Animasyonları */}

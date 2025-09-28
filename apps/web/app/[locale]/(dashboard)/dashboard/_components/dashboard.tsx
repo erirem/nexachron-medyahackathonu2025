@@ -31,6 +31,7 @@ const sideRailItems: readonly SideRailItem[] = [
   { id: "overview", label: "Genel Akış", icon: <HomeIcon /> },
   { id: "saved", label: "Kaydedilenler", icon: <BookmarkFillIcon /> },
   { id: "watch", label: "Takip", icon: <BellIcon /> },
+  { id: "quizzes", label: "Quizler", icon: <BrainIcon /> },
   { id: "profile", label: "Profilim", icon: <UserIcon /> },
   { id: "leaderboard", label: "Liderlik", icon: <TrophyIcon /> },
   { id: "audio", label: "Sesler", icon: <HeadphoneIcon /> },
@@ -122,7 +123,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
 
   // Kategori değiştirme handler'ı
   const handleCategoryChange = (categoryId: string) => {
-    if (categoryId === 'profile' || categoryId === 'leaderboard') {
+    if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'quizzes') {
       // Bu kategoriler için yeni sayfaya yönlendir
       router.push(`/${categoryId}`);
     } else {
@@ -617,6 +618,27 @@ function BellIcon(): JSX.Element {
         strokeLinejoin="round"
       />
       <path d="M8.5 16a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BrainIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1 .34-4.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0-.34-4.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
