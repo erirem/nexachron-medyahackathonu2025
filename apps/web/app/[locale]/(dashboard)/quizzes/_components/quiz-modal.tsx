@@ -120,6 +120,30 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
 
   if (!isOpen) return <></>;
 
+  // Quiz verisi eksikse hata göster
+  if (!currentQuestion) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-md bg-[#1a2234] rounded-2xl border border-white/10 shadow-2xl p-6">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-white mb-4">Quiz Verisi Eksik</h2>
+            <p className="text-white/70 mb-6">
+              Bu quiz için yeterli soru bulunmuyor. Lütfen başka bir quiz seçin.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-medium transition-all duration-200"
+            >
+              Kapat
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}

@@ -70,22 +70,22 @@ export function Leaderboard() {
   const [showOnlyLeague, setShowOnlyLeague] = useState(false);
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6">
-      <div className="bg-gradient-to-br from-[#0f1623] via-[#141b2d] to-[#0d1520] rounded-2xl shadow-xl border border-white/10 overflow-hidden">
+    <div className="w-full max-w-5xl mx-auto p-6">
+      <div className="bg-gradient-to-br from-[#0f1623] via-[#141b2d] to-[#0d1520] rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              <span>🏆</span>
+        <div className="p-8 border-b border-white/10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+              <span className="text-4xl">🏆</span>
               <span>Liderlik Tablosu</span>
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowOnlyLeague(!showOnlyLeague)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   showOnlyLeague
-                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                    : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-lg'
+                    : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
                 }`}
               >
                 Sadece Ligim
@@ -94,15 +94,15 @@ export function Leaderboard() {
           </div>
           
           {/* Period Selector */}
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {(['weekly', 'monthly', 'all-time'] as Period[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   period === p
-                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                    : 'bg-white/5 text-white/60 hover:bg-white/10'
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow-lg'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 {p === 'weekly' ? 'Haftalık' : p === 'monthly' ? 'Aylık' : 'Tüm Zamanlar'}
@@ -112,38 +112,41 @@ export function Leaderboard() {
         </div>
 
         {/* Leaderboard List */}
-        <div className="p-6 space-y-3">
-          {MOCK_LEADERBOARD.map((entry, index) => {
+        <div className="p-8 space-y-4">
+          {MOCK_LEADERBOARD
+            .sort((a, b) => b.xp - a.xp) // XP'ye göre azalan sıralama
+            .map((entry, index) => {
             const rankInfo = RANK_INFO[entry.rank];
             const leagueInfo = LEAGUE_INFO[entry.league];
             const isCurrentUser = entry.userId === 'user-123';
+            const actualPosition = index + 1; // Gerçek sıralama pozisyonu
 
             return (
               <div
                 key={entry.userId}
-                className={`relative rounded-xl p-4 transition-all ${
+                className={`relative rounded-xl p-6 transition-all duration-200 ${
                   isCurrentUser
-                    ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30'
-                    : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                    ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 shadow-lg'
+                    : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:shadow-lg'
                 }`}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                   {/* Position */}
-                  <div className="text-center min-w-[50px]">
-                    <div className={`text-2xl font-bold ${
-                      entry.position === 1 ? 'text-yellow-400' :
-                      entry.position === 2 ? 'text-gray-300' :
-                      entry.position === 3 ? 'text-orange-400' :
+                  <div className="text-center min-w-[70px]">
+                    <div className={`text-3xl font-bold ${
+                      actualPosition === 1 ? 'text-yellow-400' :
+                      actualPosition === 2 ? 'text-gray-300' :
+                      actualPosition === 3 ? 'text-orange-400' :
                       'text-white'
                     }`}>
-                      {entry.position === 1 ? '🥇' :
-                       entry.position === 2 ? '🥈' :
-                       entry.position === 3 ? '🥉' :
-                       `#${entry.position}`}
+                      {actualPosition === 1 ? '🥇' :
+                       actualPosition === 2 ? '🥈' :
+                       actualPosition === 3 ? '🥉' :
+                       `#${actualPosition}`}
                     </div>
                     {/* Movement Indicator */}
                     {entry.movement !== 'same' && (
-                      <div className={`text-xs font-medium ${
+                      <div className={`text-sm font-medium ${
                         entry.movement === 'up' ? 'text-green-400' : 'text-red-400'
                       }`}>
                         {entry.movement === 'up' ? '↑' : '↓'} {entry.movementAmount}
@@ -152,27 +155,27 @@ export function Leaderboard() {
                   </div>
 
                   {/* User Info */}
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center gap-4 flex-1">
                     <Image
                       src={entry.avatar || ''}
                       alt={entry.name}
-                      width={48}
-                      height={48}
-                      className="rounded-full border-2 border-white/20"
+                      width={56}
+                      height={56}
+                      className="rounded-full border-2 border-white/20 shadow-lg"
                     />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-white font-medium">{entry.name}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-white font-semibold text-lg">{entry.name}</h3>
                         {isCurrentUser && (
-                          <span className="text-xs text-blue-300 font-medium">(Sen)</span>
+                          <span className="text-sm text-blue-300 font-medium bg-blue-500/20 px-2 py-1 rounded-full">(Sen)</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${rankInfo.bgColor} ${rankInfo.color} border ${rankInfo.borderColor}`}>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 ${rankInfo.bgColor} ${rankInfo.color} border ${rankInfo.borderColor} shadow-sm`}>
                           <span>{rankInfo.emoji}</span>
                           <span>{rankInfo.name}</span>
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${leagueInfo.bgColor} ${leagueInfo.color} border ${leagueInfo.borderColor}`}>
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 ${leagueInfo.bgColor} ${leagueInfo.color} border ${leagueInfo.borderColor} shadow-sm`}>
                           <span>{leagueInfo.emoji}</span>
                           <span>{leagueInfo.name}</span>
                         </span>
@@ -182,16 +185,16 @@ export function Leaderboard() {
 
                   {/* XP */}
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-white">{entry.xp.toLocaleString()}</div>
-                    <div className="text-xs text-white/40">XP</div>
+                    <div className="text-3xl font-bold text-white">{entry.xp.toLocaleString()}</div>
+                    <div className="text-sm text-white/40 font-medium">XP</div>
                   </div>
                 </div>
 
                 {/* Special badges for top 3 */}
-                {entry.position <= 3 && (
-                  <div className="absolute -top-2 -right-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center shadow-lg">
-                      <span className="text-xs font-bold text-white">TOP</span>
+                {actualPosition <= 3 && (
+                  <div className="absolute -top-3 -right-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center shadow-xl">
+                      <span className="text-sm font-bold text-white">TOP</span>
                     </div>
                   </div>
                 )}
@@ -201,20 +204,21 @@ export function Leaderboard() {
         </div>
 
         {/* Season Info */}
-        <div className="p-6 border-t border-white/10 bg-white/5">
-          <div className="flex items-center justify-between">
+        <div className="p-8 border-t border-white/10 bg-gradient-to-r from-white/5 to-white/10">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-sm font-medium text-white/60">Mevcut Sezon</h3>
-              <p className="text-white font-semibold">Ekim 2024</p>
+              <h3 className="text-sm font-medium text-white/60 mb-1">Mevcut Sezon</h3>
+              <p className="text-white font-bold text-lg">Ekim 2024</p>
             </div>
             <div className="text-right">
-              <h3 className="text-sm font-medium text-white/60">Bitiş</h3>
-              <p className="text-white font-semibold">4 gün kaldı</p>
+              <h3 className="text-sm font-medium text-white/60 mb-1">Bitiş</h3>
+              <p className="text-white font-bold text-lg">4 gün kaldı</p>
             </div>
           </div>
-          <div className="mt-4 text-center">
-            <p className="text-xs text-white/40">
-              Sezon sonunda ilk 3&apos;e girenler özel rozetler kazanacak! 🏅
+          <div className="text-center">
+            <p className="text-sm text-white/60 flex items-center justify-center gap-2">
+              <span>🏅</span>
+              <span>Sezon sonunda ilk 3&apos;e girenler özel rozetler kazanacak!</span>
             </p>
           </div>
         </div>

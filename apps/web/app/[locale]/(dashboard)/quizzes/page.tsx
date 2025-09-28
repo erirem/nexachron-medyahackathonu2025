@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type JSX } from 'react';
+import { useRouter } from 'next/navigation';
 import { useGamification } from '@/contexts/gamification-context';
 import { QuizCategoryCard } from './_components/quiz-category-card';
 import { QuizList } from './_components/quiz-list';
@@ -15,7 +16,7 @@ const mockQuizzes: Quiz[] = [
     description: 'Son 24 saatteki önemli haberler hakkında bilginizi test edin',
     category: 'news',
     difficulty: 'easy',
-    questionCount: 5,
+    questionCount: 2,
     timeLimit: 300, // 5 dakika
     xpReward: 50,
     isCompleted: false,
@@ -42,7 +43,7 @@ const mockQuizzes: Quiz[] = [
     description: 'Tarih, coğrafya ve kültür hakkında sorular',
     category: 'general',
     difficulty: 'medium',
-    questionCount: 10,
+    questionCount: 1,
     timeLimit: 600, // 10 dakika
     xpReward: 100,
     isCompleted: false,
@@ -62,7 +63,7 @@ const mockQuizzes: Quiz[] = [
     description: 'Futbol, basketbol ve diğer spor dalları hakkında sorular',
     category: 'sports',
     difficulty: 'hard',
-    questionCount: 15,
+    questionCount: 1,
     timeLimit: 900, // 15 dakika
     xpReward: 150,
     isCompleted: false,
@@ -140,6 +141,7 @@ export default function QuizzesPage(): JSX.Element {
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const { userProfile, completeQuiz } = useGamification();
+  const router = useRouter();
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -162,6 +164,19 @@ export default function QuizzesPage(): JSX.Element {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
       <div className="container mx-auto px-6 py-8">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-white/70 hover:text-white"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Geri Dön
+          </button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Quizler</h1>

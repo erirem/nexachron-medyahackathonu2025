@@ -31,7 +31,7 @@ const sideRailItems: readonly SideRailItem[] = [
   { id: "overview", label: "Genel Akış", icon: <HomeIcon /> },
   { id: "saved", label: "Kaydedilenler", icon: <BookmarkFillIcon /> },
   { id: "watch", label: "Takip", icon: <BellIcon /> },
-  { id: "quizzes", label: "Quizler", icon: <BrainIcon /> },
+  { id: "games", label: "Oyunlar", icon: <GamepadIcon /> },
   { id: "profile", label: "Profilim", icon: <UserIcon /> },
   { id: "leaderboard", label: "Liderlik", icon: <TrophyIcon /> },
   { id: "audio", label: "Sesler", icon: <HeadphoneIcon /> },
@@ -123,7 +123,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
 
   // Kategori değiştirme handler'ı
   const handleCategoryChange = (categoryId: string) => {
-    if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'quizzes') {
+    if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'games') {
       // Bu kategoriler için yeni sayfaya yönlendir
       router.push(`/${categoryId}`);
     } else {
@@ -281,6 +281,11 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
             </div>
           </div>
 
+          {/* Mini Profile - Below library header */}
+          <div className={`${isCollapsed ? 'px-3 pt-4' : 'px-6 pt-4'}`}>
+            <MiniProfileWidget isCollapsed={isCollapsed} />
+          </div>
+
           <nav className={`mt-4 flex flex-col gap-2 ${isCollapsed ? 'px-3' : 'px-6'}`}>
             {sideRailItems.map((item) => {
               const isActive = activeCategory === item.id;
@@ -315,11 +320,6 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
               );
             })}
           </nav>
-
-          {/* Mini Profile - Always visible */}
-          <div className={`${isCollapsed ? 'px-3 pt-4' : 'px-6 pt-4'}`}>
-            <MiniProfileWidget isCollapsed={isCollapsed} />
-          </div>
 
           {!isCollapsed && (
             <>
@@ -639,6 +639,21 @@ function BrainIcon(): JSX.Element {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function GamepadIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M6 11h4M8 9v4M15 12h.01M17 8H3a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="15" cy="12" r="1" fill="currentColor" />
     </svg>
   );
 }
