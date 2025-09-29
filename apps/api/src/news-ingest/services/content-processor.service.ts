@@ -190,6 +190,7 @@ export class ContentProcessorService {
     featured_image?: string;
     featured_video?: string;
   }> {
+    // Media extraction started
     try {
       const response = await firstValueFrom(
         this.httpService.get(url, {
@@ -224,6 +225,8 @@ export class ContentProcessorService {
       const imageSelectors = [
         { selector: 'meta[property="og:image"]', source: 'og:image', baseScore: 100 },
         { selector: 'meta[name="twitter:image"]', source: 'twitter:image', baseScore: 95 },
+        { selector: 'meta[name="twitter:image:src"]', source: 'twitter:image:src', baseScore: 95 },
+        { selector: 'img.detay-buyukFoto', source: 'aa-main-photo', baseScore: 90 }, // AA main photo
         { selector: '.article-image img, .news-image img', source: 'article', baseScore: 80 },
         { selector: '.detay-foto img, .detay-resim img', source: 'aa-gallery', baseScore: 85 },
         { selector: 'figure img, .figure img', source: 'figure', baseScore: 75 },
@@ -233,6 +236,8 @@ export class ContentProcessorService {
         { selector: 'img[alt*="haber"], img[alt*="news"]', source: 'news-tagged', baseScore: 60 },
         { selector: '.main-content img, article img', source: 'main-content', baseScore: 50 },
         { selector: 'img[src*="uploads"], img[src*="images"]', source: 'uploaded', baseScore: 45 },
+        { selector: 'img[src^="/uploads/"]', source: 'aa-relative-uploads', baseScore: 80 }, // AA relative upload paths
+        { selector: 'img', source: 'all-images', baseScore: 30 }, // Catch all images to debug
       ];
 
       // Process each image selector
@@ -244,9 +249,12 @@ export class ContentProcessorService {
           
           if ($(el).is('meta')) {
             imgSrc = $(el).attr('content') || '';
+            // Meta tag found - keeping for processing
           } else {
             imgSrc = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-lazy') || '';
             alt = $(el).attr('alt') || '';
+            
+            // Processing images silently
             
             // Try to find caption from parent elements
             const figcaption = $(el).closest('figure').find('figcaption').text().trim();
@@ -254,11 +262,20 @@ export class ContentProcessorService {
             caption = figcaption || parentCaption || '';
           }
 
-          if (imgSrc && this.isValidImageUrl(imgSrc)) {
-            // Make relative URLs absolute
-            if (imgSrc.startsWith('/')) {
+          if (imgSrc) {
+            // Handle AA-specific relative paths FIRST (before general relative handling)
+            if (imgSrc.startsWith('/uploads/')) {
+              // AA relative uploads should go to cdnuploads subdomain directly
+              imgSrc = `https://cdnuploads.aa.com.tr${imgSrc}`;
+            } else if (imgSrc.startsWith('/')) {
+              // General relative URL handling for other paths
               const urlObj = new URL(url);
               imgSrc = `${urlObj.protocol}//${urlObj.host}${imgSrc}`;
+            }
+            
+            // Now validate the absolute URL
+            if (!this.isValidImageUrl(imgSrc)) {
+              return; // Skip invalid images
             }
 
             // Skip duplicates
@@ -299,6 +316,15 @@ export class ContentProcessorService {
             
             // URL quality indicators - be more selective
             const urlLower = imgSrc.toLowerCase();
+            
+            // Skip default AA logo and placeholder images completely
+            if (urlLower.includes('bip.png') || 
+                urlLower.includes('favicon') || 
+                urlLower.includes('logo.png') ||
+                urlLower.includes('placeholder') ||
+                urlLower.includes('default-image')) {
+              return; // Skip placeholder/logo images
+            }
             
             // Strong penalties for likely assets
             if (urlLower.includes('/assets/') || urlLower.includes('/static/')) qualityScore -= 30;
@@ -415,7 +441,18 @@ export class ContentProcessorService {
       const featuredImage = images.length > 0 ? images[0].url : undefined;
       const featuredVideo = videos.length > 0 ? videos[0].url : undefined;
 
-      this.logger.debug(`Extracted media from ${url}: ${images.length} images, ${videos.length} videos`);
+      this.logger.log(`🎯 Media extraction results for ${url}:`);
+      this.logger.log(`   📸 Images found: ${images.length}`);
+      this.logger.log(`   🎬 Videos found: ${videos.length}`);
+      this.logger.log(`   ⭐ Featured image: ${featuredImage}`);
+      this.logger.log(`   ⭐ Featured video: ${featuredVideo}`);
+      
+      if (images.length > 0) {
+        this.logger.log(`   🔍 Image details:`);
+        images.forEach((img, idx) => {
+          this.logger.log(`     ${idx + 1}. ${img.url} (score: ${img.quality_score}, source: ${img.source})`);
+        });
+      }
 
       return {
         images,
@@ -443,13 +480,20 @@ export class ContentProcessorService {
       const pathname = urlObj.pathname.toLowerCase();
       const fullUrl = url.toLowerCase();
       
-      // Check if it's a valid image extension
+      // Debug logs removed for cleaner output
+      
+      // Special case for AA userFiles with encoded paths (case insensitive)
+      const isAAUserFile = fullUrl.includes('cdnuploads.aa.com.tr') && 
+                           (fullUrl.includes('/uploads/userfiles/') || fullUrl.includes('/uploads/userFiles/'));
+      
+      // Check if it's a valid image extension (including encoded paths for userFiles)
       const hasValidExtension = (
         pathname.includes('.jpg') ||
         pathname.includes('.jpeg') ||
         pathname.includes('.png') ||
         pathname.includes('.webp') ||
-        pathname.includes('.gif')
+        pathname.includes('.gif') ||
+        (isAAUserFile && (fullUrl.includes('.jpg') || fullUrl.includes('.jpeg') || fullUrl.includes('.png')))
       );
       
       if (!hasValidExtension) {
@@ -464,15 +508,16 @@ export class ContentProcessorService {
         'banner', 'header', 'footer', 'menu', 'nav',
         'reklam', 'reklamlar', 'advertisement', 'ads',
         'cookie', 'gdpr', 'privacy',
-        'thumb', 'thumbnail', 'placeholder',
+        'thumbnail', 'placeholder', // Removed 'thumb' - it filters out AA thumbs_b_c images
         'sprite', 'background', 'bg',
         'widgets', 'sidebar', 'comment',
         'arrow', 'bullet', 'dot', 'pixel',
         'tracking', 'analytics', 'counter'
       ];
       
-      // Check if URL contains any asset keywords
-      const containsAssetKeyword = assetKeywords.some(keyword => 
+      // Check if URL contains any asset keywords - but exclude AA-specific patterns
+      const isAAThumb = fullUrl.includes('cdnuploads.aa.com.tr') && fullUrl.includes('thumbs_b_c');
+      const containsAssetKeyword = !(isAAThumb || isAAUserFile) && assetKeywords.some(keyword => 
         fullUrl.includes(keyword) || 
         pathname.includes(keyword)
       );
@@ -499,7 +544,7 @@ export class ContentProcessorService {
       }
       
       return true;
-    } catch {
+    } catch (error) {
       return false;
     }
   }

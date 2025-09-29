@@ -27,15 +27,15 @@ export class MediaStorageService {
           media_type: 'IMAGE',
           media_role: index === 0 ? 'FEATURED' : 'GALLERY',
           url: image.url,
-          alt_text: image.alt,
-          caption: image.caption,
-          width: image.width,
-          height: image.height,
-          quality_score: image.quality_score,
+          alt_text: image.alt || null,
+          caption: image.caption || null,
+          width: image.width || null,
+          height: image.height || null,
+          quality_score: Math.round(image.quality_score), // Keep as integer 0-100
           is_primary: index === 0, // First image is primary
           display_order: index,
-          extraction_method: image.source,
-          source_url: newsId, // Reference to news item
+          extraction_method: image.source || 'unknown',
+          source_url: null // Will be set to the original article URL if different
         });
       });
 
@@ -46,13 +46,16 @@ export class MediaStorageService {
           media_type: 'VIDEO',
           media_role: index === 0 ? 'FEATURED' : 'GALLERY',
           url: video.url,
-          alt_text: video.title,
-          duration: video.duration,
-          quality_score: video.quality_score,
+          alt_text: video.title || null,
+          caption: null,
+          width: null,
+          height: null,
+          duration: video.duration || null,
+          quality_score: Math.round(video.quality_score), // Keep as integer 0-100
           is_primary: index === 0, // First video is primary
-          display_order: index,
-          extraction_method: video.source,
-          source_url: newsId, // Reference to news item
+          display_order: index + mediaGallery.images.length, // Videos come after images in display order
+          extraction_method: video.source || 'unknown',
+          source_url: null
         });
       });
 

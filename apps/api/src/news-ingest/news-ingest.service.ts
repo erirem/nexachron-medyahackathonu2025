@@ -322,4 +322,41 @@ export class NewsIngestService {
   getAiUsageStats() {
     return this.aiSummaryService.getUsageStats();
   }
+
+  /**
+   * Process a single URL for testing and debugging
+   */
+  async processSingleUrl(url: string): Promise<ProcessedNewsItem> {
+    this.logger.log(`Processing single URL: ${url}`);
+
+    try {
+      // Create a fake raw news item from the URL
+      const fakeRawItem = {
+        title: 'Single URL Test', // Will be extracted from content
+        link: url,
+        description: 'Single URL processing test',
+        pubDate: new Date().toISOString(),
+        category: ['guncel'], // Default category for testing
+        guid: url,
+        enclosure: undefined,
+      };
+
+      // Process using the content processor
+      const processedItem = await this.contentProcessorService.processNewsItem(
+        fakeRawItem,
+        'guncel' as any, // Default category for testing
+      );
+
+      if (!processedItem) {
+        throw new Error('Failed to process the URL');
+      }
+
+      this.logger.log(`Successfully processed single URL: ${processedItem.title}`);
+      
+      return processedItem;
+    } catch (error) {
+      this.logger.error(`Failed to process single URL: ${url}`, error);
+      throw error;
+    }
+  }
 }

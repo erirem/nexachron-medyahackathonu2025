@@ -9,6 +9,15 @@ export enum AACategory {
   TEKNOLOJI = 'teknoloji',
   YASAM = 'yasam',
   SAGLIK = 'saglik',
+  // New categories from AA website
+  POLITIKA = 'politika',
+  ANALIZ = 'analiz',
+  KULTUR = 'kultur',
+  EGITIM = 'egitim',
+  FUTBOL = 'futbol',
+  BASKETBOL = 'basketbol',
+  KORONAVIRUS = 'koronavirus',
+  VIDEO = 'video',
 }
 
 // Mood enum (compatible with database)
