@@ -34,7 +34,7 @@ export interface ProfileWithStats {
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly supabaseService: SupabaseService) { }
 
   async getProfileWithStats(user: User): Promise<ProfileWithStats> {
     const profile = await this.ensureProfileRow(user);
@@ -61,7 +61,7 @@ export class UsersService {
   }
 
   private async ensureProfileRow(user: User): Promise<UserRow> {
-    const supabase = this.supabaseService.supabase;
+    const supabase = this.supabaseService.adminSupabase;
 
     const profileResponse = await supabase
       .from('users')
@@ -128,7 +128,7 @@ export class UsersService {
   }
 
   private async ensureStatsRow(userId: string): Promise<UserStatsRow> {
-    const supabase = this.supabaseService.supabase;
+    const supabase = this.supabaseService.adminSupabase;
 
     const upsertResponse = await supabase
       .from('user_stats')

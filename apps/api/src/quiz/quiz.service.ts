@@ -109,6 +109,8 @@ export class QuizService {
 
     const shuffleSeed = this.generateShuffleSeed();
 
+    await this.ensureUserProgress(userId);
+
     try {
       const attempt = await this.prisma.quizAttempt.create({
         data: {
@@ -156,8 +158,9 @@ export class QuizService {
     dto: AnswerQuizDto,
   ): Promise<AnswerQuizResponse> {
     return this.prisma.$transaction(async (tx) => {
+      const attemptId = dto.attemptId ?? (dto as any).attempt_id;
       const attempt = await tx.quizAttempt.findUnique({
-        where: { id: dto.attempt_id },
+        where: { id: attemptId },
         include: {
           quiz: {
             include: { options: true },
@@ -210,8 +213,9 @@ export class QuizService {
         throw new GoneException('Quiz is no longer active.');
       }
 
+      const selectedOptionId = dto.selectedOptionId ?? (dto as any).selected_option_id;
       const selectedOption = quiz.options.find(
-        (option) => option.id === dto.selected_option_id,
+        (option) => option.id === selectedOptionId,
       );
 
       if (!selectedOption) {
@@ -385,6 +389,14 @@ export class QuizService {
     return `${year}-${month}-${day}`;
   }
 
+  private async ensureUserProgress(userId: string): Promise<void> {
+    await this.prisma.userProgress.upsert({
+      where: { userId },
+      update: { updatedAt: new Date() },
+      create: { userId },
+    });
+  }
+
   private resolveExplanation(
     isCorrect: boolean,
     selectedOption: { text: string; explanation: string | null } | undefined,
@@ -406,3 +418,8 @@ export class QuizService {
     );
   }
 }
+
+
+
+
+

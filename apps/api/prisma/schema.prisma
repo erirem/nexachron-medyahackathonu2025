@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum QuizType {
@@ -26,39 +27,39 @@ enum QuizAttemptState {
 }
 
 model Quiz {
-  id          String        @id @default(cuid())
+  id          String     @id @default(cuid())
   type        QuizType
-  newsId      String?       @map("news_id")
+  newsId      String?    @map("news_id")
   question    String
   explanation String?
-  activeUntil DateTime?     @map("active_until")
-  status      QuizStatus    @default(ACTIVE)
+  activeUntil DateTime?  @map("active_until")
+  status      QuizStatus @default(ACTIVE)
   difficulty  String?
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
   options  QuizOption[]
   attempts QuizAttempt[]
 
-  @@map("quizzes")
   @@index([newsId])
   @@index([status, activeUntil])
+  @@map("quizzes")
 }
 
 model QuizOption {
-  id           String       @id @default(cuid())
-  quizId       String       @map("quiz_id")
+  id           String  @id @default(cuid())
+  quizId       String  @map("quiz_id")
   text         String
-  isCorrect    Boolean      @map("is_correct")
+  isCorrect    Boolean @map("is_correct")
   explanation  String?
-  displayOrder Int          @map("display_order")
+  displayOrder Int     @map("display_order")
 
   quiz     Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
   attempts QuizAttempt[] @relation("QuizAttemptSelectedOption")
 
-  @@map("quiz_options")
-  @@index([quizId])
   @@unique([quizId, displayOrder])
+  @@index([quizId])
+  @@map("quiz_options")
 }
 
 model QuizAttempt {
@@ -78,19 +79,19 @@ model QuizAttempt {
   selectedOption QuizOption?   @relation("QuizAttemptSelectedOption", fields: [selectedOptionId], references: [id])
   userProgress   UserProgress? @relation(fields: [userId], references: [userId])
 
-  @@map("quiz_attempts")
+  @@unique([userId, quizId])
   @@index([quizId])
   @@index([userId])
-  @@unique([userId, quizId])
+  @@map("quiz_attempts")
 }
 
 model UserProgress {
-  userId        String        @id @map("user_id")
-  xp            Int           @default(0)
-  currentStreak Int           @default(0) @map("current_streak")
-  lastSeenDate  DateTime?     @map("last_seen_date")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  userId        String    @id @map("user_id")
+  xp            Int       @default(0)
+  currentStreak Int       @default(0) @map("current_streak")
+  lastSeenDate  DateTime? @map("last_seen_date")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   attempts QuizAttempt[]
 

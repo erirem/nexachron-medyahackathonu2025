@@ -126,8 +126,8 @@ describe('QuizService', () => {
     );
 
     const response = await service.answerQuiz('user-1', {
-      attempt_id: 'attempt-1',
-      selected_option_id: 'opt-1',
+      attemptId: 'attempt-1',
+      selectedOptionId: 'opt-1',
     });
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -214,15 +214,15 @@ describe('QuizService', () => {
 
     await expect(
       service.answerQuiz('user-1', {
-        attempt_id: 'attempt-2',
-        selected_option_id: 'opt-2',
+        attemptId: 'attempt-2',
+        selectedOptionId: 'opt-2',
       }),
     ).rejects.toThrow(ConflictException);
 
     try {
       await service.answerQuiz('user-1', {
-        attempt_id: 'attempt-2',
-        selected_option_id: 'opt-2',
+        attemptId: 'attempt-2',
+        selectedOptionId: 'opt-2',
       });
     } catch (error) {
       expect(error).toBeInstanceOf(ConflictException);
