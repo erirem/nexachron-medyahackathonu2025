@@ -111,7 +111,7 @@
         "default": "Pridruži se Nexachronu i doživi gamificirane vijesti.",
         "submitting": "Provjera podataka...",
         "invalid": "Provjeri ispravnost obrasca",
-      "success": "Dobro došao nazad! Preusmjeravamo te na nadzornu ploču...",
+        "success": "Dobro došao nazad! Preusmjeravamo te na nadzornu ploču...",
         "error": "Prijava nije uspjela."
       },
       "supabase": {
@@ -172,8 +172,7 @@
     "panel": {
       "heading": "Kreiraj Nexachron račun",
       "xpBadge": "+50 XP dobrodošlice",
-      "description": "Uđi u gamificiranu newsroom, skupljaj XP i napreduj."
-      ,
+      "description": "Uđi u gamificiranu newsroom, skupljaj XP i napreduj.",
       "floatingCards": {
         "topCenter": {
           "title": "Bonus registracije",
@@ -274,7 +273,7 @@
         "submitting": "Pokrećemo registraciju...",
         "invalid": "Provjeri obavezna polja",
         "successEmail": "Registracija je uspjela! Provjeri email za potvrdu.",
-      "successRedirect": "Dobro došao! Preusmjeravamo te na nadzornu ploču...",
+        "successRedirect": "Dobro došao! Preusmjeravamo te na nadzornu ploču...",
         "error": "Registracija nije mogla biti završena."
       },
       "supabase": {
@@ -349,6 +348,208 @@
       "none": "Započni novi streak pregledom današnjih vijesti.",
       "low": "Streak od {count} dana! Nastavi tako.",
       "high": "Streak od {count} dana 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "Nazad",
+      "title": "Igre",
+      "description": "Testiraj svoje znanje kroz mini igre i osvoji XP! Imaš {xp} XP.",
+      "categoriesHeading": "Kategorije",
+      "comingSoonHeading": "Uskoro"
+    },
+    "categories": {
+      "all": {
+        "name": "Sve"
+      },
+      "educational": {
+        "name": "Edukativne"
+      },
+      "memory": {
+        "name": "Memorija"
+      },
+      "word": {
+        "name": "Riječi"
+      },
+      "trivia": {
+        "name": "Trivia"
+      },
+      "timeline": {
+        "name": "Vremenska linija"
+      },
+      "visual": {
+        "name": "Vizuelno"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "Kvizovi",
+        "description": "Odgovaraj na aktuelna pitanja i skupljaj XP iz vijesti, kulture i sporta.",
+        "estimatedTime": "5-15 min"
+      },
+      "memoryGame": {
+        "title": "Memorija vijesti",
+        "description": "Upari naslove i ojačaj pamćenje.",
+        "estimatedTime": "3-8 min"
+      },
+      "wordPuzzle": {
+        "title": "Skrivalica riječi",
+        "description": "Pronađi riječi inspirisane vijestima i proširi rječnik.",
+        "estimatedTime": "4-10 min"
+      },
+      "newsTrivia": {
+        "title": "Trivia vijesti",
+        "description": "Brza pitanja o najnovijim pričama.",
+        "estimatedTime": "2-5 min"
+      },
+      "timelineGame": {
+        "title": "Hronološki izazov",
+        "description": "Posloži događaje redom i provjeri znanje historije.",
+        "estimatedTime": "8-15 min"
+      },
+      "spotTheDifference": {
+        "title": "Pronađi razliku",
+        "description": "Uporedi novinske fotografije i izoštri fokus.",
+        "estimatedTime": "5-12 min"
+      },
+      "wordle": {
+        "title": "Wordle",
+        "description": "Pogodi riječ od pet slova u šest pokušaja — novi izazov svaki dan.",
+        "estimatedTime": "3-8 min"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "Lako",
+        "medium": "Srednje",
+        "hard": "Teško"
+      },
+      "labels": {
+        "xpReward": "XP nagrada",
+        "progress": "Napredak",
+        "comingSoon": "Uskoro",
+        "playAgain": "Igraj ponovo",
+        "start": "Pokreni igru"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "Nazad",
+      "title": "Kvizovi",
+      "description": "Provjeri se i osvoji XP. Imaš {xp} XP.",
+      "categoriesHeading": "Kategorije",
+      "categoryTitle": "Kviz: {category}",
+      "allTitle": "Svi kvizovi",
+      "showAll": "Prikaži sve"
+    },
+    "categories": {
+      "news": {
+        "name": "Vijesti",
+        "description": "Pitanja o najvažnijim naslovima i događajima."
+      },
+      "general": {
+        "name": "Opće znanje",
+        "description": "Historija, geografija, nauka i kultura."
+      },
+      "sports": {
+        "name": "Sport",
+        "description": "Fudbal, košarka i drugi sportovi."
+      },
+      "technology": {
+        "name": "Tehnologija",
+        "description": "AI, programiranje i digitalni trendovi."
+      },
+      "economy": {
+        "name": "Ekonomija",
+        "description": "Finansije, tržišta i biznis."
+      },
+      "science": {
+        "name": "Nauka",
+        "description": "Fizika, hemija, biologija i matematika."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "Broj kvizova",
+        "completed": "Završeno",
+        "progress": "Napredak"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "Lako",
+        "medium": "Srednje",
+        "hard": "Teško"
+      },
+      "empty": {
+        "title": "U ovoj kategoriji nema kvizova",
+        "description": "Odaberi drugu kategoriju i nastavi istraživati."
+      },
+      "labels": {
+        "time": "{minutes} min",
+        "questions": "{count} pitanja"
+      },
+      "actions": {
+        "retry": "Igraj ponovo",
+        "start": "Pokreni kviz"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "Nedostaju podaci",
+        "description": "Ovaj kviz nema dovoljno pitanja. Izaberi drugi."
+      },
+      "actions": {
+        "close": "Zatvori",
+        "previous": "Prethodno",
+        "submit": "Završi",
+        "next": "Sljedeće",
+        "retry": "Ponovi"
+      },
+      "labels": {
+        "questionProgress": "Pitanje {current} od {total}"
+      },
+      "results": {
+        "title": "Kviz završen!",
+        "subtitle": "Bravo, uspješno si završio kviz.",
+        "correctAnswers": "Tačni odgovori",
+        "xpEarned": "Osvojeni XP"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Tabela lidera",
+    "filters": {
+      "onlyLeague": "Samo moja liga",
+      "periods": {
+        "weekly": "Sedmično",
+        "monthly": "Mjesečno",
+        "all-time": "Sve vrijeme"
+      }
+    },
+    "table": {
+      "currentUser": "(Ti)",
+      "xpLabel": "XP",
+      "topBadge": "TOP"
+    },
+    "page": {
+      "back": "Nazad"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "Novi član",
+      "ACTIVE_READER": "Aktivni čitaoc",
+      "KNOWLEDGE_SHARER": "Dijeli znanje",
+      "EXPERT_COMMENTER": "Iskusni komentator",
+      "COMMUNITY_LEADER": "Vođa zajednice"
+    },
+    "leagues": {
+      "BRONZE": "Bronza",
+      "SILVER": "Srebro",
+      "GOLD": "Zlato",
+      "DIAMOND": "Dijamant"
     }
   }
 }

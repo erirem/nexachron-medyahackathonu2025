@@ -1,17 +1,22 @@
 'use client';
 
-import { useState, type JSX } from 'react';
+import { useMemo, useState, type JSX } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+
 import { useGamification } from '@/contexts/gamification-context';
+
 import { GameCard } from './_components/game-card';
 import type { Game } from './_types/game-types';
 
-// Mock oyun data
-const mockGames: Game[] = [
+type BaseGame = Omit<Game, 'title' | 'description' | 'estimatedTime'> & {
+  readonly translationKey: string;
+};
+
+const baseGames: readonly BaseGame[] = [
   {
     id: 'quizzes',
-    title: 'Quizler',
-    description: 'Bilginizi test edin ve XP kazanın! Haber, genel kültür, spor ve daha fazlası.',
+    translationKey: 'quizzes',
     icon: '🧠',
     color: 'blue',
     category: 'educational',
@@ -20,12 +25,10 @@ const mockGames: Game[] = [
     isAvailable: true,
     isCompleted: false,
     completionRate: 0,
-    estimatedTime: '5-15 dk'
   },
   {
     id: 'memory-game',
-    title: 'Haber Hafıza Oyunu',
-    description: 'Haber başlıklarını eşleştirin ve hafızanızı güçlendirin.',
+    translationKey: 'memoryGame',
     icon: '🧩',
     color: 'purple',
     category: 'memory',
@@ -34,12 +37,10 @@ const mockGames: Game[] = [
     isAvailable: true,
     isCompleted: false,
     completionRate: 0,
-    estimatedTime: '3-8 dk'
   },
   {
     id: 'word-puzzle',
-    title: 'Kelime Bulmaca',
-    description: 'Haberlerden kelimeleri bulun ve kelime dağarcığınızı genişletin.',
+    translationKey: 'wordPuzzle',
     icon: '🔤',
     color: 'green',
     category: 'word',
@@ -48,12 +49,10 @@ const mockGames: Game[] = [
     isAvailable: true,
     isCompleted: false,
     completionRate: 0,
-    estimatedTime: '4-10 dk'
   },
   {
     id: 'news-trivia',
-    title: 'Haber Trivia',
-    description: 'Güncel haberler hakkında hızlı sorular ve cevaplar.',
+    translationKey: 'newsTrivia',
     icon: '⚡',
     color: 'yellow',
     category: 'trivia',
@@ -62,40 +61,34 @@ const mockGames: Game[] = [
     isAvailable: true,
     isCompleted: false,
     completionRate: 0,
-    estimatedTime: '2-5 dk'
   },
   {
     id: 'timeline-game',
-    title: 'Zaman Çizelgesi',
-    description: 'Olayları kronolojik sıraya koyun ve tarih bilginizi test edin.',
+    translationKey: 'timelineGame',
     icon: '📅',
     color: 'cyan',
     category: 'timeline',
     difficulty: 'hard',
     xpReward: 40,
-    isAvailable: false, // Henüz geliştirilmedi
+    isAvailable: false,
     isCompleted: false,
     completionRate: 0,
-    estimatedTime: '8-15 dk'
   },
   {
     id: 'spot-the-difference',
-    title: 'Farkı Bul',
-    description: 'Haber fotoğraflarında farkları bulun ve dikkat becerinizi geliştirin.',
+    translationKey: 'spotTheDifference',
     icon: '🔍',
     color: 'red',
     category: 'visual',
     difficulty: 'medium',
     xpReward: 30,
-    isAvailable: false, // Henüz geliştirilmedi
+    isAvailable: false,
     isCompleted: false,
     completionRate: 0,
-    estimatedTime: '5-12 dk'
   },
   {
     id: 'wordle',
-    title: 'Wordle',
-    description: '5 harfli kelimeyi 6 denemede bulun! Her gün yeni bir kelime.',
+    translationKey: 'wordle',
     icon: '📝',
     color: 'green',
     category: 'word',
@@ -104,50 +97,72 @@ const mockGames: Game[] = [
     isAvailable: true,
     isCompleted: false,
     completionRate: 0,
-    estimatedTime: '3-8 dk'
-  }
+  },
 ];
 
-const gameCategories = [
-  { id: 'all', name: 'Tümü', icon: '🎮' },
-  { id: 'educational', name: 'Eğitici', icon: '📚' },
-  { id: 'memory', name: 'Hafıza', icon: '🧠' },
-  { id: 'word', name: 'Kelime', icon: '🔤' },
-  { id: 'trivia', name: 'Trivia', icon: '⚡' },
-  { id: 'timeline', name: 'Zaman Çizelgesi', icon: '📅' },
-  { id: 'visual', name: 'Görsel', icon: '🔍' }
+const baseCategories: readonly { readonly id: string; readonly icon: string }[] = [
+  { id: 'all', icon: '🎮' },
+  { id: 'educational', icon: '📚' },
+  { id: 'memory', icon: '🧠' },
+  { id: 'word', icon: '🔤' },
+  { id: 'trivia', icon: '⚡' },
+  { id: 'timeline', icon: '📅' },
+  { id: 'visual', icon: '🔍' },
 ];
 
 export default function GamesPage(): JSX.Element {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const { userProfile } = useGamification();
+  const locale = useLocale();
   const router = useRouter();
+  const t = useTranslations('games');
 
-  const filteredGames = selectedCategory === 'all' 
-    ? mockGames 
-    : mockGames.filter(game => game.category === selectedCategory);
+  const categories = useMemo(
+    () =>
+      baseCategories.map((category) => ({
+        ...category,
+        name: t(`categories.${category.id}.name`),
+      })),
+    [t],
+  );
+
+  const games = useMemo(
+    () =>
+      baseGames.map((game) => ({
+        ...game,
+        title: t(`gamesList.${game.translationKey}.title`),
+        description: t(`gamesList.${game.translationKey}.description`),
+        estimatedTime: t(`gamesList.${game.translationKey}.estimatedTime`),
+      })),
+    [t],
+  );
+
+  const filteredGames = selectedCategory === 'all'
+    ? games
+    : games.filter((game) => game.category === selectedCategory);
+
+  const comingSoonGames = useMemo(
+    () => games.filter((game) => !game.isAvailable),
+    [games],
+  );
 
   const handleGameSelect = (game: Game) => {
     if (!game.isAvailable) {
-      return; // Henüz geliştirilmemiş oyunlar için hiçbir şey yapma
+      return;
     }
 
     if (game.id === 'quizzes') {
-      // Quizler için özel sayfaya yönlendir
-      router.push('/quizzes');
+      router.push(`/${locale}/quizzes`);
     } else if (game.id === 'wordle') {
-      // Wordle için özel sayfaya yönlendir
-      router.push('/games/wordle');
+      router.push(`/${locale}/games/wordle`);
     } else {
-      // Diğer oyunlar için oyun sayfasına yönlendir
-      router.push(`/games/${game.id}`);
+      router.push(`/${locale}/games/${game.id}`);
     }
   };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
       <div className="container mx-auto px-6 py-8">
-        {/* Back Button */}
         <div className="mb-6">
           <button
             onClick={() => router.back()}
@@ -156,23 +171,21 @@ export default function GamesPage(): JSX.Element {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Geri Dön
+            {t('page.back')}
           </button>
         </div>
 
-        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Oyunlar</h1>
+          <h1 className="text-4xl font-bold mb-2">{t('page.title')}</h1>
           <p className="text-[#8fb8ff] text-lg">
-            Eğlenceli oyunlarla bilginizi test edin ve XP kazanın! {userProfile?.xp || 0} XP'niz var.
+            {t('page.description', { xp: (userProfile?.xp ?? 0).toLocaleString(locale) })}
           </p>
         </div>
 
-        {/* Categories */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-6">Kategoriler</h2>
+          <h2 className="text-2xl font-semibold mb-6">{t('page.categoriesHeading')}</h2>
           <div className="flex flex-wrap gap-3">
-            {gameCategories.map((category) => (
+            {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
@@ -189,7 +202,6 @@ export default function GamesPage(): JSX.Element {
           </div>
         </div>
 
-        {/* Games Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGames.map((game) => (
             <GameCard
@@ -200,21 +212,20 @@ export default function GamesPage(): JSX.Element {
           ))}
         </div>
 
-        {/* Coming Soon Section */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-semibold mb-6">Yakında Gelecek</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockGames
-              .filter(game => !game.isAvailable)
-              .map((game) => (
+        {comingSoonGames.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-semibold mb-6">{t('page.comingSoonHeading')}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {comingSoonGames.map((game) => (
                 <GameCard
                   key={game.id}
                   game={game}
                   onSelect={() => handleGameSelect(game)}
                 />
               ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

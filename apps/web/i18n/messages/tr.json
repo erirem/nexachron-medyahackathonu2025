@@ -111,7 +111,7 @@
         "default": "Nexachron'a katıl, haberleri oyunlaştırılmış deneyimle yaşa",
         "submitting": "Bilgiler kontrol ediliyor...",
         "invalid": "Formu kontrol et",
-      "success": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
+        "success": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
         "error": "Giriş sırasında beklenmeyen bir hata oluştu."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Kayıt işlemi başlatılıyor...",
         "invalid": "Lütfen tüm alanları kontrol edin",
         "successEmail": "Kayıt tamam! E-postanı kontrol ederek üyeliğini doğrula.",
-      "successRedirect": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
+        "successRedirect": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
         "error": "Kayıt sırasında beklenmeyen bir hata oluştu."
       },
       "supabase": {
@@ -348,6 +348,208 @@
       "none": "Seri başlatmak için bugün haberleri keşfet.",
       "low": "{count} günlük seri! Devam et.",
       "high": "{count} günlük seri 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "Geri Dön",
+      "title": "Oyunlar",
+      "description": "Eğlenceli oyunlarla bilginizi test edin ve XP kazanın! {xp} XP'niz var.",
+      "categoriesHeading": "Kategoriler",
+      "comingSoonHeading": "Yakında Gelecek"
+    },
+    "categories": {
+      "all": {
+        "name": "Tümü"
+      },
+      "educational": {
+        "name": "Eğitici"
+      },
+      "memory": {
+        "name": "Hafıza"
+      },
+      "word": {
+        "name": "Kelime"
+      },
+      "trivia": {
+        "name": "Trivia"
+      },
+      "timeline": {
+        "name": "Zaman Çizelgesi"
+      },
+      "visual": {
+        "name": "Görsel"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "Quizler",
+        "description": "Haber, genel kültür ve sporda güncel sorularla XP toplayın.",
+        "estimatedTime": "5-15 dk"
+      },
+      "memoryGame": {
+        "title": "Haber Hafıza",
+        "description": "Manşetleri eşleştirerek hafızanı güçlendir.",
+        "estimatedTime": "3-8 dk"
+      },
+      "wordPuzzle": {
+        "title": "Kelime Bulmaca",
+        "description": "Haberlerden kelimeleri bulun, kelime hazneni genişlet.",
+        "estimatedTime": "4-10 dk"
+      },
+      "newsTrivia": {
+        "title": "Haber Trivia",
+        "description": "Güncel gelişmeler hakkında kısa sorular.",
+        "estimatedTime": "2-5 dk"
+      },
+      "timelineGame": {
+        "title": "Zaman Çizelgesi",
+        "description": "Olayları kronolojik sıraya dizerek tarih bilgini test et.",
+        "estimatedTime": "8-15 dk"
+      },
+      "spotTheDifference": {
+        "title": "Farkı Bul",
+        "description": "Haber fotoğraflarında farkları keşfet, dikkatini artır.",
+        "estimatedTime": "5-12 dk"
+      },
+      "wordle": {
+        "title": "Wordle",
+        "description": "Beş harfli kelimeyi altı denemede bul; her gün yeni bir kelime.",
+        "estimatedTime": "3-8 dk"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "Kolay",
+        "medium": "Orta",
+        "hard": "Zor"
+      },
+      "labels": {
+        "xpReward": "XP Ödülü",
+        "progress": "İlerleme",
+        "comingSoon": "Yakında Gelecek",
+        "playAgain": "Tekrar Oyna",
+        "start": "Oyunu Başlat"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "Geri Dön",
+      "title": "Quizler",
+      "description": "Bilginizi test edin ve XP kazanın! {xp} XP'niz var.",
+      "categoriesHeading": "Kategoriler",
+      "categoryTitle": "{category} Quizleri",
+      "allTitle": "Tüm Quizler",
+      "showAll": "Tümünü Göster"
+    },
+    "categories": {
+      "news": {
+        "name": "Haber",
+        "description": "İz bırakan manşetler ve gündem soruları."
+      },
+      "general": {
+        "name": "Genel Kültür",
+        "description": "Tarih, coğrafya, bilim ve kültür soruları."
+      },
+      "sports": {
+        "name": "Spor",
+        "description": "Futbol, basketbol ve diğer branşlar."
+      },
+      "technology": {
+        "name": "Teknoloji",
+        "description": "Yapay zekâ, yazılım ve teknoloji trendleri."
+      },
+      "economy": {
+        "name": "Ekonomi",
+        "description": "Finans, piyasalar ve iş dünyası."
+      },
+      "science": {
+        "name": "Bilim",
+        "description": "Fizik, kimya, biyoloji ve matematik."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "Quiz Sayısı",
+        "completed": "Tamamlanan",
+        "progress": "İlerleme"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "Kolay",
+        "medium": "Orta",
+        "hard": "Zor"
+      },
+      "empty": {
+        "title": "Bu kategoride quiz bulunmuyor",
+        "description": "Farklı bir kategori seçerek quizleri keşfedebilirsiniz."
+      },
+      "labels": {
+        "time": "{minutes} dk",
+        "questions": "{count} soru"
+      },
+      "actions": {
+        "retry": "Tekrar Çöz",
+        "start": "Quiz'i Başlat"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "Quiz Verisi Eksik",
+        "description": "Bu quiz için yeterli soru yok. Lütfen başka bir quiz seçin."
+      },
+      "actions": {
+        "close": "Kapat",
+        "previous": "Önceki",
+        "submit": "Tamamla",
+        "next": "Sonraki",
+        "retry": "Tekrar Çöz"
+      },
+      "labels": {
+        "questionProgress": "Soru {current} / {total}"
+      },
+      "results": {
+        "title": "Quiz Tamamlandı!",
+        "subtitle": "Tebrikler, quiz'i başarıyla tamamladınız.",
+        "correctAnswers": "Doğru Cevap",
+        "xpEarned": "XP Kazandınız"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Liderlik Tablosu",
+    "filters": {
+      "onlyLeague": "Sadece Ligim",
+      "periods": {
+        "weekly": "Haftalık",
+        "monthly": "Aylık",
+        "all-time": "Tüm Zamanlar"
+      }
+    },
+    "table": {
+      "currentUser": "(Sen)",
+      "xpLabel": "XP",
+      "topBadge": "TOP"
+    },
+    "page": {
+      "back": "Geri Dön"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "Yeni Katılımcı",
+      "ACTIVE_READER": "Aktif Okur",
+      "KNOWLEDGE_SHARER": "Bilgi Paylaşımcısı",
+      "EXPERT_COMMENTER": "Uzman Yorumcu",
+      "COMMUNITY_LEADER": "Topluluk Lideri"
+    },
+    "leagues": {
+      "BRONZE": "Bronz",
+      "SILVER": "Gümüş",
+      "GOLD": "Altın",
+      "DIAMOND": "Elmas"
     }
   }
 }

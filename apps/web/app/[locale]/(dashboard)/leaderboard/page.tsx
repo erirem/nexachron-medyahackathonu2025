@@ -1,11 +1,14 @@
 'use client';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Leaderboard } from "@/components/leaderboard/leaderboard";
+
+import { Leaderboard } from '@/components/leaderboard/leaderboard';
 
 export default function LeaderboardPage(): JSX.Element {
   const router = useRouter();
+  const t = useTranslations('leaderboard.page');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#08111c] via-[#0d1421] to-[#0a0f1a]">
@@ -19,7 +22,7 @@ export default function LeaderboardPage(): JSX.Element {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Geri Dön
+            {t('back')}
           </button>
         </div>
         

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+
 import { LeaderboardEntry, RANK_INFO, LEAGUE_INFO, UserRank, League } from '@/lib/types/gamification';
 
 // Mock leaderboard data
@@ -66,6 +68,8 @@ const MOCK_LEADERBOARD: LeaderboardEntry[] = [
 type Period = 'weekly' | 'monthly' | 'all-time';
 
 export function Leaderboard() {
+  const t = useTranslations('leaderboard');
+  const g = useTranslations('gamification');
   const [period, setPeriod] = useState<Period>('weekly');
   const [showOnlyLeague, setShowOnlyLeague] = useState(false);
 
@@ -77,7 +81,7 @@ export function Leaderboard() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-white flex items-center gap-3">
               <span className="text-4xl">🏆</span>
-              <span>Liderlik Tablosu</span>
+              <span>{t('title')}</span>
             </h2>
             <div className="flex items-center gap-3">
               <button
@@ -88,7 +92,7 @@ export function Leaderboard() {
                     : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
                 }`}
               >
-                Sadece Ligim
+                {t('filters.onlyLeague')}
               </button>
             </div>
           </div>
@@ -105,7 +109,7 @@ export function Leaderboard() {
                     : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                {p === 'weekly' ? 'Haftalık' : p === 'monthly' ? 'Aylık' : 'Tüm Zamanlar'}
+                {t(`filters.periods.${p}`)}
               </button>
             ))}
           </div>
@@ -164,40 +168,40 @@ export function Leaderboard() {
                       className="rounded-full border-2 border-white/20 shadow-lg"
                     />
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-white font-semibold text-lg">{entry.name}</h3>
-                        {isCurrentUser && (
-                          <span className="text-sm text-blue-300 font-medium bg-blue-500/20 px-2 py-1 rounded-full">(Sen)</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 ${rankInfo.bgColor} ${rankInfo.color} border ${rankInfo.borderColor} shadow-sm`}>
-                          <span>{rankInfo.emoji}</span>
-                          <span>{rankInfo.name}</span>
-                        </span>
-                        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 ${leagueInfo.bgColor} ${leagueInfo.color} border ${leagueInfo.borderColor} shadow-sm`}>
-                          <span>{leagueInfo.emoji}</span>
-                          <span>{leagueInfo.name}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* XP */}
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-white">{entry.xp.toLocaleString()}</div>
-                    <div className="text-sm text-white/40 font-medium">XP</div>
-                  </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-white font-semibold text-lg">{entry.name}</h3>
+                  {isCurrentUser && (
+                    <span className="text-sm text-blue-300 font-medium bg-blue-500/20 px-2 py-1 rounded-full">{t('table.currentUser')}</span>
+                  )}
                 </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 ${rankInfo.bgColor} ${rankInfo.color} border ${rankInfo.borderColor} shadow-sm`}>
+                    <span>{rankInfo.emoji}</span>
+                    <span>{g(`ranks.${entry.rank}`)}</span>
+                  </span>
+                  <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 ${leagueInfo.bgColor} ${leagueInfo.color} border ${leagueInfo.borderColor} shadow-sm`}>
+                    <span>{leagueInfo.emoji}</span>
+                    <span>{g(`leagues.${entry.league}`)}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
 
-                {/* Special badges for top 3 */}
-                {actualPosition <= 3 && (
-                  <div className="absolute -top-3 -right-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center shadow-xl">
-                      <span className="text-sm font-bold text-white">TOP</span>
-                    </div>
-                  </div>
-                )}
+            {/* XP */}
+            <div className="text-right">
+              <div className="text-3xl font-bold text-white">{entry.xp.toLocaleString()}</div>
+              <div className="text-sm text-white/40 font-medium">{t('table.xpLabel')}</div>
+            </div>
+          </div>
+
+          {/* Special badges for top 3 */}
+          {actualPosition <= 3 && (
+            <div className="absolute -top-3 -right-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center shadow-xl">
+                <span className="text-sm font-bold text-white">{t('table.topBadge')}</span>
+              </div>
+            </div>
+          )}
               </div>
             );
           })}
