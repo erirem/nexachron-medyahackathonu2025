@@ -1,0 +1,353 @@
+{
+  "common": {
+    "localeSwitcher": {
+      "label": "Dil"
+    }
+  },
+  "login": {
+    "hero": {
+      "badge": "Anadolu Ajansı İçin Özel",
+      "title": "Nexachron ile habere giriş yap, haberi <highlight>oyunlaştırılmış</highlight> bir deneyimle yaşa.",
+      "description": "Anadolu Ajansı'nın güvenilir haberlerinden beslenen Nexachron, okuma alışkanlığını XP ile ödüllendirir, quiz'lerle gündemi pekiştirir ve kart koleksiyonu ile gazetecilik kariyerini parlatır.",
+      "ctaPrimary": "Hemen Kayıt Ol",
+      "ctaBonus": "+10",
+      "ctaSecondary": "İlk haberini oku, bonus XP kazan.",
+      "highlights": [
+        {
+          "icon": "📈",
+          "title": "Streak Odaklı Haber",
+          "description": "Haber başlıklarını kendi ritminde takip et, her okuduğun haberde XP kazan ve günlük streak ödüllerini kaçırma."
+        },
+        {
+          "icon": "🧠",
+          "title": "Quiz ile Pekiştir",
+          "description": "Anadolu Ajansı doğrulamasından gelen haberleri quiz'lerle pekiştir, doğru her cevapta ekstra 25 XP kap."
+        },
+        {
+          "icon": "📍",
+          "title": "Şehir Bazlı Filtre",
+          "description": "İstanbul'dan Ankara'ya, bulunduğun şehirdeki nabzı sez. Konumuna uygun haber akışını kişiselleştir."
+        },
+        {
+          "icon": "🎴",
+          "title": "Kart Koleksiyonu",
+          "description": "Common'dan Legendary'ye kadar gazeteci kartlarını topla, profilini güçlendir ve liderlik tablosunda öne çık."
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Nexachron'a Giriş",
+      "xpBadge": "+10 XP hazır",
+      "description": "Güvenilir ajans haberlerine eriş, kişisel streak'ini koru ve liderlik tablosunda yüksel.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "Canlı XP Akışı",
+          "description": "Kullanıcılar anlık XP kazanıyor. Sen de katıl!",
+          "capture": "CANLI"
+        },
+        "topLeft": {
+          "title": "Kart Koleksiyonu",
+          "description": "Nadir kartları topla, vitrininde sergile.",
+          "capture": "KOLEKSİYON"
+        },
+        "topRight": {
+          "title": "AI Destekli Haberler",
+          "description": "Senin için özel seçilmiş haberler.",
+          "capture": "AI POWERED"
+        },
+        "middleLeft": {
+          "title": "Streak Sistemi",
+          "description": "Kesintisiz giriş yap, ödüller kazan.",
+          "capture": "7 GÜN STREAK"
+        },
+        "middleRight": {
+          "title": "Günlük Quiz",
+          "description": "Her gün yeni sorular ve ödüller.",
+          "capture": "QUIZ"
+        },
+        "bottomCenter": {
+          "title": "Günlük Hedefler",
+          "description": "Günlük okuma hedefini tamamla.",
+          "capture": "HEDEFLER"
+        },
+        "bottomLeft": {
+          "title": "Sosyal Etkileşim",
+          "description": "Topluluğa katıl, fikirlerini paylaş.",
+          "capture": "SOSYAL"
+        },
+        "bottomRight": {
+          "title": "Başarı Rozetleri",
+          "description": "Özel görevleri tamamla, rozet kazan.",
+          "capture": "ROZETLER"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "email": {
+          "label": "E-posta",
+          "placeholder": "ornek@aa.com.tr"
+        },
+        "password": {
+          "label": "Şifre",
+          "placeholder": "••••••••"
+        },
+        "remember": "Beni hatırla",
+        "forgot": "Şifremi unuttum"
+      },
+      "submit": {
+        "loading": "Kontrol ediliyor...",
+        "success": "Başarılı!",
+        "default": "Giriş yap ve XP kazan"
+      },
+      "badges": {
+        "xp": "+10 XP"
+      },
+      "links": {
+        "registerPrompt": "Nexachron'da yeni misin?",
+        "registerCta": "Hemen Kayıt Ol"
+      },
+      "status": {
+        "default": "Nexachron'a katıl, haberleri oyunlaştırılmış deneyimle yaşa",
+        "submitting": "Bilgiler kontrol ediliyor...",
+        "invalid": "Formu kontrol et",
+      "success": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
+        "error": "Giriş sırasında beklenmeyen bir hata oluştu."
+      },
+      "supabase": {
+        "invalidCredentials": "E-posta veya şifre hatalı.",
+        "emailNotConfirmed": "E-posta adresini onaylaman gerekiyor.",
+        "generic": "Giriş işlemi sırasında bir hata oluştu."
+      },
+      "validation": {
+        "email": {
+          "required": "E-posta zorunlu",
+          "min": "E-posta en az 5 karakter olmalı",
+          "email": "Geçerli bir e-posta gir"
+        },
+        "password": {
+          "required": "Şifre zorunlu",
+          "min": "Şifren en az 8 karakter olmalı"
+        }
+      },
+      "messages": {
+        "demo": "Demo amaçlı olarak bilgiler kaydedilmedi. Supabase Auth devreye alındığında bu form direkt bağlanacak."
+      }
+    }
+  },
+  "register": {
+    "hero": {
+      "badge": "Ücretsiz Kayıt",
+      "title": "Nexachron ailesine katıl, <highlight>haberleri oyunlaştır</highlight>",
+      "description": "Anadolu Ajansı'nın güvenilir haberlerini gamified deneyimle oku, XP kazan, rozet topla ve liderlik tablosunda yüksel. Hemen ücretsiz hesap oluştur!",
+      "cta": {
+        "back": "Giriş sayfasına dön",
+        "badgeValue": "1K",
+        "badgeText": "İlk 1000 kullanıcıya özel rozet",
+        "free": "Ücretsiz kayıt"
+      },
+      "benefits": [
+        {
+          "icon": "🎯",
+          "title": "50 XP Başlangıç Bonusu",
+          "description": "Hesabını oluştur, anında 50 XP kazan"
+        },
+        {
+          "icon": "🏆",
+          "title": "Özel Early Bird Rozeti",
+          "description": "İlk 1000 kullanıcıya özel rozet"
+        },
+        {
+          "icon": "🌟",
+          "title": "Şehir Lideri Ol",
+          "description": "Kendi şehrinde en aktif okuyucu sen ol"
+        },
+        {
+          "icon": "🎮",
+          "title": "Gamified Deneyim",
+          "description": "Haberleri oyunlaştırılmış şekilde deneyimle"
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Nexachron'a Katıl",
+      "xpBadge": "+50 XP başlangıç",
+      "description": "Gamified haber platformuna katıl, XP kazan ve liderlik tablosunda yüksel.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "İlk Kayıt Bonusu",
+          "description": "Hemen kayıt ol, 50 XP ile başla!",
+          "capture": "+50 XP"
+        },
+        "topLeft": {
+          "title": "Premium Rozet",
+          "description": "İlk 1000 kullanıcıya özel rozet.",
+          "capture": "EARLY BIRD"
+        },
+        "topRight": {
+          "title": "Şehir Liderleri",
+          "description": "Şehrindeki en aktif okuyucu ol.",
+          "capture": "ŞEHİR"
+        },
+        "middleLeft": {
+          "title": "Güvenli Giriş",
+          "description": "Verilerini koruyoruz, güvende kal.",
+          "capture": "GÜVENLİK"
+        },
+        "middleRight": {
+          "title": "Arkadaş Davet",
+          "description": "Arkadaşını davet et, ikiniz de kazanın.",
+          "capture": "DAVET"
+        },
+        "bottomCenter": {
+          "title": "Başarı Yolu",
+          "description": "Liderlik tablosunda yüksel.",
+          "capture": "LİDERLİK"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "username": {
+          "label": "Kullanıcı Adı",
+          "placeholder": "nexauser"
+        },
+        "email": {
+          "label": "E-posta",
+          "placeholder": "ornek@aa.com.tr"
+        },
+        "password": {
+          "label": "Şifre",
+          "placeholder": "••••••••"
+        },
+        "confirmPassword": {
+          "label": "Şifre Tekrar",
+          "placeholder": "••••••••"
+        },
+        "city": {
+          "label": "Şehir",
+          "placeholder": "Şehir seçiniz"
+        },
+        "terms": {
+          "agreement": "<terms>Kullanım koşullarını</terms> ve <privacy>gizlilik politikasını</privacy> okudum ve kabul ediyorum."
+        }
+      },
+      "cities": [
+        "İstanbul",
+        "Ankara",
+        "İzmir",
+        "Bursa",
+        "Antalya",
+        "Adana",
+        "Konya",
+        "Gaziantep",
+        "Mersin",
+        "Diyarbakır",
+        "Kayseri",
+        "Samsun",
+        "Denizli",
+        "Eskişehir",
+        "Trabzon"
+      ],
+      "password": {
+        "strength": {
+          "1": "Çok Zayıf",
+          "2": "Zayıf",
+          "3": "Orta",
+          "4": "Güçlü",
+          "5": "Çok Güçlü"
+        }
+      },
+      "submit": {
+        "loading": "Kayıt yapılıyor...",
+        "success": "Başarıyla Kayıt Oldun!",
+        "default": "Kayıt Ol ve başla",
+        "badge": "+50 XP"
+      },
+      "links": {
+        "loginPrompt": "Zaten hesabın var mı?",
+        "loginCta": "Giriş yap"
+      },
+      "status": {
+        "default": "Nexachron'a katıl, haberleri oyunlaştırılmış deneyimle yaşa",
+        "submitting": "Kayıt işlemi başlatılıyor...",
+        "invalid": "Lütfen tüm alanları kontrol edin",
+        "successEmail": "Kayıt tamam! E-postanı kontrol ederek üyeliğini doğrula.",
+      "successRedirect": "Hoş geldin! Kontrol paneline yönlendiriliyorsun...",
+        "error": "Kayıt sırasında beklenmeyen bir hata oluştu."
+      },
+      "supabase": {
+        "exists": "Bu e-posta ile kayıtlı bir hesap mevcut.",
+        "weakPassword": "Şifreniz en az 6 karakter olmalı.",
+        "generic": "Kayıt sırasında bir hata oluştu."
+      },
+      "validation": {
+        "username": {
+          "required": "Kullanıcı adı zorunlu",
+          "min": "Kullanıcı adı en az 3 karakter olmalı",
+          "max": "Kullanıcı adı en fazla 20 karakter olabilir",
+          "pattern": "Sadece harf, rakam ve alt çizgi kullanılabilir"
+        },
+        "email": {
+          "required": "E-posta zorunlu",
+          "email": "Geçerli bir e-posta girin"
+        },
+        "password": {
+          "required": "Şifre zorunlu",
+          "min": "Şifre en az 8 karakter olmalı",
+          "uppercase": "En az bir büyük harf içermeli",
+          "lowercase": "En az bir küçük harf içermeli",
+          "digit": "En az bir rakam içermeli"
+        },
+        "confirmPassword": {
+          "required": "Şifre tekrarı zorunlu",
+          "match": "Şifreler eşleşmiyor"
+        },
+        "city": {
+          "required": "Şehir seçimi zorunlu",
+          "min": "Lütfen bir şehir seçin"
+        },
+        "terms": {
+          "accept": "Kullanım koşullarını kabul etmelisiniz"
+        }
+      },
+      "messages": {
+        "successCard": "Hoşgeldin! Hesabın başarıyla oluşturuldu. +50 XP ile başlıyorsun! 🎉"
+      }
+    }
+  },
+  "profile": {
+    "heading": "Profilim",
+    "subheading": "Haber ritmini ve XP ilerlemeni buradan takip et.",
+    "actions": {
+      "logout": "Çıkış yap"
+    },
+    "loading": "Profil bilgilerin yükleniyor...",
+    "errors": {
+      "missingApi": "API adresi tanımlı değil. .env dosyasını kontrol edin.",
+      "generic": "Profil bilgileri yüklenirken hata oluştu."
+    },
+    "account": {
+      "heading": "Hesap Bilgileri",
+      "fields": {
+        "username": "Kullanıcı adı",
+        "email": "E-posta",
+        "city": "Şehir",
+        "lastSeen": "Son görülen"
+      },
+      "unknown": "Belirtilmedi",
+      "unknownDate": "Bilinmiyor"
+    },
+    "stats": {
+      "heading": "Kullanıcı İstatistikleri",
+      "xp": "XP",
+      "streak": "Streak",
+      "rank": "Rank Level"
+    },
+    "streak": {
+      "none": "Seri başlatmak için bugün haberleri keşfet.",
+      "low": "{count} günlük seri! Devam et.",
+      "high": "{count} günlük seri 🔥"
+    }
+  }
+}

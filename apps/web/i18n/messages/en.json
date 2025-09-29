@@ -1,0 +1,353 @@
+{
+  "common": {
+    "localeSwitcher": {
+      "label": "Language"
+    }
+  },
+  "login": {
+    "hero": {
+      "badge": "Anadolu Agency",
+      "title": "Log into the news with Nexachron and live a <highlight>gamified</highlight> experience.",
+      "description": "Fueled by Anadolu Ajansı's trusted reporting, Nexachron rewards your reading streak with XP, reinforces the agenda with quizzes, and lets you shine with collectible cards.",
+      "ctaPrimary": "Create an Account",
+      "ctaBonus": "+10",
+      "ctaSecondary": "Read your first story, claim bonus XP.",
+      "highlights": [
+        {
+          "icon": "📈",
+          "title": "Streak-Driven Reading",
+          "description": "Follow headlines at your own pace, earn XP with every article, and never miss the daily streak rewards."
+        },
+        {
+          "icon": "🧠",
+          "title": "Reinforce with Quizzes",
+          "description": "Review Anadolu Ajansı verified stories with quizzes and grab an extra 25 XP for every correct answer."
+        },
+        {
+          "icon": "📍",
+          "title": "City-Based Feed",
+          "description": "Feel the pulse of your city from Istanbul to Ankara. Personalize the feed around your location."
+        },
+        {
+          "icon": "🎴",
+          "title": "Card Collection",
+          "description": "Collect journalist cards from Common to Legendary, power up your profile, and climb the leaderboard."
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Sign in to Nexachron",
+      "xpBadge": "+10 XP ready",
+      "description": "Access trusted agency news, keep your personal streak, and rise on the leaderboard.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "Live XP Stream",
+          "description": "Readers are earning XP in real time. Join them!",
+          "capture": "LIVE"
+        },
+        "topLeft": {
+          "title": "Card Collection",
+          "description": "Collect rare cards and showcase them in style.",
+          "capture": "COLLECTION"
+        },
+        "topRight": {
+          "title": "AI-Curated Briefings",
+          "description": "Stories curated just for you.",
+          "capture": "AI POWERED"
+        },
+        "middleLeft": {
+          "title": "Streak System",
+          "description": "Log in without breaks, unlock rewards.",
+          "capture": "7-DAY STREAK"
+        },
+        "middleRight": {
+          "title": "Daily Quiz",
+          "description": "Fresh questions and rewards every day.",
+          "capture": "QUIZ"
+        },
+        "bottomCenter": {
+          "title": "Daily Goals",
+          "description": "Hit your reading target and stay ahead.",
+          "capture": "GOALS"
+        },
+        "bottomLeft": {
+          "title": "Social Engagement",
+          "description": "Join the community, share your voice.",
+          "capture": "SOCIAL"
+        },
+        "bottomRight": {
+          "title": "Achievement Badges",
+          "description": "Complete special missions and earn badges.",
+          "capture": "BADGES"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "example@aa.com.tr"
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "••••••••"
+        },
+        "remember": "Remember me",
+        "forgot": "Forgot password"
+      },
+      "submit": {
+        "loading": "Checking...",
+        "success": "Success!",
+        "default": "Sign in and earn XP"
+      },
+      "badges": {
+        "xp": "+10 XP"
+      },
+      "links": {
+        "registerPrompt": "New to Nexachron?",
+        "registerCta": "Create an Account"
+      },
+      "status": {
+        "default": "Join Nexachron and experience gamified news.",
+        "submitting": "Verifying your details...",
+        "invalid": "Please review the form",
+      "success": "Welcome back! Redirecting to your dashboard...",
+        "error": "Something went wrong during sign-in."
+      },
+      "supabase": {
+        "invalidCredentials": "Email or password is incorrect.",
+        "emailNotConfirmed": "Please confirm your email address.",
+        "generic": "We couldn't complete the sign-in. Please try again."
+      },
+      "validation": {
+        "email": {
+          "required": "Email is required",
+          "min": "Email must be at least 5 characters",
+          "email": "Enter a valid email address"
+        },
+        "password": {
+          "required": "Password is required",
+          "min": "Password must contain at least 8 characters"
+        }
+      },
+      "messages": {
+        "demo": "This is a demo preview. Once Supabase Auth is enabled, the form will connect directly."
+      }
+    }
+  },
+  "register": {
+    "hero": {
+      "badge": "Free Sign-Up",
+      "title": "Join the Nexachron family, <highlight>gamify the news</highlight>",
+      "description": "Read Anadolu Ajansı's trusted coverage in a gamified flow, earn XP, collect badges, and climb the leaderboard. Create your free account now!",
+      "cta": {
+        "back": "Back to sign-in",
+        "badgeValue": "1K",
+        "badgeText": "Exclusive badge for the first 1,000 users",
+        "free": "Free to join"
+      },
+      "benefits": [
+        {
+          "icon": "🎯",
+          "title": "50 XP Starter Bonus",
+          "description": "Create your account and instantly earn 50 XP"
+        },
+        {
+          "icon": "🏆",
+          "title": "Early Bird Badge",
+          "description": "Limited badge for the first wave of members"
+        },
+        {
+          "icon": "🌟",
+          "title": "Lead Your City",
+          "description": "Become the top reader in your city"
+        },
+        {
+          "icon": "🎮",
+          "title": "Gamified Journey",
+          "description": "Experience the news like an interactive game"
+        }
+      ]
+    },
+    "panel": {
+      "heading": "Create your Nexachron account",
+      "xpBadge": "+50 XP welcome",
+      "description": "Join the gamified newsroom, earn XP, and rise through the ranks.",
+      "floatingCards": {
+        "topCenter": {
+          "title": "Sign-Up Bonus",
+          "description": "Register now and start with 50 XP!",
+          "capture": "+50 XP"
+        },
+        "topLeft": {
+          "title": "Premium Badge",
+          "description": "Special badge for the first 1,000 members.",
+          "capture": "EARLY BIRD"
+        },
+        "topRight": {
+          "title": "City Leaders",
+          "description": "Become the most active reader in your city.",
+          "capture": "CITY"
+        },
+        "middleLeft": {
+          "title": "Secure Sign-In",
+          "description": "Your data stays safe with us.",
+          "capture": "SECURITY"
+        },
+        "middleRight": {
+          "title": "Invite & Earn",
+          "description": "Invite friends and both of you collect rewards.",
+          "capture": "INVITE"
+        },
+        "bottomCenter": {
+          "title": "Path to Mastery",
+          "description": "Climb straight to the leaderboard.",
+          "capture": "LEADERSHIP"
+        }
+      }
+    },
+    "form": {
+      "fields": {
+        "username": {
+          "label": "Username",
+          "placeholder": "nexauser"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "example@aa.com.tr"
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "••••••••"
+        },
+        "confirmPassword": {
+          "label": "Confirm Password",
+          "placeholder": "••••••••"
+        },
+        "city": {
+          "label": "City",
+          "placeholder": "Select your city"
+        },
+        "terms": {
+          "agreement": "I have read and agree to the <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
+        }
+      },
+      "cities": [
+        "Istanbul",
+        "Ankara",
+        "Izmir",
+        "Bursa",
+        "Antalya",
+        "Adana",
+        "Konya",
+        "Gaziantep",
+        "Mersin",
+        "Diyarbakir",
+        "Kayseri",
+        "Samsun",
+        "Denizli",
+        "Eskisehir",
+        "Trabzon"
+      ],
+      "password": {
+        "strength": {
+          "1": "Very weak",
+          "2": "Weak",
+          "3": "Medium",
+          "4": "Strong",
+          "5": "Very strong"
+        }
+      },
+      "submit": {
+        "loading": "Creating your account...",
+        "success": "You're all set!",
+        "default": "Sign up and start",
+        "badge": "+50 XP"
+      },
+      "links": {
+        "loginPrompt": "Already have an account?",
+        "loginCta": "Sign in"
+      },
+      "status": {
+        "default": "Join Nexachron and experience gamified news.",
+        "submitting": "Starting your registration...",
+        "invalid": "Please check the required fields",
+        "successEmail": "All set! Check your inbox to verify your email.",
+      "successRedirect": "Welcome aboard! Redirecting to your dashboard...",
+        "error": "Something went wrong while creating your account."
+      },
+      "supabase": {
+        "exists": "An account already exists with this email.",
+        "weakPassword": "Your password must contain at least 6 characters.",
+        "generic": "We couldn't complete the registration. Please try again."
+      },
+      "validation": {
+        "username": {
+          "required": "Username is required",
+          "min": "Username must have at least 3 characters",
+          "max": "Username can contain up to 20 characters",
+          "pattern": "Only letters, numbers, and underscores are allowed"
+        },
+        "email": {
+          "required": "Email is required",
+          "email": "Enter a valid email"
+        },
+        "password": {
+          "required": "Password is required",
+          "min": "Password must be at least 8 characters",
+          "uppercase": "Include at least one uppercase letter",
+          "lowercase": "Include at least one lowercase letter",
+          "digit": "Include at least one digit"
+        },
+        "confirmPassword": {
+          "required": "Password confirmation is required",
+          "match": "Passwords do not match"
+        },
+        "city": {
+          "required": "City selection is required",
+          "min": "Please choose a city"
+        },
+        "terms": {
+          "accept": "You must accept the terms"
+        }
+      },
+      "messages": {
+        "successCard": "Welcome! Your account is ready. You start with +50 XP! 🎉"
+      }
+    }
+  },
+  "profile": {
+    "heading": "My Profile",
+    "subheading": "Track your reading rhythm and XP progress here.",
+    "actions": {
+      "logout": "Sign out"
+    },
+    "loading": "Loading your profile details...",
+    "errors": {
+      "missingApi": "API URL is missing. Please check your environment settings.",
+      "generic": "We couldn't load your profile information."
+    },
+    "account": {
+      "heading": "Account Details",
+      "fields": {
+        "username": "Username",
+        "email": "Email",
+        "city": "City",
+        "lastSeen": "Last seen"
+      },
+      "unknown": "Not provided",
+      "unknownDate": "Unknown"
+    },
+    "stats": {
+      "heading": "User Stats",
+      "xp": "XP",
+      "streak": "Streak",
+      "rank": "Rank Level"
+    },
+    "streak": {
+      "none": "Start your streak by exploring today's stories.",
+      "low": "{count}-day streak! Keep it up.",
+      "high": "{count}-day streak 🔥"
+    }
+  }
+}

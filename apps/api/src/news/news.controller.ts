@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Param, Query, Body } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  InternalServerErrorException,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
+
+import { resolveLocale, translate } from '../i18n/i18n';
 import { NewsService } from './news.service';
 
 @Controller('news')
@@ -10,7 +21,9 @@ export class NewsController {
     @Query('limit') limit?: string,
     @Query('mode') mode?: string,
     @Query('city') city?: string,
+    @Headers('accept-language') acceptLanguage?: string,
   ) {
+    const locale = resolveLocale(acceptLanguage);
     const { data, error } = await this.newsService.getAllNews(
       limit ? parseInt(limit) : 20,
       mode,
@@ -18,7 +31,9 @@ export class NewsController {
     );
 
     if (error) {
-      throw new Error(`Failed to fetch news: ${error.message}`);
+      throw new InternalServerErrorException(
+        translate(locale, 'errors.fetchNews'),
+      );
     }
 
     return {
@@ -29,13 +44,19 @@ export class NewsController {
   }
 
   @Get('popular')
-  async getPopularNews(@Query('limit') limit?: string) {
+  async getPopularNews(
+    @Query('limit') limit?: string,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    const locale = resolveLocale(acceptLanguage);
     const { data, error } = await this.newsService.getPopularNews(
       limit ? parseInt(limit) : 10,
     );
 
     if (error) {
-      throw new Error(`Failed to fetch popular news: ${error.message}`);
+      throw new InternalServerErrorException(
+        translate(locale, 'errors.fetchPopular'),
+      );
     }
 
     return {
@@ -49,14 +70,18 @@ export class NewsController {
   async getNewsByMode(
     @Param('mode') mode: string,
     @Query('limit') limit?: string,
+    @Headers('accept-language') acceptLanguage?: string,
   ) {
+    const locale = resolveLocale(acceptLanguage);
     const { data, error } = await this.newsService.getNewsByMode(
       mode.toUpperCase(),
       limit ? parseInt(limit) : 20,
     );
 
     if (error) {
-      throw new Error(`Failed to fetch news by mode: ${error.message}`);
+      throw new InternalServerErrorException(
+        translate(locale, 'errors.fetchByMode'),
+      );
     }
 
     return {
@@ -68,11 +93,17 @@ export class NewsController {
   }
 
   @Get(':id')
-  async getNewsById(@Param('id') id: string) {
+  async getNewsById(
+    @Param('id') id: string,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    const locale = resolveLocale(acceptLanguage);
     const { data, error } = await this.newsService.getNewsById(id);
 
     if (error) {
-      throw new Error(`Failed to fetch news: ${error.message}`);
+      throw new InternalServerErrorException(
+        translate(locale, 'errors.fetchById'),
+      );
     }
 
     return {
@@ -85,7 +116,9 @@ export class NewsController {
   async addComment(
     @Param('id') newsId: string,
     @Body() body: { userId: string; comment: string },
+    @Headers('accept-language') acceptLanguage?: string,
   ) {
+    const locale = resolveLocale(acceptLanguage);
     const { data, error } = await this.newsService.addComment(
       newsId,
       body.userId,
@@ -93,13 +126,15 @@ export class NewsController {
     );
 
     if (error) {
-      throw new Error(`Failed to add comment: ${error.message}`);
+      throw new InternalServerErrorException(
+        translate(locale, 'errors.addComment'),
+      );
     }
 
     return {
       success: true,
       data,
-      message: 'Comment added successfully',
+      message: translate(locale, 'messages.commentAdded'),
     };
   }
 
@@ -107,7 +142,9 @@ export class NewsController {
   async addReaction(
     @Param('id') newsId: string,
     @Body() body: { userId: string; emoji: string },
+    @Headers('accept-language') acceptLanguage?: string,
   ) {
+    const locale = resolveLocale(acceptLanguage);
     const { data, error } = await this.newsService.addReaction(
       newsId,
       body.userId,
@@ -115,13 +152,15 @@ export class NewsController {
     );
 
     if (error) {
-      throw new Error(`Failed to add reaction: ${error.message}`);
+      throw new InternalServerErrorException(
+        translate(locale, 'errors.addReaction'),
+      );
     }
 
     return {
       success: true,
       data,
-      message: 'Reaction added successfully',
+      message: translate(locale, 'messages.reactionAdded'),
     };
   }
 }
