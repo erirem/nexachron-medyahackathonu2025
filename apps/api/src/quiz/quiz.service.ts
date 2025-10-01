@@ -158,9 +158,8 @@ export class QuizService {
     dto: AnswerQuizDto,
   ): Promise<AnswerQuizResponse> {
     return this.prisma.$transaction(async (tx) => {
-      const attemptId = dto.attemptId ?? (dto as any).attempt_id;
       const attempt = await tx.quizAttempt.findUnique({
-        where: { id: attemptId },
+        where: { id: dto.attemptId },
         include: {
           quiz: {
             include: { options: true },
@@ -213,9 +212,8 @@ export class QuizService {
         throw new GoneException('Quiz is no longer active.');
       }
 
-      const selectedOptionId = dto.selectedOptionId ?? (dto as any).selected_option_id;
       const selectedOption = quiz.options.find(
-        (option) => option.id === selectedOptionId,
+        (option) => option.id === dto.selectedOptionId,
       );
 
       if (!selectedOption) {
@@ -418,8 +416,6 @@ export class QuizService {
     );
   }
 }
-
-
 
 
 
