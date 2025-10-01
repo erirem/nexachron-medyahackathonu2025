@@ -50,12 +50,16 @@ export class QuizController {
     const userId = this.ensureUser(request);
     const rawBody = request.body as Record<string, unknown> | undefined;
 
-    const attemptId = body.attemptId ?? (rawBody?.['attempt_id'] as string | undefined);
+    const attemptId =
+      body.attemptId ?? (rawBody?.['attempt_id'] as string | undefined);
     const selectedOptionId =
-      body.selectedOptionId ?? (rawBody?.['selected_option_id'] as string | undefined);
+      body.selectedOptionId ??
+      (rawBody?.['selected_option_id'] as string | undefined);
 
     if (!attemptId || !selectedOptionId) {
-      throw new BadRequestException('attempt_id and selected_option_id are required.');
+      throw new BadRequestException(
+        'attempt_id and selected_option_id are required.',
+      );
     }
 
     body.attemptId = attemptId;

@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuizModule } from './quiz/quiz.module';
+import { XpModule } from './xp/xp.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { QuizModule } from './quiz/quiz.module';
     UsersModule,
     NewsIngestModule,
     QuizModule,
+    XpModule,
   ],
   controllers: [AppController],
   providers: [AppService],

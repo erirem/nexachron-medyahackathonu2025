@@ -34,7 +34,7 @@ export interface ProfileWithStats {
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) { }
+  constructor(private readonly supabaseService: SupabaseService) {}
 
   async getProfileWithStats(user: User): Promise<ProfileWithStats> {
     const profile = await this.ensureProfileRow(user);

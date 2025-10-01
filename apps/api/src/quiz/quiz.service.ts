@@ -5,12 +5,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import { Prisma, QuizAttemptState, QuizStatus } from '@prisma/client';
+
 import { randomInt } from 'crypto';
 
 import type { AnswerQuizDto } from './dto/answer-quiz.dto';
+
 import type { GetNextQuizQueryDto } from './dto/get-next-quiz.dto';
+
 import { PrismaService } from '../prisma/prisma.service';
+
+import { XpService } from '../xp/xp.service';
 
 type QuizWithOptions = Prisma.QuizGetPayload<{
   include: {
@@ -38,47 +44,63 @@ type AttemptWithQuiz = Prisma.QuizAttemptGetPayload<{
 
 export interface NextQuizResponse {
   attempt_id: string;
+
   quiz: {
     id: string;
+
     type: string;
+
     news_id: string | null;
+
     question: string;
+
     options: Array<{
       id: string;
+
       text: string;
     }>;
+
     active_until: string | null;
   };
+
   shuffle_seed: number | null;
 }
 
 export interface AnswerQuizResponse {
   isCorrect: boolean;
+
   xp_delta: number;
+
   streak_update: {
     added: boolean;
+
     current_streak: number;
   };
+
   explanation: string;
+
   next_action: 'share' | 'review';
 }
 
-const CORRECT_ANSWER_XP = 10;
-const ISTANBUL_OFFSET_MINUTES = 180;
-
 @Injectable()
 export class QuizService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly xpService: XpService,
+  ) {}
 
   async getNextQuiz(
     userId: string,
+
     query: GetNextQuizQueryDto,
   ): Promise<NextQuizResponse> {
     const existingAttempt = await this.prisma.quizAttempt.findFirst({
       where: {
         userId,
+
         state: QuizAttemptState.CREATED,
       },
+
       include: {
         quiz: {
           include: {
@@ -88,6 +110,7 @@ export class QuizService {
           },
         },
       },
+
       orderBy: { createdAt: 'desc' },
     });
 
@@ -96,10 +119,14 @@ export class QuizService {
     }
 
     const now = new Date();
+
     const requestedNewsId = query.newsId ?? query['news_id'];
+
     const candidateQuiz = await this.resolveNextQuiz(
       now,
+
       userId,
+
       requestedNewsId,
     );
 
@@ -109,20 +136,24 @@ export class QuizService {
 
     const shuffleSeed = this.generateShuffleSeed();
 
-    await this.ensureUserProgress(userId);
+    await this.xpService.ensureUserProgress(this.prisma, userId);
 
     try {
       const attempt = await this.prisma.quizAttempt.create({
         data: {
           userId,
+
           quizId: candidateQuiz.id,
+
           shuffleSeed,
         },
       });
 
       return {
         attempt_id: attempt.id,
+
         quiz: this.mapQuiz(candidateQuiz),
+
         shuffle_seed: shuffleSeed,
       };
     } catch (error) {
@@ -130,9 +161,12 @@ export class QuizService {
         const retryAttempt = await this.prisma.quizAttempt.findFirst({
           where: {
             userId,
+
             quizId: candidateQuiz.id,
+
             state: QuizAttemptState.CREATED,
           },
+
           include: {
             quiz: {
               include: {
@@ -155,11 +189,13 @@ export class QuizService {
 
   async answerQuiz(
     userId: string,
+
     dto: AnswerQuizDto,
   ): Promise<AnswerQuizResponse> {
     return this.prisma.$transaction(async (tx) => {
       const attempt = await tx.quizAttempt.findUnique({
         where: { id: dto.attemptId },
+
         include: {
           quiz: {
             include: { options: true },
@@ -172,6 +208,7 @@ export class QuizService {
       }
 
       const quiz = attempt.quiz;
+
       const correctOption = quiz.options.find((option) => option.isCorrect);
 
       if (!correctOption) {
@@ -184,23 +221,32 @@ export class QuizService {
         const storedSelection = quiz.options.find(
           (option) => option.id === attempt.selectedOptionId,
         );
+
         const progressSnapshot = await tx.userProgress.findUnique({
           where: { userId },
         });
 
         throw new ConflictException({
           isCorrect: Boolean(attempt.isCorrect),
+
           xp_delta: attempt.awardedXp,
+
           streak_update: {
             added: attempt.streakIncremented,
+
             current_streak: progressSnapshot?.currentStreak ?? 0,
           },
+
           explanation: this.resolveExplanation(
             Boolean(attempt.isCorrect),
+
             storedSelection,
+
             correctOption,
+
             quiz.explanation,
           ),
+
           next_action: attempt.isCorrect ? 'share' : 'review',
         });
       }
@@ -223,65 +269,64 @@ export class QuizService {
       }
 
       const now = new Date();
+
       const isCorrect = selectedOption.isCorrect;
-      const xpDelta = isCorrect ? CORRECT_ANSWER_XP : 0;
 
-      const streakSource = await tx.userProgress.findUnique({
-        where: { userId },
-      });
+      const xpResult = await this.xpService.applyQuizResult(tx, {
+        userId,
 
-      const shouldIncrementStreak = this.shouldIncrementStreak(
-        streakSource?.lastSeenDate,
+        isCorrect,
+
         now,
-      );
+
+        attemptId: attempt.id,
+
+        quizId: attempt.quizId,
+
+        selectedOptionId: selectedOption.id,
+      });
 
       await tx.quizAttempt.update({
         where: { id: attempt.id },
+
         data: {
           state: QuizAttemptState.ANSWERED,
+
           selectedOptionId: selectedOption.id,
+
           isCorrect,
-          awardedXp: xpDelta,
-          streakIncremented: shouldIncrementStreak,
+
+          awardedXp: xpResult.xpDelta,
+
+          streakIncremented: xpResult.streak.added,
+
           answeredAt: now,
         },
       });
 
-      const progressAfter = streakSource
-        ? await tx.userProgress.update({
-            where: { userId },
-            data: {
-              xp: { increment: xpDelta },
-              ...(shouldIncrementStreak
-                ? { currentStreak: { increment: 1 } }
-                : {}),
-              lastSeenDate: now,
-            },
-          })
-        : await tx.userProgress.create({
-            data: {
-              userId,
-              xp: xpDelta,
-              currentStreak: shouldIncrementStreak ? 1 : 0,
-              lastSeenDate: now,
-            },
-          });
-
       const explanation = this.resolveExplanation(
         isCorrect,
+
         selectedOption,
+
         correctOption,
+
         quiz.explanation,
       );
 
       return {
         isCorrect,
-        xp_delta: xpDelta,
+
+        xp_delta: xpResult.xpDelta,
+
         streak_update: {
-          added: shouldIncrementStreak,
-          current_streak: progressAfter.currentStreak,
+          added: xpResult.streak.added,
+
+          current_streak: xpResult.streak.current,
         },
+
         explanation,
+
         next_action: isCorrect ? 'share' : 'review',
       };
     });
@@ -289,12 +334,16 @@ export class QuizService {
 
   private async resolveNextQuiz(
     now: Date,
+
     userId: string,
+
     newsId?: string,
   ): Promise<QuizWithOptions | null> {
     const baseWhere: Prisma.QuizWhereInput = {
       status: QuizStatus.ACTIVE,
+
       OR: [{ activeUntil: null }, { activeUntil: { gt: now } }],
+
       attempts: {
         none: {
           userId,
@@ -306,13 +355,16 @@ export class QuizService {
       const targeted = await this.prisma.quiz.findFirst({
         where: {
           ...baseWhere,
+
           newsId,
         },
+
         include: {
           options: {
             orderBy: { displayOrder: 'asc' },
           },
         },
+
         orderBy: { createdAt: 'asc' },
       });
 
@@ -323,11 +375,13 @@ export class QuizService {
 
     return this.prisma.quiz.findFirst({
       where: baseWhere,
+
       include: {
         options: {
           orderBy: { displayOrder: 'asc' },
         },
       },
+
       orderBy: { createdAt: 'asc' },
     });
   }
@@ -335,13 +389,19 @@ export class QuizService {
   private mapQuiz(quiz: QuizWithOptions): NextQuizResponse['quiz'] {
     return {
       id: quiz.id,
+
       type: quiz.type.toLowerCase(),
+
       news_id: quiz.newsId ?? null,
+
       question: quiz.question,
+
       options: quiz.options.map((option) => ({
         id: option.id,
+
         text: option.text,
       })),
+
       active_until: quiz.activeUntil ? quiz.activeUntil.toISOString() : null,
     };
   }
@@ -349,7 +409,9 @@ export class QuizService {
   private mapAttemptToPayload(attempt: AttemptWithQuiz): NextQuizResponse {
     return {
       attempt_id: attempt.id,
+
       quiz: this.mapQuiz(attempt.quiz as QuizWithOptions),
+
       shuffle_seed: attempt.shuffleSeed ?? null,
     };
   }
@@ -364,41 +426,13 @@ export class QuizService {
     return randomInt(0, 100_000);
   }
 
-  private shouldIncrementStreak(
-    lastSeen: Date | null | undefined,
-    now: Date,
-  ): boolean {
-    if (!lastSeen) {
-      return true;
-    }
-
-    const previousKey = this.computeIstanbulDayKey(lastSeen);
-    const currentKey = this.computeIstanbulDayKey(now);
-    return previousKey !== currentKey;
-  }
-
-  private computeIstanbulDayKey(date: Date): string {
-    const shifted = new Date(
-      date.getTime() + ISTANBUL_OFFSET_MINUTES * 60 * 1000,
-    );
-    const year = shifted.getUTCFullYear();
-    const month = String(shifted.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(shifted.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private async ensureUserProgress(userId: string): Promise<void> {
-    await this.prisma.userProgress.upsert({
-      where: { userId },
-      update: { updatedAt: new Date() },
-      create: { userId },
-    });
-  }
-
   private resolveExplanation(
     isCorrect: boolean,
+
     selectedOption: { text: string; explanation: string | null } | undefined,
+
     correctOption: { text: string; explanation: string | null },
+
     fallbackExplanation?: string | null,
   ): string {
     if (isCorrect) {
@@ -416,6 +450,3 @@ export class QuizService {
     );
   }
 }
-
-
-

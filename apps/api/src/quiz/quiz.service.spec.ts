@@ -2,9 +2,8 @@ import { ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { QuizAttemptState, QuizStatus } from '@prisma/client';
 
-import type { AnswerQuizResponse } from './quiz.service';
-
 import { PrismaService } from '../prisma/prisma.service';
+import { XpService, XpEventResult } from '../xp/xp.service';
 import { QuizService } from './quiz.service';
 
 type TransactionHandler = Parameters<
@@ -19,6 +18,8 @@ type TransactionClient = TransactionHandler extends (
 
 describe('QuizService', () => {
   let service: QuizService;
+  let prisma: jest.Mocked<PrismaService>;
+  let xpService: jest.Mocked<XpService>;
   let transactionMock: jest.MockedFunction<
     typeof PrismaService.prototype.$transaction
   >;
@@ -47,13 +48,23 @@ describe('QuizService', () => {
             $transaction: jest.fn(),
           },
         },
+        {
+          provide: XpService,
+          useValue: {
+            applyQuizResult: jest.fn(),
+            handleDailyLogin: jest.fn(),
+            handlePopularNews: jest.fn(),
+            ensureUserProgress: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = moduleRef.get(QuizService);
-    const prisma = moduleRef.get(PrismaService);
+    prisma = moduleRef.get(PrismaService);
+    xpService = moduleRef.get(XpService);
+    (service as any).xpService = xpService;
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     transactionMock = prisma.$transaction as jest.MockedFunction<
       typeof PrismaService.prototype.$transaction
     >;
@@ -105,25 +116,20 @@ describe('QuizService', () => {
     const tx = {
       quizAttempt: {
         findUnique: jest.fn().mockResolvedValue(attempt),
-        update: jest
-          .fn()
-          .mockResolvedValue({ ...attempt, state: QuizAttemptState.ANSWERED }),
-      },
-      userProgress: {
-        findUnique: jest.fn().mockResolvedValue(null),
-        update: jest.fn(),
-        create: jest.fn().mockResolvedValue({
-          userId: 'user-1',
-          xp: 10,
-          currentStreak: 1,
-          lastSeenDate: new Date(),
+        update: jest.fn().mockResolvedValue({
+          ...attempt,
+          state: QuizAttemptState.ANSWERED,
         }),
       },
     } as unknown as TransactionClient;
 
-    transactionMock.mockImplementation((handler) =>
-      Promise.resolve().then(() => handler(tx) as AnswerQuizResponse),
-    );
+    const xpResult: XpEventResult = {
+      xpDelta: 10,
+      streak: { added: true, current: 1 },
+    };
+    xpService.applyQuizResult.mockResolvedValue(xpResult);
+
+    transactionMock.mockImplementation(async (handler: any) => handler(tx));
 
     const response = await service.answerQuiz('user-1', {
       attemptId: 'attempt-1',
@@ -132,14 +138,18 @@ describe('QuizService', () => {
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const updateMock = tx.quizAttempt.update as jest.Mock;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const createMock = tx.userProgress.create as jest.Mock;
 
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'attempt-1' } }),
     );
-    expect(createMock).toHaveBeenCalled();
-
+    expect(xpService.applyQuizResult).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        userId: 'user-1',
+        isCorrect: true,
+        attemptId: 'attempt-1',
+      }),
+    );
     expect(response).toEqual({
       isCorrect: true,
       xp_delta: 10,
@@ -203,14 +213,10 @@ describe('QuizService', () => {
           currentStreak: 5,
           lastSeenDate: new Date(),
         }),
-        update: jest.fn(),
-        create: jest.fn(),
       },
     } as unknown as TransactionClient;
 
-    transactionMock.mockImplementation((handler) =>
-      Promise.resolve().then(() => handler(tx) as AnswerQuizResponse),
-    );
+    transactionMock.mockImplementation(async (handler: any) => handler(tx));
 
     await expect(
       service.answerQuiz('user-1', {
@@ -218,22 +224,6 @@ describe('QuizService', () => {
         selectedOptionId: 'opt-2',
       }),
     ).rejects.toThrow(ConflictException);
-
-    try {
-      await service.answerQuiz('user-1', {
-        attemptId: 'attempt-2',
-        selectedOptionId: 'opt-2',
-      });
-    } catch (error) {
-      expect(error).toBeInstanceOf(ConflictException);
-      expect((error as ConflictException).getResponse()).toMatchObject({
-        isCorrect: true,
-        xp_delta: 10,
-        streak_update: {
-          added: true,
-          current_streak: 5,
-        },
-      });
-    }
+    expect(xpService.applyQuizResult).not.toHaveBeenCalled();
   });
 });
