@@ -11,6 +11,7 @@ const MOCK_LEADERBOARD: LeaderboardEntry[] = [
     name: 'Ahmet Yılmaz',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
     rank: 'ACTIVE_READER' as UserRank,
+
     league: 'SILVER' as League,
     xp: 1250,
     position: 5,
@@ -82,28 +83,26 @@ export function Leaderboard() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowOnlyLeague(!showOnlyLeague)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  showOnlyLeague
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showOnlyLeague
                     ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                     : 'bg-white/10 text-white/60 hover:bg-white/20'
-                }`}
+                  }`}
               >
                 Sadece Ligim
               </button>
             </div>
           </div>
-          
+
           {/* Period Selector */}
           <div className="flex gap-2">
             {(['weekly', 'monthly', 'all-time'] as Period[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  period === p
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${period === p
                     ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                     : 'bg-white/5 text-white/60 hover:bg-white/10'
-                }`}
+                  }`}
               >
                 {p === 'weekly' ? 'Haftalık' : p === 'monthly' ? 'Aylık' : 'Tüm Zamanlar'}
               </button>
@@ -121,31 +120,28 @@ export function Leaderboard() {
             return (
               <div
                 key={entry.userId}
-                className={`relative rounded-xl p-4 transition-all ${
-                  isCurrentUser
+                className={`relative rounded-xl p-4 transition-all ${isCurrentUser
                     ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30'
                     : 'bg-white/5 hover:bg-white/10 border border-white/10'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-4">
                   {/* Position */}
                   <div className="text-center min-w-[50px]">
-                    <div className={`text-2xl font-bold ${
-                      entry.position === 1 ? 'text-yellow-400' :
-                      entry.position === 2 ? 'text-gray-300' :
-                      entry.position === 3 ? 'text-orange-400' :
-                      'text-white'
-                    }`}>
+                    <div className={`text-2xl font-bold ${entry.position === 1 ? 'text-yellow-400' :
+                        entry.position === 2 ? 'text-gray-300' :
+                          entry.position === 3 ? 'text-orange-400' :
+                            'text-white'
+                      }`}>
                       {entry.position === 1 ? '🥇' :
-                       entry.position === 2 ? '🥈' :
-                       entry.position === 3 ? '🥉' :
-                       `#${entry.position}`}
+                        entry.position === 2 ? '🥈' :
+                          entry.position === 3 ? '🥉' :
+                            `#${entry.position}`}
                     </div>
                     {/* Movement Indicator */}
                     {entry.movement !== 'same' && (
-                      <div className={`text-xs font-medium ${
-                        entry.movement === 'up' ? 'text-green-400' : 'text-red-400'
-                      }`}>
+                      <div className={`text-xs font-medium ${entry.movement === 'up' ? 'text-green-400' : 'text-red-400'
+                        }`}>
                         {entry.movement === 'up' ? '↑' : '↓'} {entry.movementAmount}
                       </div>
                     )}
