@@ -85,12 +85,12 @@ export class ContentProcessorService {
 
       const $ = cheerio.load(response.data);
 
-      // Remove unwanted elements first
-      $('script, style, nav, header, footer, .advertisement, .ads, .social-share, .related-news, .comments').remove();
+      // Remove unwanted elements first - more comprehensive cleanup
+      $('script, style, nav, header, footer, .advertisement, .ads, .social-share, .related-news, .comments, .sidebar, .menu, .navigation, .breadcrumb, .tags, .author-info, .date-info, .share-buttons, .newsletter, .subscription, .cookie-notice, .popup, .modal, .overlay').remove();
 
       // Enhanced AA-specific selectors for better content extraction
       const contentSelectors = [
-        '.detay-spot-category, .detay-content', // Combined for full AA content
+        '.detay-content', // Main AA detail content
         '.story-body .story-text', // Full story body
         'article .content-body', // Article content body
         '[data-role="article-content"]', // Data attribute content
@@ -100,6 +100,8 @@ export class ContentProcessorService {
         '.haber-metni', // News text
         'div[class*="detay"] p', // Detail paragraphs
         '.content-area p', // Content area paragraphs
+        'main article p', // Main article paragraphs
+        '.article-content p', // Article content paragraphs
       ];
 
       let content = '';
@@ -111,8 +113,26 @@ export class ContentProcessorService {
         const elements = $(selector);
         if (elements.length > 0) {
           const currentContent = elements
-            .map((_, el) => $(el).text().trim())
+            .map((_, el) => {
+              const $el = $(el);
+              // Skip elements that are likely navigation or metadata
+              if ($el.hasClass('breadcrumb') || 
+                  $el.hasClass('tags') || 
+                  $el.hasClass('author') ||
+                  $el.hasClass('date') ||
+                  $el.hasClass('share') ||
+                  $el.text().includes('📲') ||
+                  $el.text().includes('🔹') ||
+                  $el.text().includes('WhatsApp') ||
+                  $el.text().includes('Anadolu Ajansı') ||
+                  $el.text().includes('abonelik') ||
+                  $el.text().includes('iletişime geçiniz')) {
+                return '';
+              }
+              return $el.text().trim();
+            })
             .get()
+            .filter(text => text.length > 20) // Filter out very short text
             .join('\n')
             .trim();
           
@@ -129,13 +149,34 @@ export class ContentProcessorService {
       if (!content || content.length < 200) {
         const paragraphs = $('p')
           .map((_, el) => {
-            const text = $(el).text().trim();
-            // Filter out short, non-meaningful paragraphs
-            return text.length > 50 && 
-                   !text.includes('©') && 
-                   !text.includes('Cookie') &&
-                   !text.includes('Reklam') &&
-                   !text.includes('E-posta') ? text : null;
+            const $el = $(el);
+            const text = $el.text().trim();
+            
+            // Skip paragraphs with unwanted content
+            if (text.length < 50 || 
+                text.includes('©') || 
+                text.includes('Cookie') ||
+                text.includes('Reklam') ||
+                text.includes('E-posta') ||
+                text.includes('📲') ||
+                text.includes('🔹') ||
+                text.includes('WhatsApp') ||
+                text.includes('Anadolu Ajansı') ||
+                text.includes('abonelik') ||
+                text.includes('iletişime geçiniz') ||
+                text.includes('Bu haberi paylaşın') ||
+                text.includes('İlgili konular') ||
+                text.includes('Güncelleme') ||
+                text.includes('|') ||
+                $el.hasClass('breadcrumb') ||
+                $el.hasClass('tags') ||
+                $el.hasClass('author') ||
+                $el.hasClass('date') ||
+                $el.hasClass('share')) {
+              return null;
+            }
+            
+            return text;
           })
           .get()
           .filter(text => text !== null);
@@ -158,6 +199,9 @@ export class ContentProcessorService {
 
       // Clean and validate content
       content = this.cleanContent(content);
+      
+      // Additional AA-specific content filtering
+      content = this.filterAAUnwantedContent(content);
 
       this.logger.debug(`Extracted ${content.length} characters from ${url}`);
       return content;
@@ -553,16 +597,83 @@ export class ContentProcessorService {
    * İçeriği temizler
    */
   private cleanContent(content: string): string {
-    return (
-      // Çok kısa içerikleri filtrele
-      content
-        // Çok fazla whitespace'i temizle
-        .replace(/\s+/g, ' ')
-        // Başındaki ve sonundaki boşlukları temizle
-        .trim().length > 50
-        ? content.trim()
-        : ''
-    );
+    if (!content || content.length < 50) {
+      return '';
+    }
+
+    return content
+      // Remove multiple whitespace and normalize
+      .replace(/\s+/g, ' ')
+      // Remove unwanted patterns
+      .replace(/📲.*?(?=\n|$)/g, '')
+      .replace(/🔹.*?(?=\n|$)/g, '')
+      .replace(/WhatsApp.*?(?=\n|$)/g, '')
+      .replace(/Anadolu Ajansı.*?(?=\n|$)/g, '')
+      .replace(/abonelik.*?(?=\n|$)/g, '')
+      .replace(/iletişime geçiniz.*?(?=\n|$)/g, '')
+      .replace(/Bu haberi paylaşın.*?(?=\n|$)/g, '')
+      .replace(/İlgili konular.*?(?=\n|$)/g, '')
+      .replace(/Güncelleme.*?(?=\n|$)/g, '')
+      .replace(/Emre Aşıkçı.*?(?=\n|$)/g, '')
+      .replace(/\d{2}\.\d{2}\.\d{4}.*?(?=\n|$)/g, '')
+      .replace(/\|.*?(?=\n|$)/g, '')
+      // Remove empty lines and normalize
+      .replace(/\n\s*\n/g, '\n\n')
+      .replace(/^\s+|\s+$/g, '')
+      // Final validation
+      .trim();
+  }
+
+  /**
+   * AA-specific content filtering to remove unwanted elements
+   */
+  private filterAAUnwantedContent(content: string): string {
+    if (!content) return '';
+
+    // Split content into lines for better filtering
+    const lines = content.split('\n');
+    const filteredLines = lines.filter(line => {
+      const trimmedLine = line.trim();
+      
+      // Skip empty lines
+      if (!trimmedLine) return false;
+      
+      // Skip lines with unwanted patterns - more comprehensive matching
+      const unwantedPatterns = [
+        /^Spor,?\s*Futbol,?\s*Dünyadan Spor\s*$/,
+        /^Şampiyonlar Ligi'nde ikinci hafta tamamlandı\s*$/,
+        /^UEFA Şampiyonlar Ligi'nde ikinci hafta maçları tamamlandı\.\s*$/,
+        /Emre Aşıkçı/,
+        /Güncelleme\s*:\s*\d{2}\.\d{2}\.\d{4}/,
+        /📲.*$/,
+        /🔹.*$/,
+        /WhatsApp.*$/,
+        /Anadolu Ajansı.*$/,
+        /abonelik.*$/,
+        /iletişime geçiniz.*$/,
+        /Bu haberi paylaşın.*$/,
+        /İlgili konular.*$/,
+        /Fertek Mahalle Muhtarı.*$/,
+        /restorasyon.*$/,
+        /Tarihi Fertek Hamamı.*$/,
+        /Anadolu Ajansı web sitesinde.*$/,
+        /AA Haber Akış Sistemi.*$/,
+        /Abonelik için lütfen.*$/,
+        /^\s*\|\s*$/,
+        /^\s*-\s*$/,
+        /^\s*\.\s*$/,
+        /^\s*\d{2}\.\d{2}\.\d{4}.*$/,
+        /AA'nın WhatsApp kanallarına katılın.*$/,
+        /önemli gelişmeler cebinize düşsün.*$/,
+        /Gündemdeki gelişmeler.*$/,
+        /özel haber, analiz, fotoğraf ve videolar için.*$/,
+        /Anlık gelişmeler için AA Canlı.*$/,
+      ];
+      
+      return !unwantedPatterns.some(pattern => pattern.test(trimmedLine));
+    });
+
+    return filteredLines.join('\n').trim();
   }
 
   /**
