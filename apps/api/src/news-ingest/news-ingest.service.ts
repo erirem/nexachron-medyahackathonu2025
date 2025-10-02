@@ -296,7 +296,7 @@ export class NewsIngestService {
       // Generate summaries with budget controls
       const summaries = await this.aiSummaryService.generateBatchSummaries(
         summaryRequests,
-        5, // Max 5 AI summaries per batch to control costs
+        15, // Max 15 AI summaries per batch to control costs
       );
 
       // Apply AI summaries to items

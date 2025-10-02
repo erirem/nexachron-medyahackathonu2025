@@ -80,14 +80,14 @@ export class AiSummaryService {
     const contentLength = request.content.length;
     const descriptionLength = request.description.length;
 
-    // Only summarize if:
-    // 1. Content is at least 3x longer than description
-    // 2. Content has substantial length (500+ characters)
-    // 3. Description is relatively short (less than 200 chars)
+    // More flexible criteria for AI summarization:
+    // 1. Content is at least 2x longer than description (reduced from 3x)
+    // 2. Content has substantial length (300+ characters, reduced from 500)
+    // 3. Description is relatively short (less than 300 chars, increased from 200)
     return (
-      contentLength > descriptionLength * 3 &&
-      contentLength > 500 &&
-      descriptionLength < 200
+      contentLength > descriptionLength * 2 &&
+      contentLength > 300 &&
+      descriptionLength < 300
     );
   }
 
