@@ -232,30 +232,108 @@ export class VideoComposerService {
    * Create video overlay with text and branding
    */
   private async createVideoOverlay(reel: Reel, workDir: string): Promise<string> {
-    const overlayPath = path.join(workDir, 'overlay.png');
-    
-    // TODO: Implement overlay creation using Canvas API or ImageMagick
-    // For now, create a simple text overlay
-    
-    const overlayConfig = this.getOverlayConfig(reel.template);
-    
-    // Create overlay using ImageMagick (placeholder command)
-    const command = `convert -size 1080x1920 xc:transparent \\
-      -font Arial-Bold -pointsize ${overlayConfig.titleSize} -fill "${overlayConfig.titleColor}" \\
-      -gravity North -annotate +0+${overlayConfig.titleY} "${reel.content.headline}" \\
-      -font Arial -pointsize ${overlayConfig.textSize} -fill "${overlayConfig.textColor}" \\
-      -gravity Center -annotate +0+${overlayConfig.textY} "${reel.content.summary_sentences.join('\\n\\n')}" \\
-      "${overlayPath}"`;
+    // Use simple drawtext instead of SRT for now
+    // This ensures font size changes are applied
+    return 'drawtext'; // Signal to use drawtext filter
+  }
 
-    try {
-      await execAsync(command);
-      return overlayPath;
-    } catch (error) {
-      this.logger.warn('ImageMagick overlay creation failed, using fallback');
-      // Create a simple text file as fallback
-      await fs.writeFile(overlayPath + '.txt', reel.content.headline);
-      return overlayPath + '.txt';
+  /**
+   * Create dynamic subtitles that sync with audio
+   */
+  private async createDynamicSubtitles(reel: Reel, workDir: string): Promise<string> {
+    const subtitlePath = path.join(workDir, 'subtitles.srt');
+    
+    // Create SRT subtitle file with timing
+    const subtitleContent = this.generateSubtitleContent(reel);
+    await fs.writeFile(subtitlePath, subtitleContent);
+    
+    this.logger.log(`SRT subtitle file created: ${subtitlePath}`);
+    this.logger.log(`Subtitle content: ${subtitleContent.substring(0, 100)}...`);
+    
+    return subtitlePath;
+  }
+
+  /**
+   * Generate subtitle content with timing
+   */
+  private generateSubtitleContent(reel: Reel): string {
+    const sentences = reel.content.summary_sentences;
+    const duration = reel.duration_seconds || 30;
+    const segmentDuration = duration / sentences.length;
+    
+    let srtContent = '';
+    
+    sentences.forEach((sentence, index) => {
+      const startTime = index * segmentDuration;
+      const endTime = (index + 1) * segmentDuration;
+      
+      srtContent += `${index + 1}\n`;
+      srtContent += `${this.formatTime(startTime)} --> ${this.formatTime(endTime)}\n`;
+      srtContent += `${this.truncateText(sentence, 50)}\n\n`;
+    });
+    
+    return srtContent;
+  }
+
+  /**
+   * Format time for SRT format
+   */
+  private formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 1000);
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+  }
+
+  /**
+   * Get FFmpeg subtitle filter
+   */
+  private getSubtitleFilter(overlayPath?: string): string {
+    if (overlayPath && overlayPath.endsWith('.srt')) {
+      // Use SRT subtitles with medium font
+      return `subtitles=${overlayPath}:force_style='FontSize=20,PrimaryColour=&Hffffff,OutlineColour=&H000000,Outline=2'`;
+    } else if (overlayPath === 'drawtext') {
+      // Use drawtext with medium font for news content
+      return `drawtext=text='Haber':fontsize=20:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2:x=(w-text_w)/2:y=h-80`;
+    } else {
+      // Use simple drawtext for static subtitle with medium font
+      return `drawtext=text='Haber':fontsize=20:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2:x=(w-text_w)/2:y=h-80`;
     }
+  }
+
+  /**
+   * Get subtitle configuration for better readability
+   */
+  private getSubtitleConfig(template: ReelTemplate): {
+    titleSize: number;
+    titleColor: string;
+    titleStroke: string;
+    titleY: number;
+    subtitleSize: number;
+    subtitleColor: string;
+    subtitleStroke: string;
+    subtitleY: number;
+  } {
+    return {
+      titleSize: 32, // Medium size
+      titleColor: 'white',
+      titleStroke: 'black',
+      titleY: 80,
+      subtitleSize: 20, // Medium but readable
+      subtitleColor: 'white',
+      subtitleStroke: 'black',
+      subtitleY: 120
+    };
+  }
+
+  /**
+   * Truncate text to fit video dimensions
+   */
+  private truncateText(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
   }
 
   /**
@@ -275,12 +353,56 @@ export class VideoComposerService {
   }
 
   /**
+   * Get image dimensions using ffprobe
+   */
+  private async getImageDimensions(imagePath: string): Promise<{ width: number; height: number }> {
+    try {
+      const command = `ffprobe -v quiet -print_format json -show_streams "${imagePath}"`;
+      const result = await execAsync(command);
+      const data = JSON.parse(result.stdout);
+      
+      const videoStream = data.streams.find((stream: any) => stream.codec_type === 'video');
+      if (videoStream) {
+        return {
+          width: videoStream.width,
+          height: videoStream.height
+        };
+      }
+      
+      // Fallback to default dimensions
+      return { width: 1080, height: 1920 };
+    } catch (error) {
+      this.logger.warn(`Failed to get image dimensions for ${imagePath}, using defaults`);
+      return { width: 1080, height: 1920 };
+    }
+  }
+
+  /**
    * Create animated background from static image
    */
   private async createAnimatedBackground(imagePath: string, outputPath: string, duration: number): Promise<void> {
-    // Ken Burns effect: slow zoom and pan
+    // First, get image dimensions to calculate proper scaling
+    const dimensions = await this.getImageDimensions(imagePath);
+    this.logger.log(`Image dimensions: ${dimensions.width}x${dimensions.height}`);
+    
+    // Calculate the scale factor to ensure we have enough pixels for 1080x1920
+    const targetWidth = 1080;
+    const targetHeight = 1920;
+    
+    // Calculate scale factors for both dimensions
+    const scaleX = targetWidth / dimensions.width;
+    const scaleY = targetHeight / dimensions.height;
+    
+    // Use the larger scale factor to ensure we have enough pixels
+    const scaleFactor = Math.max(scaleX, scaleY);
+    const scaledWidth = Math.ceil(dimensions.width * scaleFactor);
+    const scaledHeight = Math.ceil(dimensions.height * scaleFactor);
+    
+    this.logger.log(`Scale factor: ${scaleFactor}, scaled dimensions: ${scaledWidth}x${scaledHeight}`);
+    
+    // Scale up the image first, then crop to exact size
     const command = `ffmpeg -loop 1 -i "${imagePath}" \\
-      -vf "scale=1200:1200,crop=1080:1920,zoompan=z='min(zoom+0.0015,1.5)':d=${duration * 30}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920" \\
+      -vf "scale=${scaledWidth}:${scaledHeight},crop=${targetWidth}:${targetHeight},zoompan=z='min(zoom+0.0015,1.5)':d=${duration * 30}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${targetWidth}x${targetHeight}" \\
       -t ${duration} -pix_fmt yuv420p -y "${outputPath}"`;
 
     try {
@@ -297,14 +419,12 @@ export class VideoComposerService {
   private async createTextOnlyBackground(reel: Reel, outputPath: string): Promise<void> {
     const bgConfig = this.getBackgroundConfig(reel.template, reel.category);
     
-    // Create animated gradient background
-    const command = `ffmpeg -f lavfi \\
-      -i "color=${bgConfig.color1}:size=1080x1920:duration=${reel.duration_seconds}" \\
-      -vf "geq=r='${bgConfig.gradient}':g='${bgConfig.gradient}':b='${bgConfig.gradient}'" \\
-      -pix_fmt yuv420p -y "${outputPath}"`;
+    // Create simple solid color background (no animation for now)
+    const command = `ffmpeg -f lavfi -i "color=${bgConfig.color1}:size=1080x1920:duration=${reel.duration_seconds}" -pix_fmt yuv420p -y "${outputPath}"`;
 
     try {
       await execAsync(command);
+      this.logger.log(`Text-only background created: ${outputPath}`);
     } catch (error) {
       this.logger.error('Text-only background creation failed', error);
       throw new Error('Failed to create text-only background');
@@ -335,19 +455,33 @@ export class VideoComposerService {
       command += ` -i "${options.overlay}"`;
     }
 
-    // Video filters
-    let vf = 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2';
+    // Add subtitle filter for dynamic text
+    const subtitleFilter = this.getSubtitleFilter(options.overlay);
     
-    // Add overlay filter if overlay exists
+    // Use filter_complex for overlay, simple vf for no overlay
     if (options.overlay && options.overlay.endsWith('.png')) {
-      vf += ',overlay=0:0';
+      // Complex filter for overlay
+      command += ` -filter_complex "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2[bg];[bg][2:v]overlay=0:0[out]" -map "[out]"`;
+    } else if (options.overlay && options.overlay.endsWith('.srt')) {
+      // Use SRT subtitles
+      command += ` -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${subtitleFilter}"`;
+    } else {
+      // Simple filter with subtitles
+      command += ` -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${subtitleFilter}"`;
     }
-
-    command += ` -vf "${vf}"`;
     
-    // Audio options
+    // Always map video stream
+    command += ` -map 0:v`;
+    
+    // Audio mapping and options
     if (options.audio) {
-      command += ' -c:a aac -b:a 128k -shortest';
+      if (options.overlay && options.overlay.endsWith('.png')) {
+        // Audio is input 1 when we have overlay (input 2)
+        command += ' -map 1:a -c:a aac -b:a 128k -shortest';
+      } else {
+        // Audio is input 1 when no overlay
+        command += ' -map 1:a -c:a aac -b:a 128k -shortest';
+      }
     } else {
       command += ' -an'; // No audio
     }
@@ -389,6 +523,28 @@ export class VideoComposerService {
    */
   private async downloadFile(url: string, outputPath: string): Promise<void> {
     try {
+      // Handle data URLs (base64 encoded)
+      if (url.startsWith('data:')) {
+        const base64Data = url.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // If it's an SVG, create a solid color PNG instead
+        if (url.includes('image/svg+xml')) {
+          // Extract color from SVG (simple approach)
+          const svgContent = buffer.toString();
+          const colorMatch = svgContent.match(/fill="([^"]+)"/);
+          const color = colorMatch ? colorMatch[1] : '#1e40af';
+          
+          // Create solid color PNG using FFmpeg
+          const command = `ffmpeg -f lavfi -i "color=${color}:size=1080x1920:duration=1" -frames:v 1 -y "${outputPath}"`;
+          await execAsync(command);
+        } else {
+          await fs.writeFile(outputPath, buffer);
+        }
+        return;
+      }
+
+      // Handle regular HTTP URLs
       const response = await this.httpService.axiosRef({
         method: 'GET',
         url: url,
@@ -410,52 +566,6 @@ export class VideoComposerService {
   /**
    * Get overlay configuration for template
    */
-  private getOverlayConfig(template: ReelTemplate) {
-    const configs = {
-      [ReelTemplate.NEWS_VIDEO]: {
-        titleSize: 48,
-        titleColor: '#FFFFFF',
-        titleY: 200,
-        textSize: 36,
-        textColor: '#F0F0F0',
-        textY: 0
-      },
-      [ReelTemplate.NEWS_IMAGE]: {
-        titleSize: 52,
-        titleColor: '#FFFFFF',
-        titleY: 150,
-        textSize: 38,
-        textColor: '#FFFFFF',
-        textY: 50
-      },
-      [ReelTemplate.NEWS_TEXT]: {
-        titleSize: 56,
-        titleColor: '#FFFFFF',
-        titleY: 100,
-        textSize: 42,
-        textColor: '#FFFFFF',
-        textY: 0
-      },
-      [ReelTemplate.BREAKING_NEWS]: {
-        titleSize: 60,
-        titleColor: '#FF0000',
-        titleY: 100,
-        textSize: 44,
-        textColor: '#FFFFFF',
-        textY: 0
-      },
-      [ReelTemplate.SPORTS_HIGHLIGHT]: {
-        titleSize: 54,
-        titleColor: '#00FF00',
-        titleY: 150,
-        textSize: 40,
-        textColor: '#FFFFFF',
-        textY: 50
-      }
-    };
-
-    return configs[template] || configs[ReelTemplate.NEWS_TEXT];
-  }
 
   /**
    * Get background configuration

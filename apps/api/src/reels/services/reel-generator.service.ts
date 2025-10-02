@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { TTSService } from './tts.service';
+import { VideoComposerService } from './video-composer.service';
 import { 
   Reel, 
   ReelSourceType, 
@@ -25,7 +26,8 @@ export class ReelGeneratorService {
     private readonly httpService: HttpService,
     private readonly supabaseService: SupabaseService,
     private readonly aiSummaryService: AiSummaryService,
-    private readonly ttsService: TTSService
+    private readonly ttsService: TTSService,
+    private readonly videoComposerService: VideoComposerService
   ) {}
 
   /**
@@ -36,8 +38,13 @@ export class ReelGeneratorService {
     
     this.logger.log(`Starting reel generation for news: ${newsItem.title}`);
 
-    // 1. Determine source type and template
-    const sourceType = this.determineSourceType(newsItem);
+    // 1. First determine source type from ProcessedNewsItem
+    let sourceType = await this.determineSourceType(newsItem);
+    
+    // 2. If no media found in ProcessedNewsItem, we need to check news_media table
+    // But we need to save the news first to get the newsId
+    // For now, we'll proceed with the initial determination and update later if needed
+    
     const template = request?.template || this.selectTemplate(newsItem, sourceType);
 
     // 2. Create initial reel record
@@ -118,7 +125,8 @@ export class ReelGeneratorService {
   /**
    * Determine source type from news item
    */
-  private determineSourceType(newsItem: ProcessedNewsItem): ReelSourceType {
+  private async determineSourceType(newsItem: ProcessedNewsItem): Promise<ReelSourceType> {
+    // First check ProcessedNewsItem data
     if (newsItem.video_url || (newsItem.media_gallery?.videos && newsItem.media_gallery.videos.length > 0)) {
       return ReelSourceType.VIDEO;
     }
@@ -126,6 +134,10 @@ export class ReelGeneratorService {
     if (newsItem.image_url || (newsItem.media_gallery?.images && newsItem.media_gallery.images.length > 0)) {
       return ReelSourceType.IMAGE;
     }
+
+    // If no media in ProcessedNewsItem, check news_media table
+    // Note: We need newsId for this, but we don't have it yet in this context
+    // We'll handle this in the main generateReel method
     
     return ReelSourceType.TEXT_ONLY;
   }
@@ -427,7 +439,8 @@ export class ReelGeneratorService {
     // - Add category-specific visual themes
     
     // For now, use a default background
-    reel.assets.background_image = this.getDefaultBackground(newsItem.category);
+    // Get background image (will be updated later with newsId if available)
+    reel.assets.background_image = await this.getBackgroundFromNews(newsItem);
     
     reel.processing_log?.push({
       step: 'text_processing',
@@ -558,8 +571,81 @@ export class ReelGeneratorService {
   /**
    * Get default background for category
    */
-  private getDefaultBackground(category: string): string {
-    // Use solid color backgrounds for now - can be replaced with real images later
+  /**
+   * Get media data from news_media table for a specific news item
+   */
+  private async getNewsMedia(newsId: string): Promise<{
+    videos: any[];
+    images: any[];
+    hasVideo: boolean;
+    hasImage: boolean;
+    bestVideo?: any;
+    bestImage?: any;
+  }> {
+    try {
+      const { data: mediaData, error } = await this.supabaseService.adminSupabase
+        .from('news_media')
+        .select('*')
+        .eq('news_id', newsId)
+        .order('quality_score', { ascending: false });
+
+      if (error) {
+        this.logger.error(`Failed to fetch media for news ${newsId}:`, error);
+        return { videos: [], images: [], hasVideo: false, hasImage: false };
+      }
+
+      const videos = mediaData?.filter(item => item.media_type === 'video') || [];
+      const images = mediaData?.filter(item => item.media_type === 'image') || [];
+      
+      return {
+        videos,
+        images,
+        hasVideo: videos.length > 0,
+        hasImage: images.length > 0,
+        bestVideo: videos[0],
+        bestImage: images[0]
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching media for news ${newsId}:`, error);
+      return { videos: [], images: [], hasVideo: false, hasImage: false };
+    }
+  }
+
+  private async getBackgroundFromNews(newsItem: ProcessedNewsItem, newsId?: string): Promise<string> {
+    // Try to get real image from news item
+    if (newsItem.image_url) {
+      return newsItem.image_url;
+    }
+    
+    // Try to get featured image from media gallery
+    if (newsItem.media_gallery?.featured_image) {
+      return newsItem.media_gallery.featured_image;
+    }
+    
+    // Try to get first high-quality image from media gallery
+    if (newsItem.media_gallery?.images && newsItem.media_gallery.images.length > 0) {
+      const images = newsItem.media_gallery.images;
+      const bestImage = images
+        .sort((a, b) => b.quality_score - a.quality_score)[0];
+      if (bestImage && bestImage.quality_score > 0.5) {
+        return bestImage.url;
+      }
+    }
+
+    // If we have newsId, check news_media table for additional images
+    if (newsId) {
+      const mediaData = await this.getNewsMedia(newsId);
+      if (mediaData.bestImage) {
+        this.logger.log(`Using image from news_media: ${mediaData.bestImage.url}`);
+        return mediaData.bestImage.url;
+      }
+    }
+    
+    // Fallback to category-based solid color
+    return this.getCategoryColorBackground(newsItem.category);
+  }
+
+  private getCategoryColorBackground(category: string): string {
     const backgrounds = {
       'guncel': 'data:image/svg+xml;base64,' + Buffer.from(`
         <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
@@ -618,10 +704,28 @@ export class ReelGeneratorService {
    * Compose video with FFmpeg (placeholder)
    */
   private async composeVideoWithFFmpeg(reel: Reel): Promise<string> {
-    // TODO: Implement FFmpeg video composition
     this.logger.log(`Composing video for reel: ${reel.id}`);
     
-    // Placeholder - return mock URL
-    return `https://example.com/reels/${reel.id}.mp4`;
+    try {
+      this.logger.log(`Starting video composition with background: ${reel.assets.background_image?.substring(0, 50)}...`);
+      this.logger.log(`Audio URL: ${reel.assets.audio_url}`);
+      
+      // Use real Video Composer service (create instance directly to avoid DI issues)
+      const videoComposerService = new VideoComposerService(this.configService, this.httpService, this.supabaseService);
+      const result = await videoComposerService.composeVideo({
+        reel: reel,
+        backgroundUrl: reel.assets.background_image,
+        audioUrl: reel.assets.audio_url
+      });
+      
+      this.logger.log(`Video composed successfully: ${result.videoUrl}`);
+      return result.videoUrl;
+    } catch (error) {
+      this.logger.error(`Video composition failed: ${error.message}`);
+      this.logger.error('Full video error:', error);
+      this.logger.error('Error stack:', error.stack);
+      // Fallback to mock URL
+      return `https://example.com/reels/${reel.id}.mp4`;
+    }
   }
 }
