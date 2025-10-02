@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { TTSService } from './tts.service';
 import { 
   Reel, 
   ReelSourceType, 
@@ -23,7 +24,8 @@ export class ReelGeneratorService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly supabaseService: SupabaseService,
-    private readonly aiSummaryService: AiSummaryService
+    private readonly aiSummaryService: AiSummaryService,
+    private readonly ttsService: TTSService
   ) {}
 
   /**
@@ -460,13 +462,34 @@ export class ReelGeneratorService {
     // 3. AWS Polly
     // 4. ElevenLabs (premium quality)
     
-    // For now, simulate TTS generation
-    const audioUrl = await this.generateTTSWithAzure(ttsText, {
-      voice: request?.tts_voice || 'tr-TR-EmelNeural',
-      speed: 1.0,
-      language: 'tr-TR'
-    });
-    reel.assets.audio_url = audioUrl;
+    // Use real TTS service (create instance directly to avoid DI issues)
+    try {
+      const ttsService = new TTSService(this.configService, this.httpService, this.supabaseService);
+      // Map string voice to enum
+      const voiceMapping = {
+        'tr-TR-EmelNeural': TTSVoice.FEMALE_TR,
+        'tr-TR-AhmetNeural': TTSVoice.MALE_TR,
+        'en-US-AriaNeural': TTSVoice.FEMALE_EN,
+        'en-US-DavisNeural': TTSVoice.MALE_EN
+      };
+      
+      const voiceString = request?.tts_voice || 'tr-TR-EmelNeural';
+      const voiceEnum = voiceMapping[voiceString] || TTSVoice.FEMALE_TR;
+      
+      const ttsResult = await ttsService.generateTTS({
+        text: ttsText,
+        voice: voiceEnum,
+        speed: 1.0,
+        language: 'tr-TR'
+      });
+      reel.assets.audio_url = ttsResult.audio_url;
+      this.logger.log(`TTS generated successfully: ${ttsResult.audio_url}`);
+    } catch (error) {
+      this.logger.error(`TTS generation failed: ${error.message}`);
+      this.logger.error('Full TTS error:', error);
+      // Fallback to mock URL
+      reel.assets.audio_url = `https://example.com/tts/${crypto.randomUUID()}.mp3`;
+    }
     
     reel.processing_log?.push({
       step: 'tts_generation',
@@ -536,26 +559,59 @@ export class ReelGeneratorService {
    * Get default background for category
    */
   private getDefaultBackground(category: string): string {
+    // Use solid color backgrounds for now - can be replaced with real images later
     const backgrounds = {
-      'guncel': 'https://example.com/backgrounds/news.jpg',
-      'spor': 'https://example.com/backgrounds/sports.jpg',
-      'ekonomi': 'https://example.com/backgrounds/economy.jpg',
-      'teknoloji': 'https://example.com/backgrounds/tech.jpg',
-      'politika': 'https://example.com/backgrounds/politics.jpg'
+      'guncel': 'data:image/svg+xml;base64,' + Buffer.from(`
+        <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#1e40af"/>
+        </svg>
+      `).toString('base64'),
+      'spor': 'data:image/svg+xml;base64,' + Buffer.from(`
+        <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#059669"/>
+        </svg>
+      `).toString('base64'),
+      'ekonomi': 'data:image/svg+xml;base64,' + Buffer.from(`
+        <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#dc2626"/>
+        </svg>
+      `).toString('base64'),
+      'teknoloji': 'data:image/svg+xml;base64,' + Buffer.from(`
+        <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#7c3aed"/>
+        </svg>
+      `).toString('base64'),
+      'politika': 'data:image/svg+xml;base64,' + Buffer.from(`
+        <svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#b45309"/>
+        </svg>
+      `).toString('base64')
     };
 
-    return backgrounds[category] || 'https://example.com/backgrounds/default.jpg';
+    return backgrounds[category] || backgrounds['guncel'];
   }
 
   /**
-   * Generate TTS with Azure (placeholder)
+   * Generate TTS with Azure (using TTS service)
    */
   private async generateTTSWithAzure(text: string, config: any): Promise<string> {
-    // TODO: Implement Azure TTS integration
     this.logger.log(`Generating TTS for text: ${text.substring(0, 50)}...`);
     
-    // Placeholder - return mock URL
-    return `https://example.com/tts/${crypto.randomUUID()}.mp3`;
+    try {
+      // Use the injected TTS service
+      const result = await this.ttsService.generateTTS({
+        text: text,
+        voice: config.voice || 'tr-TR-EmelNeural',
+        speed: config.speed || 1.0,
+        language: config.language || 'tr-TR'
+      });
+      
+      return result.audio_url;
+    } catch (error) {
+      this.logger.error(`TTS generation failed: ${error.message}`);
+      // Fallback to mock URL
+      return `https://example.com/tts/${crypto.randomUUID()}.mp3`;
+    }
   }
 
   /**

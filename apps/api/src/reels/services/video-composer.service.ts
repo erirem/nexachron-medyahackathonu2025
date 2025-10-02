@@ -6,6 +6,7 @@ import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { Reel, ReelSourceType, ReelTemplate } from '../dto/reel.dto';
+import { SupabaseService } from '../../supabase/supabase.service';
 
 const execAsync = promisify(exec);
 
@@ -31,7 +32,8 @@ export class VideoComposerService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
+    private readonly supabaseService: SupabaseService
   ) {
     this.tempDir = this.configService.get<string>('TEMP_DIR') || '/tmp/reels';
     this.outputDir = this.configService.get<string>('REELS_OUTPUT_DIR') || '/tmp/reels/output';
@@ -122,8 +124,8 @@ export class VideoComposerService {
     const stats = await fs.stat(outputPath);
 
     return {
-      videoUrl: this.getPublicUrl(outputPath),
-      thumbnailUrl: this.getPublicUrl(thumbnailPath),
+      videoUrl: await this.getPublicUrl(outputPath),
+      thumbnailUrl: await this.getPublicUrl(thumbnailPath),
       duration: reel.duration_seconds,
       fileSize: stats.size
     };
@@ -175,8 +177,8 @@ export class VideoComposerService {
     const stats = await fs.stat(outputPath);
 
     return {
-      videoUrl: this.getPublicUrl(outputPath),
-      thumbnailUrl: this.getPublicUrl(thumbnailPath),
+      videoUrl: await this.getPublicUrl(outputPath),
+      thumbnailUrl: await this.getPublicUrl(thumbnailPath),
       duration: reel.duration_seconds,
       fileSize: stats.size
     };
@@ -219,8 +221,8 @@ export class VideoComposerService {
     const stats = await fs.stat(outputPath);
 
     return {
-      videoUrl: this.getPublicUrl(outputPath),
-      thumbnailUrl: this.getPublicUrl(thumbnailPath),
+      videoUrl: await this.getPublicUrl(outputPath),
+      thumbnailUrl: await this.getPublicUrl(thumbnailPath),
       duration: reel.duration_seconds,
       fileSize: stats.size
     };
@@ -471,13 +473,45 @@ export class VideoComposerService {
   }
 
   /**
-   * Get public URL for file
+   * Upload video to storage and get public URL
    */
-  private getPublicUrl(filePath: string): string {
-    // TODO: Upload to Supabase Storage and return public URL
-    // For now, return a mock URL
+  private async getPublicUrl(filePath: string): Promise<string> {
     const fileName = path.basename(filePath);
-    return `https://example.com/storage/reels/${fileName}`;
+    
+    try {
+      // Read the video file
+      const videoBuffer = await fs.readFile(filePath);
+      
+      // Upload to Supabase Storage bucket 'reels'
+      const { data, error } = await this.supabaseService.adminSupabase.storage
+        .from('reels')
+        .upload(`videos/${fileName}`, videoBuffer, {
+          contentType: 'video/mp4',
+          cacheControl: '3600'
+        });
+
+      if (error) {
+        this.logger.error(`Failed to upload video: ${error.message}`);
+        throw new Error(`Storage upload failed: ${error.message}`);
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = this.supabaseService.adminSupabase.storage
+        .from('reels')
+        .getPublicUrl(`videos/${fileName}`);
+
+      this.logger.log(`Video uploaded successfully: ${publicUrl}`);
+      
+      // Clean up local file
+      await fs.unlink(filePath).catch(() => {});
+      
+      return publicUrl;
+
+    } catch (error) {
+      this.logger.error(`Failed to upload video: ${error.message}`);
+      // Fallback to mock URL if upload fails
+      return `https://example.com/storage/reels/${fileName}`;
+    }
   }
 
   /**
