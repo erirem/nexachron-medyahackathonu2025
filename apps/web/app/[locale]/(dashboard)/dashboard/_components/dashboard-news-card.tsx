@@ -9,66 +9,174 @@ interface DashboardNewsCardProps {
   readonly item: DashboardNewsItem;
 }
 
-const categoryThemes: Record<string, { surface: string; icon: string; brief: string; imageTint: string }> = {
+const categoryThemes: Record<string, { surface: string; icon: string; brief: string; imageTint: string; accent: string; border: string }> = {
+  gundem: {
+    surface: 'bg-gradient-to-b from-[#1e3a5f] via-[#15304a] to-[#0d1f35]',
+    icon: 'bg-[#4a90e2]',
+    brief: 'bg-[#4a90e2]/20 text-[#b8d4f0]',
+    imageTint: 'bg-[#4a90e2]/16',
+    accent: 'from-[#4a90e2] to-[#357abd]',
+    border: 'border-[#4a90e2]/30'
+  },
   finans: {
     surface: 'bg-gradient-to-b from-[#2f4d7a] via-[#233a5c] to-[#16263c]',
     icon: 'bg-[#3a83ff]',
     brief: 'bg-[#3a83ff]/18 text-[#b3d4ff]',
-    imageTint: 'bg-[#3a83ff]/16'
+    imageTint: 'bg-[#3a83ff]/16',
+    accent: 'from-[#3a83ff] to-[#2b6bcc]',
+    border: 'border-[#3a83ff]/30'
   },
   teknoloji: {
     surface: 'bg-gradient-to-b from-[#3a2c64] via-[#2a2050] to-[#1a1435]',
     icon: 'bg-[#9c6bff]',
     brief: 'bg-[#9c6bff]/20 text-[#e0cafe]',
-    imageTint: 'bg-[#9c6bff]/16'
+    imageTint: 'bg-[#9c6bff]/16',
+    accent: 'from-[#9c6bff] to-[#7c4dcc]',
+    border: 'border-[#9c6bff]/30'
   },
   savunma: {
     surface: 'bg-gradient-to-b from-[#603023] via-[#4b2219] to-[#2c130f]',
     icon: 'bg-[#ff7d3a]',
     brief: 'bg-[#ff7d3a]/22 text-[#ffd5bc]',
-    imageTint: 'bg-[#ff7d3a]/18'
+    imageTint: 'bg-[#ff7d3a]/18',
+    accent: 'from-[#ff7d3a] to-[#e55a2b]',
+    border: 'border-[#ff7d3a]/30'
   },
   diplomasi: {
     surface: 'bg-gradient-to-b from-[#26435f] via-[#1e3348] to-[#132233]',
     icon: 'bg-[#4f9dff]',
     brief: 'bg-[#4f9dff]/20 text-[#b6d7ff]',
-    imageTint: 'bg-[#4f9dff]/16'
+    imageTint: 'bg-[#4f9dff]/16',
+    accent: 'from-[#4f9dff] to-[#3d7acc]',
+    border: 'border-[#4f9dff]/30'
   },
   enerji: {
     surface: 'bg-gradient-to-b from-[#275c3a] via-[#1f452c] to-[#142b1d]',
     icon: 'bg-[#30de7b]',
     brief: 'bg-[#30de7b]/20 text-[#c0fddc]',
-    imageTint: 'bg-[#30de7b]/18'
+    imageTint: 'bg-[#30de7b]/18',
+    accent: 'from-[#30de7b] to-[#26b865]',
+    border: 'border-[#30de7b]/30'
   },
   saglik: {
     surface: 'bg-gradient-to-b from-[#1f4652] via-[#173642] to-[#0f242d]',
     icon: 'bg-[#20c9ba]',
     brief: 'bg-[#20c9ba]/22 text-[#aaf4eb]',
-    imageTint: 'bg-[#20c9ba]/18'
+    imageTint: 'bg-[#20c9ba]/18',
+    accent: 'from-[#20c9ba] to-[#1ba89a]',
+    border: 'border-[#20c9ba]/30'
   },
   ekonomi: {
     surface: 'bg-gradient-to-b from-[#5c3b17] via-[#452d13] to-[#291a0b]',
     icon: 'bg-[#ffad33]',
     brief: 'bg-[#ffad33]/22 text-[#ffe0a8]',
-    imageTint: 'bg-[#ffad33]/18'
+    imageTint: 'bg-[#ffad33]/18',
+    accent: 'from-[#ffad33] to-[#e6991a]',
+    border: 'border-[#ffad33]/30'
   },
   cevre: {
     surface: 'bg-gradient-to-b from-[#1f4c38] via-[#19392c] to-[#10251d]',
     icon: 'bg-[#3fe0a7]',
     brief: 'bg-[#3fe0a7]/20 text-[#c7f8e6]',
-    imageTint: 'bg-[#3fe0a7]/18'
+    imageTint: 'bg-[#3fe0a7]/18',
+    accent: 'from-[#3fe0a7] to-[#34c085]',
+    border: 'border-[#3fe0a7]/30'
   },
   spor: {
     surface: 'bg-gradient-to-b from-[#24426b] via-[#1a3354] to-[#10213b]',
     icon: 'bg-[#45c2ff]',
     brief: 'bg-[#45c2ff]/18 text-[#c3ecff]',
-    imageTint: 'bg-[#45c2ff]/16'
+    imageTint: 'bg-[#45c2ff]/16',
+    accent: 'from-[#45c2ff] to-[#3699cc]',
+    border: 'border-[#45c2ff]/30'
+  },
+  dunya: {
+    surface: 'bg-gradient-to-b from-[#2d1b69] via-[#221452] to-[#160d3a]',
+    icon: 'bg-[#8b5cf6]',
+    brief: 'bg-[#8b5cf6]/20 text-[#d1c4f0]',
+    imageTint: 'bg-[#8b5cf6]/16',
+    accent: 'from-[#8b5cf6] to-[#7c3aed]',
+    border: 'border-[#8b5cf6]/30'
+  },
+  politika: {
+    surface: 'bg-gradient-to-b from-[#4c1d3d] via-[#3a152f] to-[#280e20]',
+    icon: 'bg-[#ec4899]',
+    brief: 'bg-[#ec4899]/20 text-[#f5b8d8]',
+    imageTint: 'bg-[#ec4899]/16',
+    accent: 'from-[#ec4899] to-[#db2777]',
+    border: 'border-[#ec4899]/30'
+  },
+  turizm: {
+    surface: 'bg-gradient-to-b from-[#0f4c3a] via-[#0c3a2d] to-[#082820]',
+    icon: 'bg-[#10b981]',
+    brief: 'bg-[#10b981]/20 text-[#a7f3d0]',
+    imageTint: 'bg-[#10b981]/16',
+    accent: 'from-[#10b981] to-[#059669]',
+    border: 'border-[#10b981]/30'
+  },
+  tarim: {
+    surface: 'bg-gradient-to-b from-[#365314] via-[#2a3f0f] to-[#1e2b0a]',
+    icon: 'bg-[#84cc16]',
+    brief: 'bg-[#84cc16]/20 text-[#d9f99d]',
+    imageTint: 'bg-[#84cc16]/16',
+    accent: 'from-[#84cc16] to-[#65a30d]',
+    border: 'border-[#84cc16]/30'
+  },
+  kultur: {
+    surface: 'bg-gradient-to-b from-[#7c2d12] via-[#5e230e] to-[#40180a]',
+    icon: 'bg-[#f97316]',
+    brief: 'bg-[#f97316]/20 text-[#fed7aa]',
+    imageTint: 'bg-[#f97316]/16',
+    accent: 'from-[#f97316] to-[#ea580c]',
+    border: 'border-[#f97316]/30'
+  },
+  sanat: {
+    surface: 'bg-gradient-to-b from-[#581c87] via-[#431a5e] to-[#2d1b3d]',
+    icon: 'bg-[#a855f7]',
+    brief: 'bg-[#a855f7]/20 text-[#e9d5ff]',
+    imageTint: 'bg-[#a855f7]/16',
+    accent: 'from-[#a855f7] to-[#9333ea]',
+    border: 'border-[#a855f7]/30'
+  },
+  egitim: {
+    surface: 'bg-gradient-to-b from-[#1e40af] via-[#1e3a8a] to-[#1e2a5e]',
+    icon: 'bg-[#3b82f6]',
+    brief: 'bg-[#3b82f6]/20 text-[#bfdbfe]',
+    imageTint: 'bg-[#3b82f6]/16',
+    accent: 'from-[#3b82f6] to-[#2563eb]',
+    border: 'border-[#3b82f6]/30'
+  },
+  bilim: {
+    surface: 'bg-gradient-to-b from-[#0c4a6e] via-[#0a3a56] to-[#072a3e]',
+    icon: 'bg-[#06b6d4]',
+    brief: 'bg-[#06b6d4]/20 text-[#a5f3fc]',
+    imageTint: 'bg-[#06b6d4]/16',
+    accent: 'from-[#06b6d4] to-[#0891b2]',
+    border: 'border-[#06b6d4]/30'
+  },
+  yasam: {
+    surface: 'bg-gradient-to-b from-[#be185d] via-[#9d174d] to-[#7c2d3d]',
+    icon: 'bg-[#f43f5e]',
+    brief: 'bg-[#f43f5e]/20 text-[#fecaca]',
+    imageTint: 'bg-[#f43f5e]/16',
+    accent: 'from-[#f43f5e] to-[#e11d48]',
+    border: 'border-[#f43f5e]/30'
+  },
+  magazin: {
+    surface: 'bg-gradient-to-b from-[#be123c] via-[#9f1239] to-[#7f1d1d]',
+    icon: 'bg-[#ef4444]',
+    brief: 'bg-[#ef4444]/20 text-[#fecaca]',
+    imageTint: 'bg-[#ef4444]/16',
+    accent: 'from-[#ef4444] to-[#dc2626]',
+    border: 'border-[#ef4444]/30'
   },
   default: {
     surface: 'bg-gradient-to-b from-[#232a3b] via-[#1b2130] to-[#111826]',
     icon: 'bg-[#5aa2ff]',
     brief: 'bg-[#5aa2ff]/18 text-[#c7e2ff]',
-    imageTint: 'bg-[#5aa2ff]/16'
+    imageTint: 'bg-[#5aa2ff]/16',
+    accent: 'from-[#5aa2ff] to-[#3b82f6]',
+    border: 'border-[#5aa2ff]/30'
   }
 };
 
@@ -123,7 +231,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
 
   return (
     <Link href={`/haber/${item.id}`} className="block h-full">
-      <article className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 ${theme.surface} text-white shadow-[0_24px_56px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-white/20 hover:shadow-[0_36px_80px_rgba(0,0,0,0.65)] cursor-pointer`}>
+      <article className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border ${theme.border} ${theme.surface} text-white shadow-[0_24px_56px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-opacity-50 hover:shadow-[0_36px_80px_rgba(0,0,0,0.65)] cursor-pointer`}>
       <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent mix-blend-overlay" aria-hidden />
       <div className="absolute inset-0 opacity-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
 
@@ -196,7 +304,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         <div className="mb-4">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/20 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white">
+              <span className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${theme.accent}/20 border ${theme.border} backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white`}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
@@ -211,7 +319,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
           
           {/* Progress Indicator */}
           <div className="relative h-1 bg-white/10 rounded-full overflow-hidden mb-3">
-            <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse" style={{width: '40%'}} />
+            <div className={`absolute inset-y-0 left-0 bg-gradient-to-r ${theme.accent} rounded-full animate-pulse`} style={{width: '40%'}} />
           </div>
         </div>
         
@@ -255,7 +363,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         <div className="mt-auto pt-4 border-t border-white/10">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <button onClick={(e) => e.stopPropagation()} className="group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600/20 to-blue-500/20 border border-blue-400/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:from-blue-600/30 hover:to-blue-500/30 hover:scale-105">
+              <button onClick={(e) => e.stopPropagation()} className={`group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${theme.accent}/20 border ${theme.border} px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:scale-105`}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
                 </svg>
