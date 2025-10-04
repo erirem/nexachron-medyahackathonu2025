@@ -128,11 +128,8 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
       <div className="absolute inset-0 opacity-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
 
       <div className="relative flex flex-1 flex-col gap-6 p-6">
-        <header className="flex items-start gap-4">
-          <div className={`flex h-14 w-14 items-center justify-center rounded-2xl text-sm font-bold uppercase tracking-[0.2em] text-white shadow-[0_16px_36px_rgba(0,0,0,0.4)] transform transition-transform duration-300 group-hover:scale-110 ${theme.icon}`}>
-            {item.category.substring(0, 2).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0 space-y-3">
+        <header className="flex items-start">
+          <div className="flex-1 min-w-0 space-y-5">
             <div className="flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center rounded-full px-3.5 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.35em] backdrop-blur-sm ${theme.brief}`}>
                 {briefLabel}
@@ -141,7 +138,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
                 {item.category}
               </span>
             </div>
-            <h3 className="text-[1.35rem] font-bold leading-[1.3] text-white line-clamp-3 transition-colors duration-300 group-hover:text-white/95">
+            <h3 className="text-[1.35rem] font-bold leading-[1.3] text-white line-clamp-3 transition-colors duration-300 group-hover:text-white/95 mb-4">
               {item.title}
             </h3>
             <div className="flex flex-wrap items-center gap-3 text-xs text-white/65">
@@ -177,9 +174,6 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
           
           <div className={`absolute top-3 right-3 flex items-center gap-2`}>
             <div className={`h-2.5 w-2.5 rounded-full ${sentimentColors[item.sentiment]} shadow-lg animate-pulse`} />
-            <div className="rounded-full bg-black/60 backdrop-blur-md px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-white border border-white/10">
-              {tagline}
-            </div>
           </div>
         </div>
 

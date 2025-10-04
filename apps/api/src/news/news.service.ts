@@ -6,12 +6,26 @@ import type {
   FindNewsResult,
   NewsCategorySummary,
   NewsMediaDto,
-  NewsMediaRow,
   NewsRow,
   NewsWithMediaDto,
 } from '@nexachron/shared-types';
 
 import { SupabaseService } from '../supabase/supabase.service';
+
+interface MediaSummary {
+  image_count: number;
+  total_count: number;
+  video_count: number;
+  featured_image: string | null;
+  featured_video: string | null;
+  gallery_images: Array<{
+    url: string;
+    width: number | null;
+    height: number | null;
+    caption: string | null;
+    alt_text: string | null;
+  }>;
+}
 
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_SUMMARY_LENGTH = 180;
@@ -31,15 +45,14 @@ export class NewsService {
       const rangeEnd = rangeStart + pageSize - 1;
 
       let query = this.createBaseQuery(includeCount);
+      query = this.applyFilters(query, options);
       query = query.order('created_at', { ascending: false });
 
       const response = await query.range(rangeStart, rangeEnd);
       this.ensureNoError(response, 'findAll');
 
       const data = response.data ?? [];
-      const items = data.map((row) =>
-        this.mapNewsRow(row as NewsRow),
-      );
+      const items = data.map((row) => this.mapNewsRow(row as NewsRow));
 
       return {
         items,
@@ -75,55 +88,76 @@ export class NewsService {
     console.log('getCategories: Starting category query');
 
     try {
-      // Önce basit bir test yapalım - tüm haberleri alalım
-      const { data: allNews, error: newsError } = await this.supabaseService.supabase
-        .from('news')
-        .select('id, category, title, mode')
-        .limit(5);
+      // category alanına göre kategorileri sayalım
+      const { data: categoryData, error: categoryError } =
+        await this.supabaseService.supabase
+          .from('news')
+          .select('category')
+          .not('category', 'is', null);
 
-      console.log('getCategories: Sample news:', allNews);
-      console.log('getCategories: News error:', newsError);
+      console.log('getCategories: Category data:', categoryData);
+      console.log('getCategories: Category error:', categoryError);
 
-      if (newsError) {
-        console.error('getCategories: Error fetching news:', newsError);
-        throw newsError;
+      if (categoryError) {
+        console.error(
+          'getCategories: Error fetching categories:',
+          categoryError,
+        );
+        throw categoryError;
       }
 
-      // category alanına göre kategorileştirelim
-      const categoryMap = new Map<string, string>();
-      categoryMap.set('guncel', 'guncel');
-      categoryMap.set('spor', 'spor');
-      categoryMap.set('ekonomi', 'ekonomi');
-      categoryMap.set('teknoloji', 'teknoloji');
-      categoryMap.set('dunya', 'dunya');
-      categoryMap.set('politika', 'politika');
+      // Kategori sayılarını hesapla
+      const categoryCounts = new Map<string, number>();
 
-      const categories: NewsCategorySummary[] = [
-        { id: 'guncel', label: 'Güncel', total: 0 },
-        { id: 'spor', label: 'Spor', total: 0 },
-        { id: 'ekonomi', label: 'Ekonomi', total: 0 },
-        { id: 'teknoloji', label: 'Teknoloji', total: 0 },
-        { id: 'dunya', label: 'Dünya', total: 0 },
-        { id: 'politika', label: 'Politika', total: 0 },
-      ];
-
-      if (allNews && allNews.length > 0) {
-        allNews.forEach((news) => {
-          if (news.category && categoryMap.has(news.category)) {
-            const categoryId = categoryMap.get(news.category)!;
-            const category = categories.find(c => c.id === categoryId);
-            if (category) {
-              category.total++;
-            }
+      if (categoryData && categoryData.length > 0) {
+        categoryData.forEach((item: { category: string }) => {
+          if (item.category) {
+            const count = categoryCounts.get(item.category) || 0;
+            categoryCounts.set(item.category, count + 1);
           }
         });
       }
 
+      // Kategori etiketlerini tanımla
+      const categoryLabels: Record<string, string> = {
+        gundem: 'Gündem',
+        spor: 'Spor',
+        ekonomi: 'Ekonomi',
+        teknoloji: 'Teknoloji',
+        dunya: 'Dünya',
+        politika: 'Politika',
+        finans: 'Finans',
+        savunma: 'Savunma',
+        enerji: 'Enerji',
+        saglik: 'Sağlık',
+        diplomasi: 'Diplomasi',
+        cevre: 'Çevre',
+        turizm: 'Turizm',
+        tarim: 'Tarım',
+        kultur: 'Kültür',
+        sanat: 'Sanat',
+        egitim: 'Eğitim',
+        bilim: 'Bilim',
+        yasam: 'Yaşam',
+        magazin: 'Magazin',
+      };
+
+      // Kategorileri oluştur
+      const categories: NewsCategorySummary[] = Array.from(
+        categoryCounts.entries(),
+      )
+        .map(([id, total]) => ({
+          id,
+          label: categoryLabels[id] || id.charAt(0).toUpperCase() + id.slice(1),
+          total,
+        }))
+        .sort((a, b) => b.total - a.total); // En çok içeriğe sahip olanları önce göster
+
       console.log('getCategories: Generated categories:', categories);
 
       return {
-        categories: categories.filter(c => c.total > 0),
-        total: categories.filter(c => c.total > 0).length,
+        categories,
+        total: categories.length,
       };
     } catch (error) {
       console.error('getCategories: Error:', error);
@@ -145,6 +179,7 @@ export class NewsService {
         city,
         is_popular,
         created_at,
+        media_summary,
         comments(count),
         reactions(emoji)
       `,
@@ -232,15 +267,18 @@ export class NewsService {
       title,
       content,
       summary,
-      mode,
+      category,
       city,
       is_popular,
       created_at,
-      updated_at
+      updated_at,
+      media_summary
     `;
 
     const supabase = this.supabaseService.supabase;
-    const selectOptions = includeCount ? { count: 'exact' as const } : undefined;
+    const selectOptions = includeCount
+      ? { count: 'exact' as const }
+      : undefined;
 
     return selectOptions
       ? supabase.from('news').select(columns, selectOptions)
@@ -250,12 +288,12 @@ export class NewsService {
   private applyFilters(
     query: any,
     options: Omit<FindNewsOptions, 'includeCount'>,
-  ) {
+  ): any {
     let filteredQuery = query;
 
-    // For now, just filter by mode (which maps to category in frontend)
+    // Filter by categoryId (maps to category field in database)
     if (options.categoryId) {
-      filteredQuery = filteredQuery.eq('mode', 'WORLD');
+      filteredQuery = filteredQuery.eq('category', options.categoryId);
     }
 
     if (options.city) {
@@ -278,22 +316,31 @@ export class NewsService {
     return filteredQuery;
   }
 
-  private mapNewsRow(
-    row: NewsRow,
-  ): NewsWithMediaDto {
+  private mapNewsRow(row: NewsRow): NewsWithMediaDto {
+    // media_summary string ise parse et, object ise direkt kullan
+    const mediaSummaryJson =
+      typeof row.media_summary === 'string'
+        ? row.media_summary
+        : JSON.stringify(row.media_summary);
+    
+    const mediaSummary = this.parseMediaSummary(mediaSummaryJson);
+    const media = this.extractMediaFromSummary(mediaSummary);
+    const primaryMedia = media.length > 0 ? media[0] : null;
+
     return {
       id: row.id,
       title: row.title || 'Başlıksız',
       content: row.content || '',
       summary: this.resolveSummary(row),
-      categoryId: row.category_id || 'spor',
+      categoryId: row.category || 'spor',
       city: row.city || null,
       isPopular: !!row.is_popular,
       createdAt: row.created_at || new Date().toISOString(),
       updatedAt: row.updated_at ?? null,
       publishedAt: null, // published_at kolonu veritabanında yok
-      media: [],
-      primaryMedia: null,
+      media,
+      primaryMedia,
+      media_summary: row.media_summary || null,
     };
   }
 
@@ -316,7 +363,8 @@ export class NewsService {
 
     const truncated = value.slice(0, maxLength);
     const lastWhitespace = truncated.lastIndexOf(' ');
-    const finalText = lastWhitespace > 0 ? truncated.slice(0, lastWhitespace) : truncated;
+    const finalText =
+      lastWhitespace > 0 ? truncated.slice(0, lastWhitespace) : truncated;
 
     return `${finalText.trim()}...`;
   }
@@ -334,13 +382,78 @@ export class NewsService {
       .join(' ');
   }
 
+  private parseMediaSummary(
+    mediaSummaryJson: string | null,
+  ): MediaSummary | null {
+    if (!mediaSummaryJson) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(mediaSummaryJson) as MediaSummary;
+      return parsed;
+    } catch (error) {
+      this.logger.warn('Failed to parse media_summary JSON:', error);
+      return null;
+    }
+  }
+
+  private extractMediaFromSummary(
+    mediaSummary: MediaSummary | null,
+  ): NewsMediaDto[] {
+    if (!mediaSummary) {
+      return [];
+    }
+
+    const media: NewsMediaDto[] = [];
+
+    // Featured image'i ekle
+    if (mediaSummary.featured_image) {
+      media.push({
+        id: `featured-${Date.now()}`,
+        url: mediaSummary.featured_image,
+        type: 'image',
+        order: 0,
+      });
+    }
+
+    // Gallery images'ları ekle
+    if (mediaSummary.gallery_images && mediaSummary.gallery_images.length > 0) {
+      mediaSummary.gallery_images.forEach((img, index) => {
+        // Featured image ile aynı değilse ekle
+        if (img.url !== mediaSummary.featured_image) {
+          media.push({
+            id: `gallery-${index}-${Date.now()}`,
+            url: img.url,
+            type: 'image',
+            order: index + 1,
+          });
+        }
+      });
+    }
+
+    // Featured video'yu ekle
+    if (mediaSummary.featured_video) {
+      media.push({
+        id: `video-${Date.now()}`,
+        url: mediaSummary.featured_video,
+        type: 'video',
+        order: media.length,
+      });
+    }
+
+    return media;
+  }
+
   private ensureNoError<T extends PostgrestResponse<unknown>>(
     response: T,
     context: string,
   ): void {
     if (response.error) {
       this.logger.error(`[${context}] Supabase error:`, response.error);
-      throw new Error(`Database error in ${context}: ${response.error.message || 'Unknown error'}`);
+      throw new Error(
+        `Database error in ${context}: ${response.error.message || 'Unknown error'}`,
+      );
     }
   }
 }

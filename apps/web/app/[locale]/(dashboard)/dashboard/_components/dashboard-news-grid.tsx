@@ -85,6 +85,7 @@ export function DashboardNewsGrid({
           )}
         </div>
 
+
         {/* Mixed Grid Layout */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {/* Sponsored/Large Cards - Span 2 columns */}
@@ -100,11 +101,6 @@ export function DashboardNewsGrid({
                   SPONSORLU
                 </span>
               </div>
-              <div className="mb-3 transition-all duration-300 group-hover:translate-x-1">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.15em] text-white/50 truncate">
-                  {getCategoryLabel(item.category)}
-                </p>
-              </div>
               <DashboardNewsCard item={item} />
             </div>
           ))}
@@ -112,11 +108,6 @@ export function DashboardNewsGrid({
           {/* Regular Cards */}
           {standardItems.map((item) => (
             <div key={item.id} className="group">
-              <div className="mb-3 transition-all duration-300 group-hover:translate-x-1">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.15em] text-white/50 truncate">
-                  {getCategoryLabel(item.category)}
-                </p>
-              </div>
               <DashboardNewsCard item={item} />
             </div>
           ))}

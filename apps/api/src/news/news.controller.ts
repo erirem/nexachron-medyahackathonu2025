@@ -186,6 +186,32 @@ export class NewsController {
     }
   }
 
+  @Get('test-categories')
+  async testCategories() {
+    try {
+      // Test mevcut category alanını kontrol et
+      const { data: testData, error: testError } = await this.newsService['supabaseService'].supabase
+        .from('news')
+        .select('id, title, category')
+        .limit(10);
+
+      return {
+        success: true,
+        data: {
+          testData,
+          testError,
+          sampleCategories: testData?.map(item => item.category).filter(Boolean)
+        }
+      };
+    } catch (error) {
+      console.error('Error testing categories:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   @Get('trending')
   async getTrending(
     @Query('limit') limit?: string,

@@ -14,7 +14,7 @@ export interface Database {
           id: string;
           title: string;
           content: string;
-          category_id: string | null;
+          category: string | null;
           mode: string;
           city: string | null;
           is_popular: boolean;
@@ -22,12 +22,13 @@ export interface Database {
           updated_at: string | null;
           published_at: string | null;
           summary: string | null;
+          media_summary: string | null;
         };
         Insert: {
           id?: string;
           title: string;
           content: string;
-          category_id?: string | null;
+          category?: string | null;
           mode?: string;
           city?: string | null;
           is_popular?: boolean;
@@ -35,11 +36,12 @@ export interface Database {
           updated_at?: string | null;
           published_at?: string | null;
           summary?: string | null;
+          media_summary?: string | null;
         };
         Update: {
           title?: string;
           content?: string;
-          category_id?: string | null;
+          category?: string | null;
           mode?: string;
           city?: string | null;
           is_popular?: boolean;
@@ -47,6 +49,7 @@ export interface Database {
           updated_at?: string | null;
           published_at?: string | null;
           summary?: string | null;
+          media_summary?: string | null;
         };
         Relationships: [];
       };
@@ -185,6 +188,7 @@ export interface NewsWithMediaDto {
   publishedAt: string | null;
   media: NewsMediaDto[];
   primaryMedia: NewsMediaDto | null;
+  media_summary?: string | null;
 }
 
 export type DashboardNewsItem = NewsWithMediaDto;

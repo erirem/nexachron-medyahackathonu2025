@@ -14,23 +14,35 @@ import type {
   NewsCategorySummary,
   NewsListDataPayload,
   NewsWithMediaDto,
+  TrendingNewsDataPayload,
 } from "@nexachron/shared-types";
 
 type DashboardProps = {
   readonly initialNews: NewsListDataPayload;
   readonly topics: readonly DashboardTopic[];
   readonly categoriesOverview?: CategoriesOverviewResponse;
-  readonly initialPopularNews?: DashboardNewsDataPayload;
+  readonly initialPopularNews?: TrendingNewsDataPayload;
 };
 
-const filters: readonly { readonly id: string; readonly label: string; readonly active?: boolean }[] = [
-  { id: "all", label: "Tümü", active: true },
-  { id: "gundem", label: "Gündem" },
-  { id: "finans", label: "Finans" },
-  { id: "savunma", label: "Savunma" },
-  { id: "enerji", label: "Enerji" },
-  { id: "teknoloji", label: "Teknoloji" },
-] as const;
+// Icon mapping for categories
+const getCategoryIcon = (categoryId: string): JSX.Element => {
+  const iconMap: Record<string, JSX.Element> = {
+    'gundem': <AgendaIcon />,
+    'finans': <FinanceIcon />,
+    'savunma': <DefenseIcon />,
+    'enerji': <EnergyIcon />,
+    'teknoloji': <TechIcon />,
+    'spor': <SportsIcon />,
+    'saglik': <HealthIcon />,
+    'ekonomi': <EconomyIcon />,
+    'diplomasi': <AgendaIcon />,
+    'cevre': <EnergyIcon />,
+    'turizm': <SportsIcon />,
+    'tarim': <HealthIcon />,
+  };
+  
+  return iconMap[categoryId.toLowerCase()] || <AllIcon />;
+};
 
 type SideRailItem = {
   readonly id: string;
@@ -72,9 +84,12 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
   const router = useRouter();
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [activeCategory, setActiveCategory] = useState('overview');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const previousScrollHeightRef = useRef<number>(0);
   const MIN_WIDTH = 80;
   const MAX_WIDTH = 450;
   const COLLAPSED_THRESHOLD = 160;
@@ -92,22 +107,52 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     isError: isNewsError,
     error: newsError,
   } = useInfiniteNews({
-    categoryId: selectedCategoryId,
-    filterCategory: !selectedCategoryId ? activeCategory : undefined,
+    categoryId: selectedCategoryIds.length === 1 ? selectedCategoryIds[0] : undefined,
+    filterCategory: selectedCategoryIds.length === 0 ? activeCategory : undefined,
   });
 
   // Infinite scroll effect
+  const isNextPageLoadingRef = useRef(false);
+
+  // Preserve scroll position when new items are loaded
   useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
+    if (scrollContainerRef.current && previousScrollHeightRef.current > 0) {
+      const currentScrollHeight = scrollContainerRef.current.scrollHeight;
+      const scrollDifference = currentScrollHeight - previousScrollHeightRef.current;
+
+      if (scrollDifference > 0) {
+        // Maintain scroll position relative to the content
+        scrollContainerRef.current.scrollTop += scrollDifference;
+      }
+    }
+
+    // Update previous scroll height
+    if (scrollContainerRef.current) {
+      previousScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
+    }
+  }, [apiNewsItems.length]); // Trigger when new items are added
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage || isLoadingMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasNextPage) {
+        if (entries[0].isIntersecting && hasNextPage && !isNextPageLoadingRef.current) {
+          isNextPageLoadingRef.current = true;
           setIsLoadingMore(true);
-          void loadMore().finally(() => setIsLoadingMore(false));
+
+          // Save current scroll position before loading
+          if (scrollContainerRef.current) {
+            previousScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
+          }
+
+          loadMore().finally(() => {
+            setIsLoadingMore(false);
+            isNextPageLoadingRef.current = false;
+          });
         }
       },
-      { threshold: 1.0 }
+      { threshold: 0.1, rootMargin: '100px' } // Trigger when 100px before the element
     );
 
     if (loadMoreTriggerRef.current) {
@@ -146,18 +191,32 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     [apiNewsItems],
   );
 
-  // For infinite scrolling, we don't filter on the client side as it would break pagination
-  // Instead, we could apply filters by refetching with new parameters if needed
-  const filteredNews = mappedNews; // Using all news for now, filtering happens on the server
+  // Filter news by selected categories
+  const filteredNews = useMemo(() => {
+    if (selectedCategoryIds.length === 0) {
+      return mappedNews;
+    }
+    
+    return mappedNews.filter((newsItem) => {
+      return newsItem.categoryId && selectedCategoryIds.includes(newsItem.categoryId);
+    });
+  }, [mappedNews, selectedCategoryIds]);
 
   const categoryInfo = useMemo(() => {
-    if (selectedCategoryId) {
-      const selected = categories?.find((category) => category.id === selectedCategoryId);
-      const label = selected?.label ?? deriveCategoryLabel(selectedCategoryId);
-      return {
-        title: label,
-        subtitle: 'Seçili kategori için son haberler',
-      };
+    if (selectedCategoryIds.length > 0) {
+      if (selectedCategoryIds.length === 1) {
+        const selected = categories?.find((category) => category.id === selectedCategoryIds[0]);
+        const label = selected?.label ?? deriveCategoryLabel(selectedCategoryIds[0]);
+        return {
+          title: label,
+          subtitle: 'Seçili kategori için son haberler',
+        };
+      } else {
+        return {
+          title: 'Seçili Kategoriler',
+          subtitle: `${selectedCategoryIds.length} kategori için son haberler`,
+        };
+      }
     }
 
     switch (activeCategory) {
@@ -192,7 +251,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           subtitle: 'Anadolu Ajansı\'ndan son gelişmeler',
         };
     }
-  }, [activeCategory, selectedCategoryId, categories]);
+  }, [activeCategory, selectedCategoryIds, categories]);
 
   const handleCategoryChange = useCallback(
     (categoryId: string) => {
@@ -203,18 +262,50 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
 
       setActiveCategory(categoryId);
       if (categoryId !== 'overview') {
-        setSelectedCategoryId(undefined);
+        setSelectedCategoryIds([]);
       }
     },
     [router],
   );
 
   const handleCategoryChipSelect = useCallback((categoryId: string) => {
-    setSelectedCategoryId((previous) => (previous === categoryId ? undefined : categoryId));
+    setSelectedCategoryIds((previous) => {
+      if (previous.includes(categoryId)) {
+        return previous.filter(id => id !== categoryId);
+      } else {
+        return [...previous, categoryId];
+      }
+    });
     setActiveCategory('overview');
   }, []);
 
   const hasNews = filteredNews.length > 0;
+
+  // Scroll to top functionality
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []);
+
+  // Show/hide scroll to top button based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      console.log('Scroll position:', scrollTop, 'showScrollToTop:', scrollTop > 50);
+      setShowScrollToTop(scrollTop > 50);
+    };
+
+    // Initial check
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
     <div className="relative flex min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
@@ -236,7 +327,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         style={{ marginLeft: `${sidebarWidth}px` }}
       >
         <div className="flex min-h-screen flex-col">
-          <div className="relative flex-1 overflow-y-auto">
+          <div ref={scrollContainerRef} className="relative flex-1 overflow-y-auto">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#20324a_0%,rgba(25,37,58,0.94)_60%,#141b29_100%)]" aria-hidden />
             <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_top,#365982_0%,rgba(20,28,45,0.82)_70%,transparent_95%)] blur-[80px] opacity-80" aria-hidden />
 
@@ -248,8 +339,27 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                 <div className="flex flex-wrap items-center gap-3">
                   <SearchBox />
                   <div className="flex flex-wrap items-center gap-2">
-                    {filters.map((filter) => (
-                      <FilterChip key={filter.id} label={filter.label} active={activeCategory === filter.id} />
+                    {/* "Tümü" butonu */}
+                    <FilterChip 
+                      label="Tümü" 
+                      icon={<AllIcon />}
+                      active={selectedCategoryIds.length === 0 && activeCategory === 'overview'} 
+                      onClick={() => {
+                        setSelectedCategoryIds([]);
+                        handleCategoryChange('overview');
+                      }}
+                    />
+                    
+                    {/* API'den gelen kategoriler */}
+                    {categories?.slice(0, 8).map((category) => (
+                      <FilterChip 
+                        key={category.id} 
+                        label={category.label} 
+                        icon={getCategoryIcon(category.id)}
+                        count={category.total}
+                        active={selectedCategoryIds.includes(category.id)} 
+                        onClick={() => handleCategoryChipSelect(category.id)}
+                      />
                     ))}
                   </div>
                   {isNewsFetching && (
@@ -257,61 +367,31 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                   )}
                 </div>
 
-                <CategorySummaryBar
-                  categories={categories}
-                  isLoading={isCategoriesLoading}
-                  error={categoriesError}
-                  onRetry={refetchCategories}
-                  selectedCategoryId={selectedCategoryId}
-                  onSelect={handleCategoryChipSelect}
-                />
 
-                {/* Popular news section */}
-                <section className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white">Popüler Haberler</h2>
-                    {isPopularNewsFetching && (
-                      <span className="text-xs font-semibold text-white/60">Güncelleniyor...</span>
-                    )}
-                  </div>
-                  {popularNewsError ? (
-                    <ErrorState
-                      message="Popüler haberler yüklenirken bir sorun oluştu."
-                      onRetry={refetchPopularNews}
-                    />
-                  ) : isPopularNewsLoading ? (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <div key={index} className="h-64 animate-pulse rounded-xl border border-white/10 bg-white/5" aria-hidden />
-                      ))}
-                    </div>
-                  ) : popularNewsItems.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                      {popularNewsItems.map((item) => {
-                        // Transform the item similar to how regular news items are transformed
-                        const transformedItem = transformNewsItem(item);
-                        return (
-                          <div key={transformedItem.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                            <h3 className="font-semibold text-white line-clamp-2">{transformedItem.title}</h3>
-                            <p className="mt-2 text-sm text-white/70 line-clamp-3">{transformedItem.summary}</p>
-                            <div className="mt-3 text-xs text-white/50">{transformedItem.dateline || 'Türkiye'}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-white/15 bg-white/5 px-6 py-8 text-center text-white/70">
-                      <p className="text-sm font-semibold">Popüler haber bulunamadı.</p>
-                    </div>
-                  )}
-                </section>
 
                 <div className="mb-8 space-y-4">
-                  {selectedCategoryId && (
-                    <ActiveCategoryBadge
-                      label={deriveCategoryLabel(selectedCategoryId)}
-                      onClear={() => setSelectedCategoryId(undefined)}
-                    />
+                  {selectedCategoryIds.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {selectedCategoryIds.map((categoryId) => {
+                        const category = categories?.find(c => c.id === categoryId);
+                        const label = category?.label ?? deriveCategoryLabel(categoryId);
+                        return (
+                          <ActiveCategoryBadge
+                            key={categoryId}
+                            label={label}
+                            onClear={() => setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId))}
+                          />
+                        );
+                      })}
+                      {selectedCategoryIds.length > 1 && (
+                        <button
+                          onClick={() => setSelectedCategoryIds([])}
+                          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/80 transition hover:bg-white/20"
+                        >
+                          Tümünü Temizle
+                        </button>
+                      )}
+                    </div>
                   )}
 
                   {isNewsError ? (
@@ -327,6 +407,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                   ) : apiNewsItems.length > 0 ? (
                     <>
                       <DashboardNewsGrid
+                        key={apiNewsItems.length} // Key prop to force re-render when new items are added
                         items={apiNewsItems.map(transformNewsItem)}
                         title={categoryInfo.title}
                         subtitle={categoryInfo.subtitle}
@@ -334,17 +415,26 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                       />
                       {/* Load more trigger */}
                       {hasNextPage && (
-                        <div ref={loadMoreTriggerRef} className="h-10 flex items-center justify-center">
-                          {isFetchingNextPage || isLoadingMore ? (
-                            <div className="text-white/60">Yükleniyor...</div>
-                          ) : null}
+                        <div 
+                          ref={loadMoreTriggerRef} 
+                          className="h-20 flex items-center justify-center"
+                        >
+                          {(isFetchingNextPage || isLoadingMore) ? (
+                            <div className="flex flex-col items-center">
+                              <div className="h-2 w-2 bg-white/60 rounded-full mb-1 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="h-2 w-2 bg-white/60 rounded-full mb-1 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="h-2 w-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                          ) : (
+                            <div className="text-white/40 text-sm">Daha fazla haber için kaydırın</div>
+                          )}
                         </div>
                       )}
                     </>
                   ) : (
                     <EmptyState
                       message="Bu kriterlere uygun haber bulunamadı."
-                      onReset={() => setSelectedCategoryId(undefined)}
+                      onReset={() => setSelectedCategoryIds([])}
                     />
                   )}
                 </div>
@@ -352,6 +442,19 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
             </div>
           </div>
         </div>
+
+        {/* Scroll to Top Button */}
+        {showScrollToTop && (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            className="fixed bottom-8 right-4 z-[9999] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-[0_12px_32px_rgba(15,106,205,0.5)] transition-all duration-200 hover:scale-105 hover:shadow-[0_16px_40px_rgba(15,106,205,0.6)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+            aria-label="Başa dön"
+            title="Başa dön"
+          >
+            <div className="text-2xl font-bold">↑</div>
+          </button>
+        )}
       </main>
     </div>
   );
@@ -676,15 +779,39 @@ function LivePill(): JSX.Element {
 }
 
 function SearchBox(): JSX.Element {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <div className="relative flex min-w-[220px] flex-1 items-center rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm text-white/80 shadow-[0_18px_50px_rgba(21,61,125,0.18)]">
-      <SearchIcon />
+    <div className={`relative flex min-w-[280px] flex-1 items-center rounded-full border transition-all duration-300 ${
+      isFocused 
+        ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]' 
+        : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
+    }`}>
+      <div className="pl-5 pr-3">
+        <SearchIcon />
+      </div>
       <input
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         placeholder="Haber, şirket veya bölge ara"
-        className="ml-3 flex-1 bg-transparent text-sm text-white placeholder:text-white/60 focus:outline-none"
+        className="flex-1 bg-transparent py-3 text-sm text-white placeholder:text-white/60 focus:outline-none"
         type="search"
       />
-      <kbd className="hidden rounded-full border border-[#d3e1f5] bg-[#eff4fb] px-2 py-1 text-[0.65rem] font-semibold text-[#5a7397] sm:inline-block">
+      {searchQuery && (
+        <button
+          onClick={() => setSearchQuery('')}
+          className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      )}
+      <kbd className="hidden rounded-full border border-[#d3e1f5] bg-[#eff4fb] px-2 py-1 text-[0.65rem] font-semibold text-[#5a7397] mr-3 sm:inline-block">
         ⌘K
       </kbd>
     </div>
@@ -693,17 +820,29 @@ function SearchBox(): JSX.Element {
 
 type FilterChipProps = {
   readonly label: string;
+  readonly icon: JSX.Element;
+  readonly count?: number;
   readonly active?: boolean;
+  readonly onClick?: () => void;
 };
 
-function FilterChip({ label, active }: FilterChipProps): JSX.Element {
+function FilterChip({ label, icon, count, active, onClick }: FilterChipProps): JSX.Element {
   if (active) {
     return (
       <button
         type="button"
-        className="rounded-full border border-white/30 bg-[#0f6acd] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(10,94,173,0.32)]"
+        onClick={onClick}
+        className="group flex items-center gap-2 rounded-full border border-white/30 bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(10,94,173,0.32)] transition-all duration-200 hover:scale-105 hover:shadow-[0_20px_50px_rgba(10,94,173,0.4)]"
       >
-        {label}
+        <span className="flex h-4 w-4 items-center justify-center">
+          {icon}
+        </span>
+        <span>{label}</span>
+        {count !== undefined && (
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
+            {count}
+          </span>
+        )}
       </button>
     );
   }
@@ -711,16 +850,25 @@ function FilterChip({ label, active }: FilterChipProps): JSX.Element {
   return (
     <button
       type="button"
-      className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/75 transition hover:bg-white/20"
+      onClick={onClick}
+      className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white/75 transition-all duration-200 hover:bg-white/20 hover:text-white hover:scale-105 hover:border-white/25"
     >
-      {label}
+      <span className="flex h-4 w-4 items-center justify-center transition-transform duration-200 group-hover:scale-110">
+        {icon}
+      </span>
+      <span>{label}</span>
+      {count !== undefined && (
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-white/60 group-hover:bg-white/20 group-hover:text-white/80">
+          {count}
+        </span>
+      )}
     </button>
   );
 }
 
 type CategorySummaryBarProps = {
   readonly categories: readonly NewsCategorySummary[] | undefined;
-  readonly selectedCategoryId?: string;
+  readonly selectedCategoryIds: string[];
   readonly isLoading: boolean;
   readonly error: Error | undefined;
   readonly onRetry: () => Promise<unknown> | void;
@@ -729,7 +877,7 @@ type CategorySummaryBarProps = {
 
 function CategorySummaryBar({
   categories,
-  selectedCategoryId,
+  selectedCategoryIds,
   isLoading,
   error,
   onRetry,
@@ -764,7 +912,7 @@ function CategorySummaryBar({
         <CategoryChip
           key={category.id}
           category={category}
-          isActive={selectedCategoryId === category.id}
+          isActive={selectedCategoryIds.includes(category.id)}
           onSelect={onSelect}
         />
       ))}
@@ -911,20 +1059,56 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   const categoryLabel = deriveCategoryLabel(item.categoryId);
   const readingTime = estimateReadingTime(item.content);
 
-  const orderedMedia = [...item.media].sort((a, b) => {
-    const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
-    const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
-    return orderA - orderB;
-  });
+  // Parse media_summary if it exists and is a string
+  let mediaSummary = null;
+  if (item.media_summary) {
+    try {
+      // Check if it's already an object or a string that needs parsing
+      mediaSummary = typeof item.media_summary === 'string' 
+        ? JSON.parse(item.media_summary) 
+        : item.media_summary;
+    } catch (e) {
+      console.error('Error parsing media_summary:', e);
+      mediaSummary = null;
+    }
+  }
 
-  const images = orderedMedia.map((mediaItem) => ({
-    url: mediaItem.url,
-    alt: item.title,
-    caption: undefined,
-    credit: undefined,
-  }));
+  // Extract images from media_summary if available, otherwise use other image sources
+  let extractedImages = [];
+  let primaryImageUrl = '';
 
-  const primaryImage = item.primaryMedia?.url ?? images[0]?.url ?? FALLBACK_IMAGE_URL;
+  if (mediaSummary && mediaSummary.gallery_images && Array.isArray(mediaSummary.gallery_images)) {
+    extractedImages = mediaSummary.gallery_images.map((img: any) => ({
+      url: img.url,
+      alt: item.title,
+      caption: img.caption || undefined,
+      credit: undefined,
+    }));
+    
+    // Set featured image as primary if available
+    if (mediaSummary.featured_image) {
+      primaryImageUrl = mediaSummary.featured_image;
+    } else if (extractedImages.length > 0) {
+      primaryImageUrl = extractedImages[0].url;
+    }
+  } else {
+    // Fallback to other media sources
+    const orderedMedia = [...item.media].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+
+    extractedImages = orderedMedia.map((mediaItem) => ({
+      url: mediaItem.url,
+      alt: item.title,
+      caption: undefined,
+      credit: undefined,
+    }));
+
+    primaryImageUrl = item.primaryMedia?.url ?? extractedImages[0]?.url ?? FALLBACK_IMAGE_URL;
+  }
+
   const tags = [categoryLabel.toLowerCase().replace(/\s+/g, '-')];
 
   if (item.isPopular) {
@@ -945,8 +1129,8 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
     readingTime,
     dateline: item.city ?? 'Türkiye',
     tags,
-    imageUrl: primaryImage,
-    images,
+    imageUrl: primaryImageUrl,
+    images: extractedImages,
     sentiment: item.isPopular ? 'positive' : 'neutral',
     impact: item.isPopular ? 'Yüksek' : 'Orta',
     viewCount: undefined,
@@ -1162,6 +1346,98 @@ function TrophyIcon(): JSX.Element {
       <path d="M6 9H4.5a2.5 2.5 0 010-5H6M14 9h1.5a2.5 2.5 0 000-5H14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M14 15v-1a5 5 0 00-8 0v1M14 15a2 2 0 11-4 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M10 4v10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChevronUpIcon(): JSX.Element {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M18 15l-6-6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// New filter icons
+function AllIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="7" height="7"/>
+      <rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/>
+    </svg>
+  );
+}
+
+function AgendaIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M8 2v4"/>
+      <path d="M16 2v4"/>
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <path d="M3 10h18"/>
+    </svg>
+  );
+}
+
+function FinanceIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="12" y1="1" x2="12" y2="23"/>
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+  );
+}
+
+function DefenseIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <path d="M9 12l2 2 4-4"/>
+    </svg>
+  );
+}
+
+function EnergyIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+    </svg>
+  );
+}
+
+function TechIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/>
+      <line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+  );
+}
+
+function SportsIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M8.14 12.14l1.72 1.72 4.28-4.28"/>
+    </svg>
+  );
+}
+
+function HealthIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
+    </svg>
+  );
+}
+
+function EconomyIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
     </svg>
   );
 }

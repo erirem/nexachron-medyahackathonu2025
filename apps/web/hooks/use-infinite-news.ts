@@ -28,27 +28,73 @@ export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
       limit: 10 as number,
     };
 
-    // If a specific category ID is provided, use it
+    // If a specific category ID is provided, use it directly
     if (categoryId) {
       params.categoryId = categoryId;
+      params.limit = undefined; // Use pagination when filtering by category
     } 
     // If a filter category is provided, map it to backend category
     else if (filterCategory) {
       switch (filterCategory) {
         case 'gundem':
-          params.categoryId = 'guncel';
+          params.categoryId = 'gundem';
           break;
         case 'finans':
-          params.categoryId = 'ekonomi';
+          params.categoryId = 'finans';
           break;
         case 'savunma':
-          params.categoryId = 'dunya';
+          params.categoryId = 'savunma';
           break;
         case 'enerji':
-          params.categoryId = 'dunya';
+          params.categoryId = 'enerji';
           break;
         case 'teknoloji':
           params.categoryId = 'teknoloji';
+          break;
+        case 'spor':
+          params.categoryId = 'spor';
+          break;
+        case 'ekonomi':
+          params.categoryId = 'ekonomi';
+          break;
+        case 'saglik':
+          params.categoryId = 'saglik';
+          break;
+        case 'dunya':
+          params.categoryId = 'dunya';
+          break;
+        case 'politika':
+          params.categoryId = 'politika';
+          break;
+        case 'diplomasi':
+          params.categoryId = 'diplomasi';
+          break;
+        case 'cevre':
+          params.categoryId = 'cevre';
+          break;
+        case 'turizm':
+          params.categoryId = 'turizm';
+          break;
+        case 'tarim':
+          params.categoryId = 'tarim';
+          break;
+        case 'kultur':
+          params.categoryId = 'kultur';
+          break;
+        case 'sanat':
+          params.categoryId = 'sanat';
+          break;
+        case 'egitim':
+          params.categoryId = 'egitim';
+          break;
+        case 'bilim':
+          params.categoryId = 'bilim';
+          break;
+        case 'yasam':
+          params.categoryId = 'yasam';
+          break;
+        case 'magazin':
+          params.categoryId = 'magazin';
           break;
         default:
           params.limit = 20; // Default when no specific category
@@ -87,20 +133,22 @@ export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
       const params = resolveParams();
       return fetchNewsList({ 
         ...params,
-        page: pageParam, 
+        page: pageParam,
+        pageSize: params.pageSize || 10,
       });
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      const currentPage = allPages.length;
+      // Check if there are more pages based on the pagination response
       const hasMore = lastPage.pagination?.hasMore ?? false;
-      const total = lastPage.pagination?.total ?? 0;
-      const loadedCount = allPages.reduce((acc, page) => acc + page.items.length, 0);
-      
-      // If there are more items to load, return next page number
-      if (hasMore || loadedCount < total) {
+
+      if (hasMore) {
+        // Use the current page from pagination response, or fallback to allPages.length + 1
+        const currentPage = lastPage.pagination?.page ?? allPages.length;
         return currentPage + 1;
       }
+
+      // If no pagination info or no more items, return undefined to stop loading
       return undefined;
     },
     initialData: initialData ? { pages: [initialData], pageParams: [1] } : undefined,
@@ -111,7 +159,7 @@ export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
 
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
-      void fetchNextPage();
+      return fetchNextPage();
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
