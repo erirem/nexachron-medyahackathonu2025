@@ -30,14 +30,38 @@ export class RssParserService {
       const url = `${this.baseUrl}?cat=${category}`;
       this.logger.debug(`Fetching RSS feed from: ${url}`);
 
-      const response = await firstValueFrom(
-        this.httpService.get(url, {
-          timeout: 10000,
-          headers: {
-            'User-Agent': 'Nexachron News Bot 1.0',
-          },
-        }),
-      );
+      const maxRetries = 3;
+
+      let response;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          response = await firstValueFrom(
+            this.httpService.get(url, {
+              timeout: 8000, // Reduced from 10s to 8s
+              headers: {
+                'User-Agent': 'Nexachron News Bot 1.0',
+                'Accept': 'application/rss+xml,application/xml,text/xml',
+              },
+            }),
+          );
+
+          // If successful, break out of retry loop
+          break;
+        } catch (error) {
+          if (attempt === maxRetries) {
+            this.logger.error(
+              `Failed to fetch RSS feed for category ${category} after ${maxRetries} attempts:`,
+              error,
+            );
+            return [];
+          }
+
+          // Wait before retrying (exponential backoff)
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
+          this.logger.debug(`Retrying RSS fetch for ${category}, attempt ${attempt}/${maxRetries}, waiting ${delay}ms`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
 
       const feed = await this.parser.parseString(response.data);
 

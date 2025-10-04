@@ -6,10 +6,73 @@ import { ReadingProgress } from './_components/reading-progress';
 import { SmoothScrollWrapper } from './_components/smooth-scroll-wrapper';
 import { DynamicScrollbarWrapper } from './_components/dynamic-scrollbar-wrapper';
 import type { DashboardNewsItem } from '../../dashboard/_components/types';
+import { fetchNewsById, fetchNewsList } from '@/services/api';
 import './_components/scrollbar.css';
 
-// Sample news data (same as dashboard)
-const newsItems: DashboardNewsItem[] = [
+// Helper function to transform news data to dashboard item format
+function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
+  // Transform the news item to match the DashboardNewsItem interface
+  return {
+    id: item.id,
+    category: item.categoryId || item.category || 'Diğer',
+    categoryId: item.categoryId || null,
+    title: item.title || 'Başlık yok',
+    summary: item.summary || item.content?.substring(0, 100) + '...' || '',
+    detail: item.content || item.summary || '',
+    fullContent: item.content || '',
+    timestamp: item.createdAt ? formatRelativeTime(new Date(item.createdAt)) : 'Yakın zamanda',
+    publishedAt: item.publishedAt || item.createdAt || new Date().toISOString(),
+    storyDate: item.publishedAt || item.createdAt || new Date().toISOString(),
+    readingTime: estimateReadingTime(item.content || ''),
+    dateline: item.city || 'Türkiye',
+    tags: [item.categoryId || item.category || 'genel'],
+    imageUrl: item.image_url || item.primaryMedia?.url || item.media?.[0]?.url || '',
+    images: item.media?.map((media: any) => ({
+      url: media.url,
+      alt: item.title,
+      caption: media.caption || undefined,
+      credit: undefined,
+    })) || [],
+    sentiment: item.isPopular ? 'positive' : 'neutral',
+    impact: item.isPopular ? 'Yüksek' : 'Orta',
+    viewCount: undefined, // Not available in the API response
+    likeCount: undefined, // Not available in the API response
+    shareCount: undefined, // Not available in the API response
+    relatedIds: undefined,
+    storyId: undefined,
+    timelineOrder: undefined,
+    storyTitle: undefined,
+    author: undefined,
+    isPopular: item.isPopular || false,
+    city: item.city || null,
+    createdAt: item.createdAt,
+    subtitle: undefined,
+  };
+}
+
+function formatRelativeTime(date: Date): string {
+  const diffMs = date.getTime() - Date.now();
+  const rtf = new Intl.RelativeTimeFormat('tr', { numeric: 'auto' });
+  const diffMinutes = Math.round(diffMs / 60000);
+
+  if (Math.abs(diffMinutes) < 60) {
+    return rtf.format(diffMinutes, 'minute');
+  }
+
+  const diffHours = Math.round(diffMs / (60 * 60000));
+  if (Math.abs(diffHours) < 24) {
+    return rtf.format(diffHours, 'hour');
+  }
+
+  const diffDays = Math.round(diffMs / (24 * 60 * 60000));
+  return rtf.format(diffDays, 'day');
+}
+
+function estimateReadingTime(content: string): string {
+  const words = content.trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 220));
+  return `${minutes} dk okuma`;
+}
   {
     id: "haber-1",
     category: "Finans",
@@ -234,76 +297,156 @@ interface NewsPageProps {
 
 export default async function NewsPage({ params }: NewsPageProps): Promise<JSX.Element> {
   const { id } = await params;
-  const article = newsItems.find(item => item.id === id);
+  
+  try {
+    // Fetch the specific news article by ID
+    const articleData = await fetchNewsById(id);
+    // Transform the article data to match the expected format
+    const article = transformNewsDataToDashboardItem(articleData);
+    
+    if (!article) {
+      notFound();
+    }
 
-  if (!article) {
+    // Fetch related news based on category
+    const relatedNewsData = await fetchNewsList({ 
+      categoryId: article.categoryId || undefined, 
+      limit: 4 
+    });
+    
+    // Transform related news data
+    const relatedNews = relatedNewsData.items
+      .filter(item => item.id !== id)
+      .map(transformNewsDataToDashboardItem)
+      .slice(0, 4);
+
+    // Fetch popular news for sidebar
+    const popularNewsData = await fetchNewsList({ 
+      isPopular: true, 
+      limit: 6 
+    });
+    
+    // Transform popular news data
+    const popularNews = popularNewsData.items
+      .map(transformNewsDataToDashboardItem);
+
+    // Fetch recent news for sidebar
+    const recentNewsData = await fetchNewsList({ 
+      limit: 5 
+    });
+    
+    // Transform recent news data
+    const recentNews = recentNewsData.items
+      .map(transformNewsDataToDashboardItem);
+
+    const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://nexachron.com'}/haber/${article.id}`;
+    
+    return (
+      <>
+        <ReadingProgress 
+          articleTitle={article.title}
+          articleUrl={currentUrl}
+        />
+        
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)]">
+          <DynamicScrollbarWrapper>
+            <SmoothScrollWrapper>
+            <div className="container mx-auto px-6 py-8">
+              <div className="flex gap-8 max-w-7xl mx-auto lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
+                {/* Main Content */}
+                <main className="flex-1 min-w-0">
+                  <div
+                    id="article-scroll-container"
+                    className="lg:h-full lg:overflow-y-auto lg:pr-6 lg:pb-12 dynamic-scrollbar"
+                  >
+                    <NewsArticle 
+                      article={article} 
+                      relatedNews={relatedNews}
+                      allNews={recentNewsData.items.map(transformNewsDataToDashboardItem)}
+                    />
+                  </div>
+                </main>
+                
+                {/* Sidebar */}
+                <NewsSidebar 
+                  popularNews={popularNews}
+                  recentNews={recentNews}
+                  currentArticleId={article.id}
+                />
+              </div>
+            </div>
+            </SmoothScrollWrapper>
+          </DynamicScrollbarWrapper>
+        </div>
+      </>
+    );
+  } catch (error) {
+    console.error('Error fetching news article:', error);
     notFound();
   }
+}
 
-  // Get popular news (sorted by view count)
-  const popularNews = [...newsItems]
-    .sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0))
-    .slice(0, 6);
+// Helper function to transform news data to dashboard item format
+function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
+  // Transform the news item to match the DashboardNewsItem interface
+  return {
+    id: item.id,
+    category: item.categoryId || item.category || 'Diğer',
+    categoryId: item.categoryId || null,
+    title: item.title || 'Başlık yok',
+    summary: item.summary || item.content?.substring(0, 100) + '...' || '',
+    detail: item.content || item.summary || '',
+    fullContent: item.content || '',
+    timestamp: item.createdAt ? formatRelativeTime(new Date(item.createdAt)) : 'Yakın zamanda',
+    publishedAt: item.publishedAt || item.createdAt || new Date().toISOString(),
+    storyDate: item.publishedAt || item.createdAt || new Date().toISOString(),
+    readingTime: estimateReadingTime(item.content || ''),
+    dateline: item.city || 'Türkiye',
+    tags: [item.categoryId || item.category || 'genel'],
+    imageUrl: item.image_url || item.primaryMedia?.url || item.media?.[0]?.url || '',
+    images: item.media?.map((media: any) => ({
+      url: media.url,
+      alt: item.title,
+      caption: media.caption || undefined,
+      credit: undefined,
+    })) || [],
+    sentiment: item.isPopular ? 'positive' : 'neutral',
+    impact: item.isPopular ? 'Yüksek' : 'Orta',
+    viewCount: undefined, // Not available in the API response
+    likeCount: undefined, // Not available in the API response
+    shareCount: undefined, // Not available in the API response
+    relatedIds: undefined,
+    storyId: undefined,
+    timelineOrder: undefined,
+    storyTitle: undefined,
+    author: undefined,
+    isPopular: item.isPopular || false,
+    city: item.city || null,
+    createdAt: item.createdAt,
+    subtitle: undefined,
+  };
+}
 
-  // Get recent news (sorted by timestamp - simulated)
-  const recentNews = [...newsItems]
-    .sort((a, b) => {
-      const aTime = a.timestamp.includes('dk') ? parseInt(a.timestamp) : 
-                   a.timestamp.includes('sa') ? parseInt(a.timestamp) * 60 : 1000;
-      const bTime = b.timestamp.includes('dk') ? parseInt(b.timestamp) : 
-                   b.timestamp.includes('sa') ? parseInt(b.timestamp) * 60 : 1000;
-      return aTime - bTime;
-    })
-    .slice(0, 5);
+function formatRelativeTime(date: Date): string {
+  const diffMs = date.getTime() - Date.now();
+  const rtf = new Intl.RelativeTimeFormat('tr', { numeric: 'auto' });
+  const diffMinutes = Math.round(diffMs / 60000);
 
-  // Get related news (same category or similar tags)
-  const relatedNews = newsItems
-    .filter(item => 
-      item.id !== article.id && 
-      (item.category === article.category || 
-       item.tags.some(tag => article.tags.includes(tag)))
-    )
-    .slice(0, 4);
+  if (Math.abs(diffMinutes) < 60) {
+    return rtf.format(diffMinutes, 'minute');
+  }
 
-  const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://nexachron.com'}/haber/${article.id}`;
-  
-  return (
-    <>
-      <ReadingProgress 
-        articleTitle={article.title}
-        articleUrl={currentUrl}
-      />
-      
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)]">
-        <DynamicScrollbarWrapper>
-          <SmoothScrollWrapper>
-          <div className="container mx-auto px-6 py-8">
-            <div className="flex gap-8 max-w-7xl mx-auto lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
-              {/* Main Content */}
-              <main className="flex-1 min-w-0">
-                <div
-                  id="article-scroll-container"
-                  className="lg:h-full lg:overflow-y-auto lg:pr-6 lg:pb-12 dynamic-scrollbar"
-                >
-                  <NewsArticle 
-                    article={article} 
-                    relatedNews={relatedNews}
-                    allNews={newsItems}
-                  />
-                </div>
-              </main>
-              
-              {/* Sidebar */}
-              <NewsSidebar 
-                popularNews={popularNews}
-                recentNews={recentNews}
-                currentArticleId={article.id}
-              />
-            </div>
-          </div>
-          </SmoothScrollWrapper>
-        </DynamicScrollbarWrapper>
-      </div>
-    </>
-  );
+  const diffHours = Math.round(diffMs / (60 * 60000));
+  if (Math.abs(diffHours) < 24) {
+    return rtf.format(diffHours, 'hour');
+  }
+
+  const diffDays = Math.round(diffMs / (24 * 60 * 60000));
+  return rtf.format(diffDays, 'day');
+}
+
+function estimateReadingTime(content: string): string {
+  const words = content.trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 220));
+  return `${minutes} dk okuma`;
 }

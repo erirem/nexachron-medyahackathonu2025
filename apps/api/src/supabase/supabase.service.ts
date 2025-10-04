@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database } from './database.types';
+import type { Database } from '@nexachron/shared-types';
 
 @Injectable()
 export class SupabaseService implements OnModuleInit {
@@ -13,8 +13,12 @@ export class SupabaseService implements OnModuleInit {
 
   onModuleInit() {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const anonKey = this.configService.get<string>('SUPABASE_ANON_KEY');
-    const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+    const anonKey =
+      this.configService.get<string>('SUPABASE_ANON_KEY') ??
+      this.configService.get<string>('SUPABASE_KEY');
+    const serviceKey = this.configService.get<string>(
+      'SUPABASE_SERVICE_ROLE_KEY',
+    );
 
     if (!supabaseUrl) {
       throw new Error('Missing Supabase configuration: SUPABASE_URL is required.');
@@ -67,5 +71,25 @@ export class SupabaseService implements OnModuleInit {
       );
     }
     return this.serviceClient;
+  }
+
+  // Test connection method
+  async testConnection(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase
+        .from('news')
+        .select('id', { count: 'exact', head: true });
+
+      if (error) {
+        console.error('Supabase connection test failed:', error);
+        return false;
+      }
+
+      console.log('Supabase connection test successful');
+      return true;
+    } catch (error) {
+      console.error('Supabase connection test error:', error);
+      return false;
+    }
   }
 }

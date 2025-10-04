@@ -23,6 +23,7 @@ export type NewsAuthor = {
 export type DashboardNewsItem = {
   readonly id: string;
   readonly category: string;
+  readonly categoryId?: string | null;
   readonly title: string;
   readonly subtitle?: string;
   readonly summary: string;
@@ -46,4 +47,7 @@ export type DashboardNewsItem = {
   readonly storyId?: string; // Groups related news in a timeline
   readonly timelineOrder?: number; // Order in the timeline
   readonly storyTitle?: string; // Overall story title
+  readonly isPopular?: boolean;
+  readonly city?: string | null;
+  readonly createdAt?: string;
 };

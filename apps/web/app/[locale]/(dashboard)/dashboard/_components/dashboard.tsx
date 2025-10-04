@@ -1,15 +1,26 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, type JSX } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, type JSX } from "react";
 import { useRouter } from 'next/navigation';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
 import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
 import type { DashboardNewsItem, DashboardTopic } from "./types";
+import { useCategories } from "@/hooks/use-categories";
+import { usePopularNews } from "@/hooks/use-popular-news";
+import { useInfiniteNews } from "@/hooks/use-infinite-news";
+import type {
+  CategoriesOverviewResponse,
+  NewsCategorySummary,
+  NewsListDataPayload,
+  NewsWithMediaDto,
+} from "@nexachron/shared-types";
 
 type DashboardProps = {
-  readonly news: readonly DashboardNewsItem[];
+  readonly initialNews: NewsListDataPayload;
   readonly topics: readonly DashboardTopic[];
+  readonly categoriesOverview?: CategoriesOverviewResponse;
+  readonly initialPopularNews?: DashboardNewsDataPayload;
 };
 
 const filters: readonly { readonly id: string; readonly label: string; readonly active?: boolean }[] = [
@@ -57,85 +68,158 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
   },
 };
 
-export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
+export function Dashboard({ initialNews, topics, categoriesOverview, initialPopularNews }: DashboardProps): JSX.Element {
   const router = useRouter();
-  const [sidebarWidth, setSidebarWidth] = useState(320); // Başlangıç genişliği
-  const [activeCategory, setActiveCategory] = useState('overview'); // Aktif kategori
-  const MIN_WIDTH = 80; // Minimum genişlik (sadece iconlar)
-  const MAX_WIDTH = 450; // Maksimum genişlik
-  const COLLAPSED_THRESHOLD = 160; // Bu genişlikten küçükse collapsed sayılır
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [activeCategory, setActiveCategory] = useState('overview');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  const MIN_WIDTH = 80;
+  const MAX_WIDTH = 450;
+  const COLLAPSED_THRESHOLD = 160;
 
   const isCollapsed = sidebarWidth <= COLLAPSED_THRESHOLD;
+  const limit = (initialNews.pagination?.pageSize ?? initialNews.items.length) || 10;
 
-  // Kategoriye göre haberleri filtrele
-  const getFilteredNews = () => {
-    switch (activeCategory) {
-      case 'saved':
-        return news.filter(item => item.tags.includes('favori')); // Kaydedilenler
-      case 'audio':
-        return news.filter(item => item.category === 'Podcast' || item.tags.includes('ses')); // Sesler
-      case 'reports':
-        return news.filter(item => item.category === 'Finans' || item.tags.includes('rapor')); // Raporlar
-      case 'briefs':
-        return news.filter(item => item.category === 'Gündem'); // Günlük
-      case 'watch':
-        return news.filter(item => item.category === 'Savunma'); // Takip
-      default:
-        return news; // Genel Akış - tüm haberler
+  const {
+    news: apiNewsItems,
+    loadMore,
+    isLoading: isNewsLoading,
+    isFetching: isNewsFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    isError: isNewsError,
+    error: newsError,
+  } = useInfiniteNews({
+    categoryId: selectedCategoryId,
+    filterCategory: !selectedCategoryId ? activeCategory : undefined,
+  });
+
+  // Infinite scroll effect
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          setIsLoadingMore(true);
+          void loadMore().finally(() => setIsLoadingMore(false));
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (loadMoreTriggerRef.current) {
+      observer.observe(loadMoreTriggerRef.current);
     }
-  };
 
-  // Kategoriye göre başlık ve alt başlık
-  const getCategoryInfo = () => {
+    return () => {
+      if (loadMoreTriggerRef.current) {
+        observer.unobserve(loadMoreTriggerRef.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, loadMore]);
+
+  const {
+    categories,
+    isLoading: isCategoriesLoading,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useCategories({
+    initialOverview: categoriesOverview,
+  });
+
+  const {
+    data: popularNewsItems,
+    isLoading: isPopularNewsLoading,
+    isFetching: isPopularNewsFetching,
+    error: popularNewsError,
+    refetch: refetchPopularNews,
+  } = usePopularNews({
+    limit: 5,
+    initialData: initialPopularNews,
+  });
+
+  const mappedNews = useMemo(
+    () => apiNewsItems.map(transformNewsItem),
+    [apiNewsItems],
+  );
+
+  // For infinite scrolling, we don't filter on the client side as it would break pagination
+  // Instead, we could apply filters by refetching with new parameters if needed
+  const filteredNews = mappedNews; // Using all news for now, filtering happens on the server
+
+  const categoryInfo = useMemo(() => {
+    if (selectedCategoryId) {
+      const selected = categories?.find((category) => category.id === selectedCategoryId);
+      const label = selected?.label ?? deriveCategoryLabel(selectedCategoryId);
+      return {
+        title: label,
+        subtitle: 'Seçili kategori için son haberler',
+      };
+    }
+
     switch (activeCategory) {
       case 'saved':
         return {
           title: 'Kaydedilen Haberler',
-          subtitle: 'Daha sonra okumak için kaydettigintiz haberler'
+          subtitle: 'Favorilerinize eklediğiniz haberler',
         };
       case 'audio':
         return {
           title: 'Sesli İçerikler',
-          subtitle: 'Podcast ve sesli haber içerikleri'
+          subtitle: 'Podcast ve sesli haber içerikleri',
         };
       case 'reports':
         return {
           title: 'Raporlar ve Analizler',
-          subtitle: 'Derinlemesine analiz ve raporlar'
+          subtitle: 'Derinlemesine analiz ve raporlar',
         };
       case 'briefs':
         return {
           title: 'Günlük Özetler',
-          subtitle: 'Günün önemli gelişmeleri'
+          subtitle: 'Günün önemli gelişmeleri',
         };
       case 'watch':
         return {
           title: 'Takip Edilen Konular',
-          subtitle: 'Takip ettiğiniz özel konular'
+          subtitle: 'Seçili başlıklar için canlı güncellemeler',
         };
       default:
         return {
           title: 'Günün Öne Çıkan Haberleri',
-          subtitle: 'Anadolu Ajansı\'ndan son dakika gelişmeler'
+          subtitle: 'Anadolu Ajansı\'ndan son gelişmeler',
         };
     }
-  };
+  }, [activeCategory, selectedCategoryId, categories]);
 
-  // Kategori değiştirme handler'ı
-  const handleCategoryChange = (categoryId: string) => {
-    if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'quizzes') {
-      // Bu kategoriler için yeni sayfaya yönlendir
-      router.push(`/${categoryId}`);
-    } else {
-      // Diğer kategoriler için mevcut sayfada kategori değiştir
+  const handleCategoryChange = useCallback(
+    (categoryId: string) => {
+      if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'quizzes') {
+        router.push(`/${categoryId}`);
+        return;
+      }
+
       setActiveCategory(categoryId);
-    }
-  };
+      if (categoryId !== 'overview') {
+        setSelectedCategoryId(undefined);
+      }
+    },
+    [router],
+  );
+
+  const handleCategoryChipSelect = useCallback((categoryId: string) => {
+    setSelectedCategoryId((previous) => (previous === categoryId ? undefined : categoryId));
+    setActiveCategory('overview');
+  }, []);
+
+  const hasNews = filteredNews.length > 0;
 
   return (
     <div className="relative flex min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
       <BackdropDecor />
-      
+
       <Sidebar
         width={sidebarWidth}
         onWidthChange={setSidebarWidth}
@@ -147,7 +231,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
         topics={topics}
       />
 
-      <main 
+      <main
         className="relative z-10 flex-1 overflow-hidden transition-all duration-200"
         style={{ marginLeft: `${sidebarWidth}px` }}
       >
@@ -165,18 +249,104 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
                   <SearchBox />
                   <div className="flex flex-wrap items-center gap-2">
                     {filters.map((filter) => (
-                      <FilterChip key={filter.id} label={filter.label} active={filter.active ?? false} />
+                      <FilterChip key={filter.id} label={filter.label} active={activeCategory === filter.id} />
                     ))}
                   </div>
+                  {isNewsFetching && (
+                    <span className="text-xs font-semibold text-white/60">Güncelleniyor...</span>
+                  )}
                 </div>
 
-                <div className="mb-8">
-                  <DashboardNewsGrid 
-                    items={getFilteredNews()}
-                    title={getCategoryInfo().title}
-                    subtitle={getCategoryInfo().subtitle}
-                    showAll={true}
-                  />
+                <CategorySummaryBar
+                  categories={categories}
+                  isLoading={isCategoriesLoading}
+                  error={categoriesError}
+                  onRetry={refetchCategories}
+                  selectedCategoryId={selectedCategoryId}
+                  onSelect={handleCategoryChipSelect}
+                />
+
+                {/* Popular news section */}
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white">Popüler Haberler</h2>
+                    {isPopularNewsFetching && (
+                      <span className="text-xs font-semibold text-white/60">Güncelleniyor...</span>
+                    )}
+                  </div>
+                  {popularNewsError ? (
+                    <ErrorState
+                      message="Popüler haberler yüklenirken bir sorun oluştu."
+                      onRetry={refetchPopularNews}
+                    />
+                  ) : isPopularNewsLoading ? (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <div key={index} className="h-64 animate-pulse rounded-xl border border-white/10 bg-white/5" aria-hidden />
+                      ))}
+                    </div>
+                  ) : popularNewsItems.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                      {popularNewsItems.map((item) => {
+                        // Transform the item similar to how regular news items are transformed
+                        const transformedItem = transformNewsItem(item);
+                        return (
+                          <div key={transformedItem.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                            <h3 className="font-semibold text-white line-clamp-2">{transformedItem.title}</h3>
+                            <p className="mt-2 text-sm text-white/70 line-clamp-3">{transformedItem.summary}</p>
+                            <div className="mt-3 text-xs text-white/50">{transformedItem.dateline || 'Türkiye'}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-white/15 bg-white/5 px-6 py-8 text-center text-white/70">
+                      <p className="text-sm font-semibold">Popüler haber bulunamadı.</p>
+                    </div>
+                  )}
+                </section>
+
+                <div className="mb-8 space-y-4">
+                  {selectedCategoryId && (
+                    <ActiveCategoryBadge
+                      label={deriveCategoryLabel(selectedCategoryId)}
+                      onClear={() => setSelectedCategoryId(undefined)}
+                    />
+                  )}
+
+                  {isNewsError ? (
+                    <ErrorState
+                      message="Haber akışı yüklenirken bir sorun oluştu."
+                      onRetry={() => {
+                        // Reload the page to reset the infinite query
+                        window.location.reload();
+                      }}
+                    />
+                  ) : isNewsLoading && apiNewsItems.length === 0 ? (
+                    <NewsGridSkeleton />
+                  ) : apiNewsItems.length > 0 ? (
+                    <>
+                      <DashboardNewsGrid
+                        items={apiNewsItems.map(transformNewsItem)}
+                        title={categoryInfo.title}
+                        subtitle={categoryInfo.subtitle}
+                        showAll={true}
+                      />
+                      {/* Load more trigger */}
+                      {hasNextPage && (
+                        <div ref={loadMoreTriggerRef} className="h-10 flex items-center justify-center">
+                          {isFetchingNextPage || isLoadingMore ? (
+                            <div className="text-white/60">Yükleniyor...</div>
+                          ) : null}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <EmptyState
+                      message="Bu kriterlere uygun haber bulunamadı."
+                      onReset={() => setSelectedCategoryId(undefined)}
+                    />
+                  )}
                 </div>
               </section>
             </div>
@@ -546,6 +716,305 @@ function FilterChip({ label, active }: FilterChipProps): JSX.Element {
       {label}
     </button>
   );
+}
+
+type CategorySummaryBarProps = {
+  readonly categories: readonly NewsCategorySummary[] | undefined;
+  readonly selectedCategoryId?: string;
+  readonly isLoading: boolean;
+  readonly error: Error | undefined;
+  readonly onRetry: () => Promise<unknown> | void;
+  readonly onSelect: (categoryId: string) => void;
+};
+
+function CategorySummaryBar({
+  categories,
+  selectedCategoryId,
+  isLoading,
+  error,
+  onRetry,
+  onSelect,
+}: CategorySummaryBarProps): JSX.Element {
+  if (isLoading) {
+    return <CategorySummarySkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+        <span>Kategoriler yüklenemedi.</span>
+        <button
+          type="button"
+          onClick={() => void onRetry()}
+          className="rounded-full border border-red-300/40 bg-red-400/30 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-400/40"
+        >
+          Yeniden dene
+        </button>
+      </div>
+    );
+  }
+
+  if (!categories || categories.length === 0) {
+    return <></>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {categories.slice(0, 8).map((category) => (
+        <CategoryChip
+          key={category.id}
+          category={category}
+          isActive={selectedCategoryId === category.id}
+          onSelect={onSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+type CategoryChipProps = {
+  readonly category: NewsCategorySummary;
+  readonly isActive: boolean;
+  readonly onSelect: (categoryId: string) => void;
+};
+
+function CategoryChip({ category, isActive, onSelect }: CategoryChipProps): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(category.id)}
+      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+        isActive
+          ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
+          : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
+      }`}
+    >
+      <span>{category.label}</span>
+      <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-semibold text-white/80">
+        {category.total}
+      </span>
+    </button>
+  );
+}
+
+function CategorySummarySkeleton(): JSX.Element {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="h-8 w-24 animate-pulse rounded-full bg-white/10" aria-hidden />
+      ))}
+    </div>
+  );
+}
+
+type ActiveCategoryBadgeProps = {
+  readonly label: string;
+  readonly onClear: () => void;
+};
+
+function ActiveCategoryBadge({ label, onClear }: ActiveCategoryBadgeProps): JSX.Element {
+  return (
+    <div className="inline-flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/80">
+      <span className="font-semibold text-white">{label}</span>
+      <button
+        type="button"
+        onClick={onClear}
+        className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/20 hover:text-white"
+      >
+        Temizle
+      </button>
+    </div>
+  );
+}
+
+type ErrorStateProps = {
+  readonly message: string;
+  readonly onRetry: () => Promise<unknown> | void;
+};
+
+function ErrorState({ message, onRetry }: ErrorStateProps): JSX.Element {
+  return (
+    <div className="rounded-3xl border border-red-400/30 bg-red-500/10 px-6 py-12 text-center text-red-100">
+      <p className="text-sm font-semibold">{message}</p>
+      <button
+        type="button"
+        onClick={() => void onRetry()}
+        className="mt-5 inline-flex items-center gap-2 rounded-full border border-red-300/30 bg-red-400/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400/30"
+      >
+        Yeniden dene
+      </button>
+    </div>
+  );
+}
+
+type EmptyStateProps = {
+  readonly message: string;
+  readonly onReset?: () => void;
+};
+
+function EmptyState({ message, onReset }: EmptyStateProps): JSX.Element {
+  return (
+    <div className="rounded-3xl border border-white/15 bg-white/5 px-6 py-16 text-center text-white/70">
+      <p className="text-sm font-semibold">{message}</p>
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+        >
+          Filtreyi temizle
+        </button>
+      )}
+    </div>
+  );
+}
+
+function NewsGridSkeleton(): JSX.Element {
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="h-72 animate-pulse rounded-[28px] border border-white/10 bg-white/5" aria-hidden />
+      ))}
+    </div>
+  );
+}
+
+const FALLBACK_IMAGE_URL =
+  'https://images.unsplash.com/photo-1521133573890-3b093187b0e7?auto=format&fit=crop&w=960&q=60';
+
+const CATEGORY_FILTERS: Record<string, (item: DashboardNewsItem) => boolean> = {
+  saved: (item) => item.isPopular ?? false,
+  audio: (item) => item.tags.some((tag) => tag.includes('ses')),
+  reports: (item) => (item.categoryId ?? '').includes('finans'),
+  briefs: (item) => (item.categoryId ?? '').includes('gundem'),
+  watch: (item) => (item.categoryId ?? '').includes('savunma'),
+};
+
+function applyLocalFilters(
+  items: readonly DashboardNewsItem[],
+  filterId: string,
+): DashboardNewsItem[] {
+  const predicate = CATEGORY_FILTERS[filterId];
+  if (!predicate) {
+    return [...items];
+  }
+
+  const filtered = items.filter(predicate);
+  return filtered.length > 0 ? filtered : [...items];
+}
+
+function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
+  const createdAt = item.createdAt ? new Date(item.createdAt) : new Date();
+  const summary = item.summary && item.summary.trim().length > 0
+    ? item.summary.trim()
+    : truncateText(item.content, 220);
+  const categoryLabel = deriveCategoryLabel(item.categoryId);
+  const readingTime = estimateReadingTime(item.content);
+
+  const orderedMedia = [...item.media].sort((a, b) => {
+    const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+    const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+    return orderA - orderB;
+  });
+
+  const images = orderedMedia.map((mediaItem) => ({
+    url: mediaItem.url,
+    alt: item.title,
+    caption: undefined,
+    credit: undefined,
+  }));
+
+  const primaryImage = item.primaryMedia?.url ?? images[0]?.url ?? FALLBACK_IMAGE_URL;
+  const tags = [categoryLabel.toLowerCase().replace(/\s+/g, '-')];
+
+  if (item.isPopular) {
+    tags.push('favori', 'trend');
+  }
+
+  return {
+    id: item.id,
+    category: categoryLabel,
+    categoryId: item.categoryId ?? null,
+    title: item.title,
+    summary,
+    detail: summary,
+    fullContent: item.content,
+    timestamp: formatRelativeTime(createdAt),
+    publishedAt: createdAt.toISOString(),
+    storyDate: item.publishedAt ?? item.createdAt ?? createdAt.toISOString(),
+    readingTime,
+    dateline: item.city ?? 'Türkiye',
+    tags,
+    imageUrl: primaryImage,
+    images,
+    sentiment: item.isPopular ? 'positive' : 'neutral',
+    impact: item.isPopular ? 'Yüksek' : 'Orta',
+    viewCount: undefined,
+    likeCount: undefined,
+    shareCount: undefined,
+    relatedIds: undefined,
+    storyId: undefined,
+    timelineOrder: undefined,
+    storyTitle: undefined,
+    author: undefined,
+    isPopular: item.isPopular,
+    city: item.city ?? null,
+    createdAt: item.createdAt,
+    subtitle: undefined,
+  };
+}
+
+function deriveCategoryLabel(categoryId: string | null | undefined): string {
+  if (!categoryId) {
+    return 'Gündem';
+  }
+
+  return categoryId
+    .replace(/[-_]+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1))
+    .join(' ');
+}
+
+function formatRelativeTime(date: Date): string {
+  const diffMs = date.getTime() - Date.now();
+  const rtf = new Intl.RelativeTimeFormat('tr', { numeric: 'auto' });
+  const diffMinutes = Math.round(diffMs / 60000);
+
+  if (Math.abs(diffMinutes) < 60) {
+    return rtf.format(diffMinutes, 'minute');
+  }
+
+  const diffHours = Math.round(diffMs / (60 * 60000));
+  if (Math.abs(diffHours) < 24) {
+    return rtf.format(diffHours, 'hour');
+  }
+
+  const diffDays = Math.round(diffMs / (24 * 60 * 60000));
+  return rtf.format(diffDays, 'day');
+}
+
+function estimateReadingTime(content: string): string {
+  const words = content.trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 220));
+  return `${minutes} dk okuma`;
+}
+
+function truncateText(value: string, maxLength: number): string {
+  if (!value) {
+    return '';
+  }
+
+  if (value.length <= maxLength) {
+    return value.trim();
+  }
+
+  const shortened = value.slice(0, maxLength);
+  const lastSpace = shortened.lastIndexOf(' ');
+  const base = lastSpace > 0 ? shortened.slice(0, lastSpace) : shortened;
+  return `${base.trim()}...`;
 }
 
 function ExpandIcon(): JSX.Element {
