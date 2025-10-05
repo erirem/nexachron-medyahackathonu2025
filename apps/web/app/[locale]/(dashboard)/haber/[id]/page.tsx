@@ -10,7 +10,7 @@ import { fetchNewsById, fetchNewsList } from '@/services/api';
 import './_components/scrollbar.css';
 
 export default async function NewsPage({ params }: { params: Promise<{ id: string; locale: string }> }): Promise<JSX.Element> {
-  const { id } = await params;
+  const { id, locale } = await params;
   
   try {
     // Fetch the specific news article by ID
@@ -53,7 +53,7 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
     const recentNews = recentNewsData.items
       .map(transformNewsDataToDashboardItem);
 
-    const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://nexachron.com'}/haber/${article.id}`;
+    const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://nexachron.com'}/${locale}/haber/${article.id}`;
     
     return (
       <>

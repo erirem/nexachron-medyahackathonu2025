@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo, type JSX } from "react";
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
 import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
@@ -230,10 +231,18 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     }
   }, [activeCategory, selectedCategoryIds, categories]);
 
+  const locale = useLocale();
+
   const handleCategoryChange = useCallback(
     (categoryId: string) => {
-      if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'quizzes') {
-        router.push(`/${categoryId}`);
+      if (
+        categoryId === 'profile' ||
+        categoryId === 'leaderboard' ||
+        categoryId === 'quizzes' ||
+        categoryId === 'games'
+      ) {
+        const destination = categoryId === 'quizzes' ? 'quizzes' : categoryId;
+        router.push(`/${locale}/${destination}`);
         return;
       }
 
@@ -242,7 +251,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         setSelectedCategoryIds([]);
       }
     },
-    [router],
+    [router, locale],
   );
 
   const handleCategoryChipSelect = useCallback((categoryId: string) => {

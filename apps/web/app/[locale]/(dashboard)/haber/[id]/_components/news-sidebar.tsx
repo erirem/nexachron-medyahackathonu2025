@@ -3,6 +3,7 @@
 import { type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from '../../../dashboard/_components/types';
 
 interface NewsSidebarProps {
@@ -16,6 +17,7 @@ export function NewsSidebar({
   recentNews, 
   currentArticleId 
 }: NewsSidebarProps): JSX.Element {
+  const locale = useLocale();
   const filteredPopular = popularNews.filter(item => item.id !== currentArticleId).slice(0, 5);
   const filteredRecent = recentNews.filter(item => item.id !== currentArticleId).slice(0, 4);
 
@@ -35,10 +37,10 @@ export function NewsSidebar({
           </div>
           
           <div className="space-y-4">
-            {filteredPopular.map((item, index) => (
+            {filteredPopular.map((item) => (
               <Link 
                 key={item.id} 
-                href={`/haber/${item.id}`}
+                href={`/${locale}/haber/${item.id}`}
                 className="group block"
               >
                 <article className="flex gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-transparent hover:border-white/20">
@@ -69,7 +71,7 @@ export function NewsSidebar({
           </div>
           
           <Link 
-            href="/dashboard" 
+            href={`/${locale}/dashboard`} 
             className="block mt-4 text-center py-2 px-4 rounded-lg bg-white/10 text-white/70 text-sm font-medium hover:bg-white/20 hover:text-white transition-colors"
           >
             Tüm Popüler Haberleri Gör
@@ -92,7 +94,7 @@ export function NewsSidebar({
             {filteredRecent.map((item) => (
               <Link 
                 key={item.id} 
-                href={`/haber/${item.id}`}
+                href={`/${locale}/haber/${item.id}`}
                 className="group block"
               >
                 <article className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-transparent hover:border-white/20">

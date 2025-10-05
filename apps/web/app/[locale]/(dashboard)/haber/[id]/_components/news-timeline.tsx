@@ -3,6 +3,7 @@
 import { useState, type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from '../../../dashboard/_components/types';
 
 interface NewsTimelineProps {
@@ -28,6 +29,7 @@ function parseArticleDate(article: DashboardNewsItem): Date | null {
 
 export function NewsTimeline({ currentArticle, allNews }: NewsTimelineProps): JSX.Element | null {
   const [isExpanded, setIsExpanded] = useState(true);
+  const locale = useLocale();
 
   // If no storyId, this article doesn't belong to a timeline
   if (!currentArticle.storyId) {
@@ -225,7 +227,7 @@ export function NewsTimeline({ currentArticle, allNews }: NewsTimelineProps): JS
                     {/* Content */}
                     <div className="flex-1 pb-8">
                       <Link 
-                        href={`/haber/${article.id}`}
+                        href={`/${locale}/haber/${article.id}`}
                         className={`
                           group/timeline block p-6 rounded-2xl border backdrop-blur-sm
                           transition-all duration-300 transform hover:scale-[1.02]

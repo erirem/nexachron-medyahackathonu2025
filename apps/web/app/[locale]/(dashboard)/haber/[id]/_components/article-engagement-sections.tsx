@@ -3,6 +3,7 @@
 import { type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from '../../../dashboard/_components/types';
 
 interface ArticleEngagementSectionsProps {
@@ -14,6 +15,7 @@ export function ArticleEngagementSections({
   currentArticle, 
   allNews 
 }: ArticleEngagementSectionsProps): JSX.Element {
+  const locale = useLocale();
   const editorialScore = (item: DashboardNewsItem): number => {
     const impactWeight = item.impact === 'Yüksek' ? 3 : item.impact === 'Orta' ? 2 : 1;
     const sentimentBonus = item.sentiment === 'positive' ? 0.2 : item.sentiment === 'neutral' ? 0.1 : 0;
@@ -59,7 +61,7 @@ export function ArticleEngagementSections({
   const renderNewsCard = (item: DashboardNewsItem) => (
     <Link 
       key={item.id}
-      href={`/haber/${item.id}`}
+      href={`/${locale}/haber/${item.id}`}
       className="group block"
     >
       <article className="bg-slate-800/30 hover:bg-slate-700/40 transition-all duration-300 border border-slate-600/30 hover:border-slate-500/50 backdrop-blur-sm rounded-xl overflow-hidden h-full">

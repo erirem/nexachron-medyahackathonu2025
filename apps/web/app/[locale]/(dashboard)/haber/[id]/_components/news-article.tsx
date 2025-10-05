@@ -3,6 +3,7 @@
 import { useState, useCallback, type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from '../../../dashboard/_components/types';
 import { ArticleEngagementSections } from './article-engagement-sections';
 import { NewsTimeline } from './news-timeline';
@@ -16,6 +17,7 @@ interface NewsArticleProps {
 }
 
 export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArticleProps): JSX.Element {
+  const locale = useLocale();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -46,13 +48,13 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
     <article className="max-w-4xl mx-auto">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-white/60 mb-8">
-        <Link href="/dashboard" className="hover:text-white/80 transition-colors">
+        <Link href={`/${locale}/dashboard`} className="hover:text-white/80 transition-colors">
           Ana Sayfa
         </Link>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="9 18 15 12 9 6" />
         </svg>
-        <Link href="/dashboard" className="hover:text-white/80 transition-colors">
+        <Link href={`/${locale}/dashboard`} className="hover:text-white/80 transition-colors">
           Haberler
         </Link>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -348,7 +350,7 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
             {relatedNews.slice(0, 4).map((news) => (
               <Link 
                 key={news.id} 
-                href={`/haber/${news.id}`}
+                href={`/${locale}/haber/${news.id}`}
                 className="group"
               >
                 <article className="flex gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-white/20">
@@ -392,7 +394,7 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
       {/* Bottom Navigation */}
       <div className="mt-20 mb-8 flex items-center justify-between">
         <Link 
-          href="/dashboard"
+          href={`/${locale}/dashboard`}
           className="group flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white font-medium transition-all"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:-translate-x-1">
