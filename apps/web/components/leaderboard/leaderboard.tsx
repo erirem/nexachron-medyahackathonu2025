@@ -13,6 +13,7 @@ const MOCK_LEADERBOARD: LeaderboardEntry[] = [
     name: 'Ahmet Yılmaz',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
     rank: 'ACTIVE_READER' as UserRank,
+
     league: 'SILVER' as League,
     xp: 1250,
     position: 5,
@@ -96,7 +97,7 @@ export function Leaderboard() {
               </button>
             </div>
           </div>
-          
+
           {/* Period Selector */}
           <div className="flex gap-3">
             {(['weekly', 'monthly', 'all-time'] as Period[]).map((p) => (

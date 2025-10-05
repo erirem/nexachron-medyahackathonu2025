@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import type { PostgrestError, User } from '@supabase/supabase-js';
 
-import type { Database } from '../supabase/database.types';
+import type { Database } from '@nexachron/shared-types';
 import { SupabaseService } from '../supabase/supabase.service';
 
 type UserRow = Database['public']['Tables']['users']['Row'];
 type UserStatsRow = Database['public']['Tables']['user_stats']['Row'];
 
-interface ProfileWithStats {
+export interface ProfileWithStats {
   user: {
     id: string;
     email: string | null;

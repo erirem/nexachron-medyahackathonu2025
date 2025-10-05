@@ -3,6 +3,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseService } from '../supabase/supabase.service';
 import { RssParserService } from './services/rss-parser.service';
 import { ContentProcessorService } from './services/content-processor.service';
+import { AiSummaryService } from './services/ai-summary.service';
+import { MediaStorageService } from './services/media-storage.service';
 import { ProcessedNewsItem, AACategory } from './dto/news-item.dto';
 
 @Injectable()
@@ -14,6 +16,8 @@ export class NewsIngestService {
     private readonly supabaseService: SupabaseService,
     private readonly rssParserService: RssParserService,
     private readonly contentProcessorService: ContentProcessorService,
+    private readonly aiSummaryService: AiSummaryService,
+    private readonly mediaStorageService: MediaStorageService,
   ) {}
 
   /**
@@ -101,6 +105,9 @@ export class NewsIngestService {
         }
       }
 
+      // AI özetleme (sadece önemli haberlerde, bütçe dostu)
+      await this.enhanceWithAiSummaries(processedItems);
+
       // Kaydet
       await this.saveToDatabase(processedItems);
 
@@ -143,28 +150,47 @@ export class NewsIngestService {
           continue;
         }
 
-        // Save to your Supabase news table using service role (bypasses RLS)
-        const { error } = await this.supabaseService.adminSupabase
-          .from('news')
-          .insert({
-            source: item.source,
-            title: item.title,
-            content: item.content,
-            summary: item.summary,
-            image_url: item.image_url,
-            tts_url: null, // Future feature
-            category: item.category, // Store AA category directly
-            mode: item.mode, // Default mode, will be updated based on user feedback
-            city: item.city,
-            geo: null, // Future: add GPS coordinates
-            is_popular: false,
-            // created_at and updated_at will be auto-set by your triggers
-          });
+            // Save to your Supabase news table using service role (bypasses RLS)
+            const { data: insertedNews, error } = await this.supabaseService.adminSupabase
+              .from('news')
+              .insert({
+                source: item.source,
+                title: item.title,
+                content: item.content,
+                description: item.description, // Original RSS description
+                summary: item.summary, // AI summary or fallback to description
+                summary_type: item.summary_type, // Track if summary is original or AI-generated
+                image_url: item.image_url,
+                video_url: item.video_url, // Extracted video URL
+                tts_url: null, // Future feature
+                category: item.category, // Store AA category directly
+                mode: item.mode, // Default mode, will be updated based user feedback
+                city: item.city,
+                original_url: item.original_url, // Store original RSS link
+                geo: null, // Future: add GPS coordinates
+                is_popular: false,
+                // created_at and updated_at will be auto-set by your triggers
+              })
+              .select('id')
+              .single();
 
         if (error) {
           this.logger.error(`Failed to save news item: ${item.title}`, error);
           errors++;
         } else {
+          // Store media gallery if available
+          if (insertedNews && item.media_gallery) {
+            const mediaStored = await this.mediaStorageService.storeNewsMedia(
+              insertedNews.id,
+              item.media_gallery
+            );
+            
+            if (!mediaStored) {
+              this.logger.warn(`Failed to store media for news: ${item.title}`);
+            } else {
+              this.logger.debug(`Stored media gallery for: ${item.title} (${item.media_gallery.images.length} images, ${item.media_gallery.videos.length} videos)`);
+            }
+          }
           saved++;
           this.logger.debug(`Saved news item: ${item.title}`);
         }
@@ -239,6 +265,98 @@ export class NewsIngestService {
         lastIngestion: null,
         categoryCounts: {},
       };
+    }
+  }
+
+  /**
+   * Budget-conscious AI enhancement of news summaries
+   * Only summarizes articles where it would add significant value
+   */
+  private async enhanceWithAiSummaries(
+    items: ProcessedNewsItem[],
+  ): Promise<void> {
+    if (!this.aiSummaryService.isAvailable()) {
+      this.logger.debug(
+        'AI summarization not available, using original descriptions',
+      );
+      return;
+    }
+
+    this.logger.log(`Evaluating ${items.length} articles for AI enhancement`);
+
+    try {
+      // Prepare requests for articles worth summarizing
+      const summaryRequests = items.map((item) => ({
+        title: item.title,
+        content: item.content,
+        description: item.description,
+        category: item.category,
+      }));
+
+      // Generate summaries with budget controls
+      const summaries = await this.aiSummaryService.generateBatchSummaries(
+        summaryRequests,
+        15, // Max 15 AI summaries per batch to control costs
+      );
+
+      // Apply AI summaries to items
+      for (let i = 0; i < items.length && i < summaries.length; i++) {
+        const summaryResponse = summaries[i];
+        items[i].summary = summaryResponse.summary;
+        items[i].summary_type = summaryResponse.summary_type;
+      }
+
+      const usageStats = this.aiSummaryService.getUsageStats();
+      this.logger.log(
+        `AI enhancement completed. Daily usage: ${usageStats.totalRequests}/${usageStats.dailyLimit}`,
+      );
+    } catch (error) {
+      this.logger.error('Failed to enhance articles with AI summaries:', error);
+      // Continue without AI summaries - articles keep original descriptions
+    }
+  }
+
+  /**
+   * Get AI usage statistics for monitoring budget
+   */
+  getAiUsageStats() {
+    return this.aiSummaryService.getUsageStats();
+  }
+
+  /**
+   * Process a single URL for testing and debugging
+   */
+  async processSingleUrl(url: string): Promise<ProcessedNewsItem> {
+    this.logger.log(`Processing single URL: ${url}`);
+
+    try {
+      // Create a fake raw news item from the URL
+      const fakeRawItem = {
+        title: 'Single URL Test', // Will be extracted from content
+        link: url,
+        description: 'Single URL processing test',
+        pubDate: new Date().toISOString(),
+        category: ['guncel'], // Default category for testing
+        guid: url,
+        enclosure: undefined,
+      };
+
+      // Process using the content processor
+      const processedItem = await this.contentProcessorService.processNewsItem(
+        fakeRawItem,
+        'guncel' as any, // Default category for testing
+      );
+
+      if (!processedItem) {
+        throw new Error('Failed to process the URL');
+      }
+
+      this.logger.log(`Successfully processed single URL: ${processedItem.title}`);
+      
+      return processedItem;
+    } catch (error) {
+      this.logger.error(`Failed to process single URL: ${url}`, error);
+      throw error;
     }
   }
 }

@@ -6,6 +6,8 @@ import { NewsIngestController } from './news-ingest.controller';
 import { RssParserService } from './services/rss-parser.service';
 import { ContentProcessorService } from './services/content-processor.service';
 import { MoodCalculatorService } from './services/mood-calculator.service';
+import { AiSummaryService } from './services/ai-summary.service';
+import { MediaStorageService } from './services/media-storage.service';
 import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
@@ -16,7 +18,9 @@ import { SupabaseModule } from '../supabase/supabase.module';
     RssParserService,
     ContentProcessorService,
     MoodCalculatorService,
+    AiSummaryService,
+    MediaStorageService,
   ],
-  exports: [NewsIngestService, MoodCalculatorService],
+  exports: [NewsIngestService, MoodCalculatorService, AiSummaryService, MediaStorageService],
 })
 export class NewsIngestModule {}
