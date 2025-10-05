@@ -99,12 +99,12 @@ const categoryThemes: Record<string, { surface: string; icon: string; brief: str
     border: 'border-[#8b5cf6]/30'
   },
   politika: {
-    surface: 'bg-gradient-to-b from-[#4c1d3d] via-[#3a152f] to-[#280e20]',
-    icon: 'bg-[#ec4899]',
-    brief: 'bg-[#ec4899]/20 text-[#f5b8d8]',
-    imageTint: 'bg-[#ec4899]/16',
-    accent: 'from-[#ec4899] to-[#db2777]',
-    border: 'border-[#ec4899]/30'
+    surface: 'bg-gradient-to-b from-[#6d3f58] via-[#553146] to-[#3d2434]',
+    icon: 'bg-[#f0a3c3]',
+    brief: 'bg-[#f0a3c3]/18 text-[#fbe1ed]',
+    imageTint: 'bg-[#f0a3c3]/14',
+    accent: 'from-[#f3b4ce] to-[#d78ea7]',
+    border: 'border-[#f0a3c3]/25'
   },
   turizm: {
     surface: 'bg-gradient-to-b from-[#0f4c3a] via-[#0c3a2d] to-[#082820]',
@@ -123,12 +123,12 @@ const categoryThemes: Record<string, { surface: string; icon: string; brief: str
     border: 'border-[#84cc16]/30'
   },
   kultur: {
-    surface: 'bg-gradient-to-b from-[#7c2d12] via-[#5e230e] to-[#40180a]',
-    icon: 'bg-[#f97316]',
-    brief: 'bg-[#f97316]/20 text-[#fed7aa]',
-    imageTint: 'bg-[#f97316]/16',
-    accent: 'from-[#f97316] to-[#ea580c]',
-    border: 'border-[#f97316]/30'
+    surface: 'bg-gradient-to-b from-[#744024] via-[#5a301b] to-[#3f2213]',
+    icon: 'bg-[#f2b48a]',
+    brief: 'bg-[#f2b48a]/18 text-[#fde5d3]',
+    imageTint: 'bg-[#f2b48a]/14',
+    accent: 'from-[#f4c29d] to-[#d9986e]',
+    border: 'border-[#f2b48a]/25'
   },
   sanat: {
     surface: 'bg-gradient-to-b from-[#581c87] via-[#431a5e] to-[#2d1b3d]',
@@ -155,20 +155,20 @@ const categoryThemes: Record<string, { surface: string; icon: string; brief: str
     border: 'border-[#06b6d4]/30'
   },
   yasam: {
-    surface: 'bg-gradient-to-b from-[#be185d] via-[#9d174d] to-[#7c2d3d]',
-    icon: 'bg-[#f43f5e]',
-    brief: 'bg-[#f43f5e]/20 text-[#fecaca]',
-    imageTint: 'bg-[#f43f5e]/16',
-    accent: 'from-[#f43f5e] to-[#e11d48]',
-    border: 'border-[#f43f5e]/30'
+    surface: 'bg-gradient-to-b from-[#86506a] via-[#6a3f54] to-[#4c2d3c]',
+    icon: 'bg-[#f2a9c8]',
+    brief: 'bg-[#f2a9c8]/18 text-[#fde3ee]',
+    imageTint: 'bg-[#f2a9c8]/14',
+    accent: 'from-[#f4b7d2] to-[#d790ab]',
+    border: 'border-[#f2a9c8]/25'
   },
   magazin: {
-    surface: 'bg-gradient-to-b from-[#be123c] via-[#9f1239] to-[#7f1d1d]',
-    icon: 'bg-[#ef4444]',
-    brief: 'bg-[#ef4444]/20 text-[#fecaca]',
-    imageTint: 'bg-[#ef4444]/16',
-    accent: 'from-[#ef4444] to-[#dc2626]',
-    border: 'border-[#ef4444]/30'
+    surface: 'bg-gradient-to-b from-[#8a4242] via-[#6a3232] to-[#4a2323]',
+    icon: 'bg-[#f2a6a6]',
+    brief: 'bg-[#f2a6a6]/18 text-[#fde3e3]',
+    imageTint: 'bg-[#f2a6a6]/14',
+    accent: 'from-[#f3b5b5] to-[#d98c8c]',
+    border: 'border-[#f2a6a6]/25'
   },
   default: {
     surface: 'bg-gradient-to-b from-[#232a3b] via-[#1b2130] to-[#111826]',
@@ -187,6 +187,12 @@ function normalizeCategory(value: string): string {
     .replace(/\p{Diacritic}/gu, '')
     .replace(/[^a-z]/g, '');
 }
+
+const sentimentDescriptions = {
+  positive: 'Okur hissi • Olumlu',
+  neutral: 'Okur hissi • Dengeli',
+  negative: 'Okur hissi • Olumsuz'
+} as const;
 
 const overlaySnippets = [
   'Günün özetine göz at',
@@ -215,6 +221,148 @@ function getTagline(item: DashboardNewsItem): string {
   return item.tags?.[0] ?? item.category;
 }
 
+const insightIconMap = {
+  impact: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M13 2L3 14h7l-1 8 11-12h-7z" />
+    </svg>
+  ),
+  sentiment: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+    </svg>
+  ),
+  views: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  shares: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
+    </svg>
+  ),
+  likes: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  ),
+  readingTime: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  ),
+  category: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </svg>
+  ),
+  tag: () => (
+    <svg className="h-4 w-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+      <circle cx="7.5" cy="7.5" r="1.5" />
+    </svg>
+  )
+} satisfies Record<string, () => JSX.Element>;
+
+type InsightItem = {
+  readonly key: keyof typeof insightIconMap;
+  readonly label: string;
+  readonly value: string;
+  readonly icon: () => JSX.Element;
+};
+
+function formatCompactNumber(value?: number): string {
+  if (value === undefined || value === null) {
+    return 'Yeni';
+  }
+
+  return new Intl.NumberFormat('tr-TR', {
+    notation: 'compact',
+    maximumFractionDigits: 1
+  }).format(value);
+}
+
+function buildInsightItems(item: DashboardNewsItem, tagline: string): readonly InsightItem[] {
+  const items: InsightItem[] = [
+    {
+      key: 'impact',
+      label: 'Yayın etkisi',
+      value: item.impact,
+      icon: insightIconMap.impact
+    },
+    {
+      key: 'sentiment',
+      label: 'Okur hissi',
+      value: sentimentDescriptions[item.sentiment],
+      icon: insightIconMap.sentiment
+    }
+  ];
+
+  if (item.viewCount !== undefined) {
+    items.push({
+      key: 'views',
+      label: 'Okunma',
+      value: formatCompactNumber(item.viewCount),
+      icon: insightIconMap.views
+    });
+  }
+
+  if (item.shareCount !== undefined) {
+    items.push({
+      key: 'shares',
+      label: 'Paylaşım',
+      value: formatCompactNumber(item.shareCount),
+      icon: insightIconMap.shares
+    });
+  }
+
+  if (item.likeCount !== undefined) {
+    items.push({
+      key: 'likes',
+      label: 'Beğeni',
+      value: formatCompactNumber(item.likeCount),
+      icon: insightIconMap.likes
+    });
+  }
+
+  const fallbackCandidates: InsightItem[] = [
+    {
+      key: 'readingTime',
+      label: 'Okuma süresi',
+      value: item.readingTime,
+      icon: insightIconMap.readingTime
+    },
+    {
+      key: 'category',
+      label: 'Kategori',
+      value: item.category,
+      icon: insightIconMap.category
+    },
+    {
+      key: 'tag',
+      label: 'Odak etiketi',
+      value: tagline,
+      icon: insightIconMap.tag
+    }
+  ];
+
+  for (const candidate of fallbackCandidates) {
+    if (!items.some((insight) => insight.key === candidate.key) && items.length < 4) {
+      items.push(candidate);
+    }
+  }
+
+  return items.slice(0, 4);
+}
+
 const sentimentColors = {
   positive: 'bg-[#22a45b]',
   neutral: 'bg-[#3a7bd5]',
@@ -228,6 +376,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
   const overlayCopy = getOverlayCopy(Number(item.id.replace(/\D/g, '') || 0));
   const briefLabel = getBriefLabel(item);
   const tagline = getTagline(item);
+  const insightItems = buildInsightItems(item, tagline);
 
   return (
     <Link href={`/haber/${item.id}`} className="block h-full">
@@ -285,12 +434,37 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
           </div>
         </div>
 
-        <section className="flex flex-1 flex-col justify-between gap-3 text-sm leading-relaxed text-white/75">
+        <section className="flex flex-1 flex-col gap-3 text-sm leading-relaxed text-white/75">
           <p className="line-clamp-3 transition-opacity duration-300 group-hover:opacity-0">{item.summary}</p>
-          <footer className="flex flex-wrap items-center gap-2 text-[0.7rem] uppercase tracking-[0.24em] text-white/60">
-            <span>{item.timestamp}</span>
+          {item.detail && (
+            <p className="text-white/65 line-clamp-2 text-[0.9rem] transition-opacity duration-300 group-hover:opacity-0">
+              {item.detail}
+            </p>
+          )}
+          <div className="grid grid-cols-1 gap-2 text-[0.7rem] transition-opacity duration-300 group-hover:opacity-0 sm:grid-cols-2">
+            {insightItems.slice(0, 2).map((insight) => (
+              <div
+                key={`preview-${insight.key}`}
+                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-white/70 shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/8 text-white/80">
+                  {insight.icon()}
+                </span>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[0.55rem] uppercase tracking-[0.18em] text-white/55">
+                    {insight.label}
+                  </span>
+                  <span className="text-xs font-semibold text-white">
+                    {insight.value}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <footer className="mt-auto flex flex-wrap items-center gap-2 text-[0.7rem] uppercase tracking-[0.24em] text-white/60 transition-opacity duration-300 group-hover:opacity-0">
+            <span>{overlayCopy}</span>
             <span className="h-0.5 w-0.5 rounded-full bg-white/35" aria-hidden />
-            <span>{item.impact}</span>
+            <span>{`Etkisi • ${item.impact}`}</span>
           </footer>
         </section>
       </div>
@@ -361,7 +535,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         
         {/* Bottom Actions - Enhanced */}
         <div className="mt-auto pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button onClick={(e) => e.stopPropagation()} className={`group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${theme.accent}/20 border ${theme.border} px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:scale-105`}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -387,34 +561,43 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
               </button>
             </div>
             
-            {/* Quick Stats */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-xs text-white/50">
+            <div className="flex items-center gap-3 text-xs text-white/55">
+              <span className="flex items-center gap-1.5">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M3 3h5l2 5h9" />
+                  <path d="M7 13h8l3-5" />
+                  <circle cx="7" cy="21" r="2" />
+                  <circle cx="17" cy="21" r="2" />
                 </svg>
-                <span>2.3k</span>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-white/50">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
-                </svg>
-                <span>89%</span>
-              </div>
+                Canlı akışta takip et
+              </span>
             </div>
           </div>
           
-          {/* Meta Info */}
-          <div className="flex items-center justify-between text-xs text-white/50">
-            <div className="flex items-center gap-2">
-              <span>{item.category}</span>
-              <span>•</span>
-              <span>{item.timestamp}</span>
-              <span>•</span>
-              <span>{item.readingTime}</span>
-            </div>
-            <span className="text-white/70 font-medium">{item.dateline}</span>
+          {/* Insight Badges */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-3">
+            {[{
+              label: 'Yayın Tarihi',
+              value: item.timestamp
+            }, {
+              label: 'Okuma Süresi',
+              value: item.readingTime
+            }, {
+              label: 'Odak Başlığı',
+              value: tagline
+            }].map((meta) => (
+              <div
+                key={meta.label}
+                className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70"
+              >
+                <span className="text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-white/55">
+                  {meta.label}
+                </span>
+                <p className="mt-1 text-sm font-medium text-white/90">
+                  {meta.value}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

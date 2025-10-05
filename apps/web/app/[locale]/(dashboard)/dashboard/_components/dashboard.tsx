@@ -89,7 +89,6 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const previousScrollHeightRef = useRef<number>(0);
   const MIN_WIDTH = 80;
   const MAX_WIDTH = 450;
   const COLLAPSED_THRESHOLD = 160;
@@ -116,23 +115,6 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
 
   // Preserve scroll position when new items are loaded
   useEffect(() => {
-    if (scrollContainerRef.current && previousScrollHeightRef.current > 0) {
-      const currentScrollHeight = scrollContainerRef.current.scrollHeight;
-      const scrollDifference = currentScrollHeight - previousScrollHeightRef.current;
-
-      if (scrollDifference > 0) {
-        // Maintain scroll position relative to the content
-        scrollContainerRef.current.scrollTop += scrollDifference;
-      }
-    }
-
-    // Update previous scroll height
-    if (scrollContainerRef.current) {
-      previousScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
-    }
-  }, [apiNewsItems.length]); // Trigger when new items are added
-
-  useEffect(() => {
     if (!hasNextPage || isFetchingNextPage || isLoadingMore) return;
 
     const observer = new IntersectionObserver(
@@ -140,11 +122,6 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         if (entries[0].isIntersecting && hasNextPage && !isNextPageLoadingRef.current) {
           isNextPageLoadingRef.current = true;
           setIsLoadingMore(true);
-
-          // Save current scroll position before loading
-          if (scrollContainerRef.current) {
-            previousScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
-          }
 
           loadMore().finally(() => {
             setIsLoadingMore(false);
@@ -413,19 +390,16 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                         subtitle={categoryInfo.subtitle}
                         showAll={true}
                       />
+                      {(isFetchingNextPage || isLoadingMore) && (
+                        <NewsLoadingPlaceholders />
+                      )}
                       {/* Load more trigger */}
                       {hasNextPage && (
                         <div 
                           ref={loadMoreTriggerRef} 
                           className="h-20 flex items-center justify-center"
                         >
-                          {(isFetchingNextPage || isLoadingMore) ? (
-                            <div className="flex flex-col items-center">
-                              <div className="h-2 w-2 bg-white/60 rounded-full mb-1 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="h-2 w-2 bg-white/60 rounded-full mb-1 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="h-2 w-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                            </div>
-                          ) : (
+                          {!(isFetchingNextPage || isLoadingMore) && (
                             <div className="text-white/40 text-sm">Daha fazla haber için kaydırın</div>
                           )}
                         </div>
@@ -1022,6 +996,25 @@ function NewsGridSkeleton(): JSX.Element {
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 6 }).map((_, index) => (
         <div key={index} className="h-72 animate-pulse rounded-[28px] border border-white/10 bg-white/5" aria-hidden />
+      ))}
+    </div>
+  );
+}
+
+function NewsLoadingPlaceholders({ count = 4 }: { readonly count?: number }): JSX.Element {
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-live="polite">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={`loading-card-${index}`}
+          className="relative h-72 overflow-hidden rounded-[28px] border border-white/10 bg-white/5"
+        >
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
+          <div className="absolute inset-x-6 top-6 h-5 rounded-full bg-white/10" />
+          <div className="absolute inset-x-6 top-16 h-40 rounded-[22px] bg-white/10" />
+          <div className="absolute inset-x-6 bottom-16 h-12 rounded-2xl bg-white/10" />
+          <div className="absolute inset-x-6 bottom-6 h-4 rounded-full bg-white/10" />
+        </div>
       ))}
     </div>
   );

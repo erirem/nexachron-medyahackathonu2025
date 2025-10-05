@@ -30,6 +30,22 @@ function getCategoryLabel(category: string): string {
   return categoryLabels[category] || `GÜNDEMDE • ${category.toUpperCase()}`;
 }
 
+function needsWideLayout(item: DashboardNewsItem): boolean {
+  const titleLength = item.title.length;
+  const summaryLength = item.summary.trim().length;
+  const detailLength = item.detail.trim().length;
+  const tagCount = item.tags.length;
+
+  // Broaden layout for dense content so button group keeps a single row.
+  return (
+    titleLength > 110 ||
+    summaryLength > 220 ||
+    detailLength > 220 ||
+    summaryLength + detailLength > 420 ||
+    tagCount > 4
+  );
+}
+
 export function DashboardNewsGrid({
   items,
   title = 'Öne çıkan haberler',
@@ -78,10 +94,16 @@ export function DashboardNewsGrid({
         {/* Mixed Grid Layout */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {/* Sponsored/Large Cards - Span 2 columns */}
-          {sponsoredItems.slice(0, 2).map((item, index) => (
-            <div key={item.id} className={`group relative ${
-              index === 0 ? 'md:col-span-2 lg:col-span-2' : ''
-            }`}>
+          {sponsoredItems.slice(0, 2).map((item, index) => {
+            const spanWide = needsWideLayout(item) || index === 0;
+
+            return (
+              <div
+                key={`${item.id}-${index}`}
+                className={`group relative h-full ${
+                  spanWide ? 'md:col-span-2 lg:col-span-2 xl:col-span-2' : ''
+                }`}
+              >
               <div className="absolute -top-3 left-4 z-10">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/30 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm whitespace-nowrap">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -91,15 +113,23 @@ export function DashboardNewsGrid({
                 </span>
               </div>
               <DashboardNewsCard item={item} />
-            </div>
-          ))}
+              </div>
+            );
+          })}
           
           {/* Regular Cards */}
-          {standardItems.map((item) => (
-            <div key={item.id} className="group">
-              <DashboardNewsCard item={item} />
-            </div>
-          ))}
+          {standardItems.map((item, index) => {
+            const spanWide = needsWideLayout(item);
+
+            return (
+              <div
+                key={`${item.id}-${index}`}
+                className={`group h-full ${spanWide ? 'md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+              >
+                <DashboardNewsCard item={item} />
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
