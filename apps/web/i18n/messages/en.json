@@ -4,6 +4,40 @@
       "label": "Language"
     }
   },
+  "newsGuessr": {
+    "title": "NewsGuessr",
+    "score": "Score: {score}/{total}",
+    "progress": "Question {current} of {total}",
+    "actions": {
+      "back": "Back",
+      "next": "Next",
+      "finish": "Finish"
+    },
+    "correct": "Correct!",
+    "wrong": "Wrong",
+    "results": {
+      "title": "Results",
+      "correct": "Correct",
+      "wrong": "Wrong"
+    },
+    "youWin": "You win!",
+    "youLose": "You lose",
+    "draw": "Draw",
+    "yourGuess": "Your Guess",
+    "opponentGuess": "Opponent's Guess",
+    "noGuesses": "No guesses yet.",
+    "selectMode": {
+      "title": "Select Mode",
+      "subtitle": "Choose how you want to play",
+      "single": "Single Player",
+      "multi": "Multiplayer"
+    }
+  },
+  "results": {
+    "title": "Results",
+    "correct": "Correct",
+    "wrong": "Wrong"
+  },
   "login": {
     "hero": {
       "badge": "Anadolu Agency",
@@ -416,6 +450,11 @@
         "title": "Wordle",
         "description": "Guess the five-letter word in six tries—new challenge every day.",
         "estimatedTime": "3-8 min"
+      },
+      "newsGuessr": {
+        "title": "NewsGuessr",
+        "description": "Read a headline and guess which city it happened in.",
+        "estimatedTime": "3-6 min"
       }
     },
     "card": {

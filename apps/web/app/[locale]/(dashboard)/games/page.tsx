@@ -63,6 +63,18 @@ const baseGames: readonly BaseGame[] = [
     completionRate: 0,
   },
   {
+    id: 'news-guessr',
+    translationKey: 'newsGuessr',
+    icon: '🗺️',
+    color: 'cyan',
+    category: 'trivia',
+    difficulty: 'medium',
+    xpReward: 30,
+    isAvailable: true,
+    isCompleted: false,
+    completionRate: 0,
+  },
+  {
     id: 'timeline-game',
     translationKey: 'timelineGame',
     icon: '📅',

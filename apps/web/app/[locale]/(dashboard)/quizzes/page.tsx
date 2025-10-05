@@ -79,6 +79,87 @@ const mockQuizzes: Quiz[] = [
         explanation: "Galatasaray 2000 yılında UEFA Kupası'nı kazandı."
       }
     ]
+  },
+  {
+    id: '4',
+    title: "Teknoloji Quiz'i",
+    description: 'Yazılım, donanım ve güncel teknoloji trendleri hakkında sorular',
+    category: 'technology',
+    difficulty: 'medium',
+    questionCount: 2,
+    timeLimit: 600,
+    xpReward: 100,
+    isCompleted: false,
+    questions: [
+      {
+        id: '1',
+        question: 'Hangi şirket 2023 yılında ARM tabanlı dizüstü çiplerinde pazar payını artırdı?',
+        options: ['Intel', 'AMD', 'Apple', 'Qualcomm'],
+        correctAnswer: 2,
+        explanation: 'Apple M-serisi çiplerle ARM tabanlı dizüstü segmentinde payını artırdı.'
+      },
+      {
+        id: '2',
+        question: 'Git sürüm kontrol sisteminde uzak depoya değişiklik göndermek için hangi komut kullanılır?',
+        options: ['git push', 'git pull', 'git commit', 'git merge'],
+        correctAnswer: 0,
+        explanation: 'Uzak depoya yerel commitleri göndermek için git push kullanılır.'
+      }
+    ]
+  },
+  {
+    id: '5',
+    title: "Ekonomi Quiz'i",
+    description: 'Makroekonomi göstergeleri ve finansal kavramlar hakkında sorular',
+    category: 'economy',
+    difficulty: 'easy',
+    questionCount: 2,
+    timeLimit: 480,
+    xpReward: 80,
+    isCompleted: false,
+    questions: [
+      {
+        id: '1',
+        question: 'Enflasyon oranı artarken para biriminin satın alma gücüne ne olur?',
+        options: ['Artar', 'Azalır', 'Değişmez', 'Sadece ihracatı etkiler'],
+        correctAnswer: 1,
+        explanation: 'Enflasyon yükseldikçe bir birim paranın satın alma gücü düşer.'
+      },
+      {
+        id: '2',
+        question: 'Merkez bankalarının en sık kullandığı politika aracı nedir?',
+        options: ['Zorunlu karşılık', 'Faiz oranı', 'Açık piyasa işlemleri', 'Döviz kuru sabitleme'],
+        correctAnswer: 1,
+        explanation: 'Politika faizi, para politikasının temel aktarım kanalıdır.'
+      }
+    ]
+  },
+  {
+    id: '6',
+    title: "Bilim Quiz'i",
+    description: 'Fizik, biyoloji ve uzay bilimleri hakkında sorular',
+    category: 'science',
+    difficulty: 'medium',
+    questionCount: 2,
+    timeLimit: 600,
+    xpReward: 100,
+    isCompleted: false,
+    questions: [
+      {
+        id: '1',
+        question: 'Suyun kimyasal formülü nedir?',
+        options: ['H2', 'H2O', 'O2', 'CO2'],
+        correctAnswer: 1,
+        explanation: 'Su, iki hidrojen ve bir oksijen atomundan oluşur: H2O.'
+      },
+      {
+        id: '2',
+        question: 'Işık hızına en yakın hızlarda hareket eden parçacıkları inceleyen fizik dalı hangisidir?',
+        options: ['Klasik mekanik', 'Termodinamik', 'Görelilik', 'Elektromanyetizma'],
+        correctAnswer: 2,
+        explanation: 'Özel görelilik, ışık hızına yakın hızlarda fizik yasalarını açıklar.'
+      }
+    ]
   }
 ];
 

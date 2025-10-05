@@ -4,6 +4,40 @@
       "label": "Dil"
     }
   },
+  "newsGuessr": {
+    "title": "NewsGuessr",
+    "score": "Skor: {score}/{total}",
+    "progress": "Soru {current} / {total}",
+    "actions": {
+      "back": "Geri",
+      "next": "Sonraki",
+      "finish": "Bitir"
+    },
+    "correct": "Doğru!",
+    "wrong": "Yanlış",
+    "results": {
+      "title": "Sonuçlar",
+      "correct": "Doğru",
+      "wrong": "Yanlış"
+    },
+    "youWin": "Kazandın!",
+    "youLose": "Kaybettin",
+    "draw": "Berabere",
+    "yourGuess": "Senin Tahminin",
+    "opponentGuess": "Rakibin Tahmini",
+    "noGuesses": "Henüz tahmin yok.",
+    "selectMode": {
+      "title": "Mod Seçin",
+      "subtitle": "Nasıl oynamak istediğini seç",
+      "single": "Tek Oyuncu",
+      "multi": "Çok Oyunculu"
+    }
+  },
+  "results": {
+    "title": "Sonuçlar",
+    "correct": "Doğru",
+    "wrong": "Yanlış"
+  },
   "login": {
     "hero": {
       "badge": "Anadolu Ajansı İçin Özel",
@@ -416,6 +450,11 @@
         "title": "Wordle",
         "description": "Beş harfli kelimeyi altı denemede bul; her gün yeni bir kelime.",
         "estimatedTime": "3-8 dk"
+      },
+      "newsGuessr": {
+        "title": "NewsGuessr",
+        "description": "Manşeti oku, olayın hangi şehirde yaşandığını tahmin et.",
+        "estimatedTime": "3-6 dk"
       }
     },
     "card": {
