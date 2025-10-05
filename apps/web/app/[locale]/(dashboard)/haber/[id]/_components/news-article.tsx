@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback, type JSX } from 'react';
+import { useState, useCallback, useMemo, useEffect, type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
-import type { DashboardNewsItem } from '../../../dashboard/_components/types';
+import type { DashboardNewsItem, NewsImage } from '../../../dashboard/_components/types';
 import { ArticleEngagementSections } from './article-engagement-sections';
 import { NewsTimeline } from './news-timeline';
 import { ReaderEngagement } from './reader-engagement';
@@ -22,6 +22,9 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(article.likeCount ?? 156);
+  useEffect(() => {
+    console.debug('[NewsArticle] inline images', article.images);
+  }, [article.images]);
 
   const allImages = [
     { url: article.imageUrl, alt: article.title, caption: article.title },
@@ -41,8 +44,43 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
     setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   }, [allImages.length]);
 
-  const fullContent = article.fullContent ?? `${article.summary}\n\n${article.detail}`;
-  const paragraphs = fullContent.split('\\n\\n').filter(p => p.trim());
+  const articleBody = useMemo(() => {
+    if (article.fullContent && article.fullContent.trim().length > 0) {
+      return article.fullContent;
+    }
+    return article.detail || '';
+  }, [article.fullContent, article.detail]);
+
+  const paragraphs = useMemo(() => splitContentIntoParagraphs(articleBody), [articleBody]);
+
+  const inlineImages = useMemo(() => {
+    if (!article.images) {
+      return [];
+    }
+
+    const unique: NewsImage[] = [];
+    const seen = new Set<string>();
+
+    article.images.forEach((image) => {
+      if (!image?.url || seen.has(image.url) || image.url === article.imageUrl) {
+        return;
+      }
+
+      seen.add(image.url);
+      unique.push({
+        ...image,
+        alt: image.alt || article.title,
+      });
+    });
+
+    return unique;
+  }, [article.images, article.imageUrl, article.title]);
+
+  const paragraphImageAssignments = useMemo(() => {
+    const assignments = inlineImages.slice(0, paragraphs.length);
+    const leftovers = inlineImages.slice(assignments.length);
+    return { assignments, leftovers };
+  }, [inlineImages, paragraphs.length]);
 
   return (
     <article className="max-w-4xl mx-auto">
@@ -250,49 +288,43 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
 
         {/* Article body */}
         <div className="space-y-8 text-lg leading-relaxed text-white/85">
-          {paragraphs.map((paragraph, index) => (
-            <div key={index}>
-              <p className="mb-6 last:mb-0">
-                {paragraph}
-              </p>
-              
-              {/* Insert media after specific paragraphs */}
-              {index === 1 && article.images?.[0] && (
-                <InlineMedia
-                  type="image"
-                  src={article.images[0].url}
-                  alt={article.images[0].alt}
-                  caption={article.images[0].caption}
-                  credit={article.images[0].credit}
-                />
-              )}
-              
-              {index === 3 && (
-                <InlineMedia
-                  type="quote"
-                  quote="BIST 100 endeksinin bu performanı sadece sayılarla değil, ekonomiye olan güvenin de bir göstergesidir."
-                  author="Dr. Mehmet Özkan, Ekonomi Uzmanı"
-                />
-              )}
-              
-              {index === 5 && article.images?.[1] && (
-                <InlineMedia
-                  type="image"
-                  src={article.images[1].url}
-                  alt={article.images[1].alt}
-                  caption={article.images[1].caption}
-                />
-              )}
-              
-              {index === 7 && (
-                <InlineMedia
-                  type="chart"
-                  caption="BIST 100 Endeksi Yıllık Performans Analizi - Son 5 yılın en yüksek seviyelerine ulaştı"
-                />
-              )}
-            </div>
-          ))}
+          {paragraphs.map((paragraph, index) => {
+            const imageForParagraph = paragraphImageAssignments.assignments[index];
+
+            return (
+              <div key={index}>
+                <p className="mb-6 last:mb-0">
+                  {paragraph}
+                </p>
+
+                {imageForParagraph && (
+                  <InlineMedia
+                    type="image"
+                    src={imageForParagraph.url}
+                    alt={imageForParagraph.alt}
+                    caption={imageForParagraph.caption}
+                    credit={imageForParagraph.credit}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
+
+        {paragraphImageAssignments.leftovers.length > 0 && (
+          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
+            {paragraphImageAssignments.leftovers.map((image) => (
+              <InlineMedia
+                key={image.url}
+                type="image"
+                src={image.url}
+                alt={image.alt}
+                caption={image.caption}
+                credit={image.credit}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Tags */}
         <div className="mt-12">
@@ -307,7 +339,7 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
             {article.tags.map((tag, index) => (
               <Link
                 key={index}
-                href={`/dashboard?tag=${tag}`}
+                href={`/${locale}/dashboard?tag=${encodeURIComponent(tag)}`}
                 className="px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm text-white/80 hover:bg-white/20 transition-colors cursor-pointer"
               >
                 #{tag}
@@ -355,13 +387,22 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
               >
                 <article className="flex gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-white/20">
                   <div className="w-24 h-18 rounded-xl bg-white/10 flex-shrink-0 relative overflow-hidden">
-                    <Image
-                      src={news.imageUrl}
-                      alt={news.title}
-                      fill
-                      className="object-cover"
-                      sizes="96px"
-                    />
+                    {news.imageUrl ? (
+                      <Image
+                        src={news.imageUrl}
+                        alt={news.title}
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center text-slate-300">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <path d="M21 15l-5-5-11 11" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-semibold line-clamp-2 mb-2 group-hover:text-white/90 transition-colors">
@@ -409,4 +450,54 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
       </div>
     </article>
   );
+}
+
+function splitContentIntoParagraphs(content: string): string[] {
+  if (!content) {
+    return [];
+  }
+
+  const normalized = content
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .trim();
+
+  if (!normalized) {
+    return [];
+  }
+
+  const paragraphBreaks = normalized
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  if (paragraphBreaks.length > 1) {
+    return paragraphBreaks;
+  }
+
+  const sentences = normalized.split(/(?<=[.!?])\s+(?=[A-ZÇĞİÖŞÜ0-9])/u);
+  if (sentences.length <= 1) {
+    return [normalized];
+  }
+
+  const chunks: string[] = [];
+  let buffer: string[] = [];
+  let charCount = 0;
+
+  sentences.forEach((sentence) => {
+    buffer.push(sentence);
+    charCount += sentence.length;
+
+    if (charCount >= 360) {
+      chunks.push(buffer.join(' '));
+      buffer = [];
+      charCount = 0;
+    }
+  });
+
+  if (buffer.length > 0) {
+    chunks.push(buffer.join(' '));
+  }
+
+  return chunks.length > 0 ? chunks : [normalized];
 }
