@@ -111,7 +111,7 @@
         "default": "Rejoignez Nexachron et découvrez l'actualité gamifiée.",
         "submitting": "Nous vérifions vos informations...",
         "invalid": "Veuillez vérifier le formulaire",
-      "success": "Bon retour ! Redirection vers votre tableau de bord...",
+        "success": "Bon retour ! Redirection vers votre tableau de bord...",
         "error": "Impossible de vous connecter pour le moment."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Démarrage de l'inscription...",
         "invalid": "Veuillez vérifier les champs requis",
         "successEmail": "Inscription réussie ! Vérifiez votre boîte mail pour confirmer.",
-      "successRedirect": "Bienvenue ! Redirection vers votre tableau de bord...",
+        "successRedirect": "Bienvenue ! Redirection vers votre tableau de bord...",
         "error": "Une erreur est survenue lors de l'inscription."
       },
       "supabase": {
@@ -348,6 +348,208 @@
       "none": "Lancez un nouveau streak en parcourant les articles du jour.",
       "low": "Série de {count} jours ! Continuez.",
       "high": "Série de {count} jours 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "Retour",
+      "title": "Jeux",
+      "description": "Testez vos connaissances avec des mini expériences et gagnez de l'XP ! Vous avez {xp} XP.",
+      "categoriesHeading": "Catégories",
+      "comingSoonHeading": "À venir"
+    },
+    "categories": {
+      "all": {
+        "name": "Tous"
+      },
+      "educational": {
+        "name": "Éducatif"
+      },
+      "memory": {
+        "name": "Mémoire"
+      },
+      "word": {
+        "name": "Mots"
+      },
+      "trivia": {
+        "name": "Quiz"
+      },
+      "timeline": {
+        "name": "Chronologie"
+      },
+      "visual": {
+        "name": "Visuel"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "Quiz",
+        "description": "Répondez aux questions d’actualité et cumulez de l’XP sur l’actu, la culture et le sport.",
+        "estimatedTime": "5-15 min"
+      },
+      "memoryGame": {
+        "title": "Mémoire des actus",
+        "description": "Associez les titres et stimulez votre mémoire.",
+        "estimatedTime": "3-8 min"
+      },
+      "wordPuzzle": {
+        "title": "Puzzle de mots",
+        "description": "Trouvez des mots inspirés des actualités et enrichissez votre vocabulaire.",
+        "estimatedTime": "4-10 min"
+      },
+      "newsTrivia": {
+        "title": "Quiz actu",
+        "description": "Questions rapides sur les dernières nouvelles.",
+        "estimatedTime": "2-5 min"
+      },
+      "timelineGame": {
+        "title": "Défi chronologique",
+        "description": "Replacez les événements dans l’ordre pour tester votre sens de l’histoire.",
+        "estimatedTime": "8-15 min"
+      },
+      "spotTheDifference": {
+        "title": "Cherche les différences",
+        "description": "Comparez des photos d’actualité et affûtez votre regard.",
+        "estimatedTime": "5-12 min"
+      },
+      "wordle": {
+        "title": "Wordle",
+        "description": "Devinez le mot de cinq lettres en six essais — un défi quotidien.",
+        "estimatedTime": "3-8 min"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "Facile",
+        "medium": "Intermédiaire",
+        "hard": "Difficile"
+      },
+      "labels": {
+        "xpReward": "Récompense XP",
+        "progress": "Progression",
+        "comingSoon": "Bientôt disponible",
+        "playAgain": "Rejouer",
+        "start": "Lancer le jeu"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "Retour",
+      "title": "Quiz",
+      "description": "Testez-vous et gagnez de l'XP ! Vous avez {xp} XP.",
+      "categoriesHeading": "Catégories",
+      "categoryTitle": "Quiz {category}",
+      "allTitle": "Tous les quiz",
+      "showAll": "Tout afficher"
+    },
+    "categories": {
+      "news": {
+        "name": "Actualité",
+        "description": "Les questions incontournables sur les derniers titres."
+      },
+      "general": {
+        "name": "Culture générale",
+        "description": "Histoire, géographie, sciences et culture."
+      },
+      "sports": {
+        "name": "Sport",
+        "description": "Football, basket et autres disciplines."
+      },
+      "technology": {
+        "name": "Technologie",
+        "description": "IA, programmation et tendances numériques."
+      },
+      "economy": {
+        "name": "Économie",
+        "description": "Finance, marchés et business."
+      },
+      "science": {
+        "name": "Science",
+        "description": "Physique, chimie, biologie et mathématiques."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "Nombre de quiz",
+        "completed": "Terminés",
+        "progress": "Progression"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "Facile",
+        "medium": "Intermédiaire",
+        "hard": "Difficile"
+      },
+      "empty": {
+        "title": "Aucun quiz dans cette catégorie",
+        "description": "Choisissez une autre catégorie pour en découvrir."
+      },
+      "labels": {
+        "time": "{minutes} min",
+        "questions": "{count} questions"
+      },
+      "actions": {
+        "retry": "Rejouer",
+        "start": "Commencer le quiz"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "Données du quiz manquantes",
+        "description": "Ce quiz ne contient pas encore assez de questions. Choisissez-en un autre."
+      },
+      "actions": {
+        "close": "Fermer",
+        "previous": "Précédent",
+        "submit": "Valider",
+        "next": "Suivant",
+        "retry": "Rejouer"
+      },
+      "labels": {
+        "questionProgress": "Question {current} sur {total}"
+      },
+      "results": {
+        "title": "Quiz terminé !",
+        "subtitle": "Bravo, vous avez terminé le quiz avec succès.",
+        "correctAnswers": "Bonnes réponses",
+        "xpEarned": "XP gagné"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Classement",
+    "filters": {
+      "onlyLeague": "Seulement ma ligue",
+      "periods": {
+        "weekly": "Hebdomadaire",
+        "monthly": "Mensuel",
+        "all-time": "Depuis le début"
+      }
+    },
+    "table": {
+      "currentUser": "(Vous)",
+      "xpLabel": "XP",
+      "topBadge": "TOP"
+    },
+    "page": {
+      "back": "Retour"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "Nouveau membre",
+      "ACTIVE_READER": "Lecteur actif",
+      "KNOWLEDGE_SHARER": "Partageur de savoir",
+      "EXPERT_COMMENTER": "Commentateur expert",
+      "COMMUNITY_LEADER": "Leader de la communauté"
+    },
+    "leagues": {
+      "BRONZE": "Bronze",
+      "SILVER": "Argent",
+      "GOLD": "Or",
+      "DIAMOND": "Diamant"
     }
   }
 }

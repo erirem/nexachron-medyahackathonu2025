@@ -111,7 +111,7 @@
         "default": "Придружете се на Nexachron и доживејте ги игрифицираните вести.",
         "submitting": "Ги проверуваме податоците...",
         "invalid": "Проверете ја формата",
-      "success": "Добредојдовте назад! Ве пренасочуваме кон контролната табла...",
+        "success": "Добредојдовте назад! Ве пренасочуваме кон контролната табла...",
         "error": "Настана грешка при најавата."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Го започнуваме процесот на регистрација...",
         "invalid": "Проверете ги задолжителните полиња",
         "successEmail": "Регистрацијата успеа! Проверете ја е-поштата за потврда.",
-      "successRedirect": "Добредојдовте! Ве пренасочуваме кон контролната табла...",
+        "successRedirect": "Добредојдовте! Ве пренасочуваме кон контролната табла...",
         "error": "Регистрацијата не може да се заврши."
       },
       "supabase": {
@@ -348,6 +348,208 @@
       "none": "Започнете streak со читање на денешните вести.",
       "low": "Streak од {count} дена! Продолжете.",
       "high": "Streak од {count} дена 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "Назад",
+      "title": "Игри",
+      "description": "Тестирај го знаењето со мини игри и заработи XP! Имаш {xp} XP.",
+      "categoriesHeading": "Категории",
+      "comingSoonHeading": "Наскоро"
+    },
+    "categories": {
+      "all": {
+        "name": "Сите"
+      },
+      "educational": {
+        "name": "Едукативни"
+      },
+      "memory": {
+        "name": "Меморија"
+      },
+      "word": {
+        "name": "Зборови"
+      },
+      "trivia": {
+        "name": "Тривија"
+      },
+      "timeline": {
+        "name": "Временска линија"
+      },
+      "visual": {
+        "name": "Визуелно"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "Квизови",
+        "description": "Одговарај на актуелни прашања и собирај XP од вести, култура и спорт.",
+        "estimatedTime": "5-15 мин"
+      },
+      "memoryGame": {
+        "title": "Меморија вести",
+        "description": "Спои наслови и зајакни ја меморијата.",
+        "estimatedTime": "3-8 мин"
+      },
+      "wordPuzzle": {
+        "title": "Зборовна сложувалка",
+        "description": "Најди зборови инспирирани од вестите и прошири го речникот.",
+        "estimatedTime": "4-10 мин"
+      },
+      "newsTrivia": {
+        "title": "Тривија вести",
+        "description": "Брзи прашања за најновите случувања.",
+        "estimatedTime": "2-5 мин"
+      },
+      "timelineGame": {
+        "title": "Хронолошки предизвик",
+        "description": "Подреди ги настаните и провери ја историјата.",
+        "estimatedTime": "8-15 мин"
+      },
+      "spotTheDifference": {
+        "title": "Пронајди разлика",
+        "description": "Спореди новинарски фотографии и изостри го фокусот.",
+        "estimatedTime": "5-12 мин"
+      },
+      "wordle": {
+        "title": "Wordle",
+        "description": "Погоди збор од пет букви во шест обиди — нов предизвик секој ден.",
+        "estimatedTime": "3-8 мин"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "Лесно",
+        "medium": "Средно",
+        "hard": "Тешко"
+      },
+      "labels": {
+        "xpReward": "XP награда",
+        "progress": "Напредок",
+        "comingSoon": "Наскоро",
+        "playAgain": "Играј повторно",
+        "start": "Започни игра"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "Назад",
+      "title": "Квизови",
+      "description": "Провери се и заработи XP. Имаш {xp} XP.",
+      "categoriesHeading": "Категории",
+      "categoryTitle": "Квизови: {category}",
+      "allTitle": "Сите квизови",
+      "showAll": "Прикажи ги сите"
+    },
+    "categories": {
+      "news": {
+        "name": "Вести",
+        "description": "Прашања за најважните наслови и настани."
+      },
+      "general": {
+        "name": "Општо знаење",
+        "description": "Историја, географија, наука и култура."
+      },
+      "sports": {
+        "name": "Спорт",
+        "description": "Фудбал, кошарка и други спортови."
+      },
+      "technology": {
+        "name": "Технологија",
+        "description": "AI, програмирање и дигитални трендови."
+      },
+      "economy": {
+        "name": "Економија",
+        "description": "Финансии, пазари и бизнис."
+      },
+      "science": {
+        "name": "Наука",
+        "description": "Физика, хемија, биологија и математика."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "Број на квизови",
+        "completed": "Завршено",
+        "progress": "Напредок"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "Лесно",
+        "medium": "Средно",
+        "hard": "Тешко"
+      },
+      "empty": {
+        "title": "Во оваа категорија нема квизови",
+        "description": "Избери друга категорија за да продолжиш."
+      },
+      "labels": {
+        "time": "{minutes} мин",
+        "questions": "{count} прашања"
+      },
+      "actions": {
+        "retry": "Играј повторно",
+        "start": "Започни квиз"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "Недостасуваат податоци за квизот",
+        "description": "Овој квиз нема доволно прашања. Избери друг."
+      },
+      "actions": {
+        "close": "Затвори",
+        "previous": "Претходно",
+        "submit": "Заврши",
+        "next": "Следно",
+        "retry": "Повтори"
+      },
+      "labels": {
+        "questionProgress": "Прашање {current} од {total}"
+      },
+      "results": {
+        "title": "Квизот е завршен!",
+        "subtitle": "Браво, успешно го заврши квизот.",
+        "correctAnswers": "Точни одговори",
+        "xpEarned": "Заработено XP"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Табела на лидери",
+    "filters": {
+      "onlyLeague": "Само мојата лига",
+      "periods": {
+        "weekly": "Неделно",
+        "monthly": "Месечно",
+        "all-time": "Цел период"
+      }
+    },
+    "table": {
+      "currentUser": "(Ти)",
+      "xpLabel": "XP",
+      "topBadge": "ТОП"
+    },
+    "page": {
+      "back": "Назад"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "Нов член",
+      "ACTIVE_READER": "Активен читател",
+      "KNOWLEDGE_SHARER": "Споделувач на знаење",
+      "EXPERT_COMMENTER": "Експерт коментатор",
+      "COMMUNITY_LEADER": "Водач на заедницата"
+    },
+    "leagues": {
+      "BRONZE": "Бронза",
+      "SILVER": "Сребро",
+      "GOLD": "Злато",
+      "DIAMOND": "Дијамант"
     }
   }
 }

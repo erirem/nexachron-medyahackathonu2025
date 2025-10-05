@@ -47,8 +47,7 @@
         },
         "topLeft": {
           "title": "Koleksion kartash",
-          "description": "Mblidh kartat e rralla dhe ekspozoji."
-          ,
+          "description": "Mblidh kartat e rralla dhe ekspozoji.",
           "capture": "KOLEKSION"
         },
         "topRight": {
@@ -112,7 +111,7 @@
         "default": "Bëhu pjesë e Nexachron dhe përjeto lajmet e gamifikuara.",
         "submitting": "Po verifikojmë të dhënat...",
         "invalid": "Kontrollo formularin",
-      "success": "Mirë se u ktheve! Po të ridrejtojmë te pulti...",
+        "success": "Mirë se u ktheve! Po të ridrejtojmë te pulti...",
         "error": "Pati një problem gjatë hyrjes."
       },
       "supabase": {
@@ -274,7 +273,7 @@
         "submitting": "Po nisim regjistrimin...",
         "invalid": "Kontrollo fushat e detyrueshme",
         "successEmail": "Regjistrimi u krye! Kontrollo email-in për konfirmim.",
-      "successRedirect": "Mirësevjen! Po të ridrejtojmë te pulti...",
+        "successRedirect": "Mirësevjen! Po të ridrejtojmë te pulti...",
         "error": "Nuk mundëm të përfundojmë regjistrimin."
       },
       "supabase": {
@@ -349,6 +348,208 @@
       "none": "Fillo streak-un duke eksploruar lajmet e sotme.",
       "low": "Streak prej {count} ditësh! Vazhdoni.",
       "high": "Streak prej {count} ditësh 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "Kthehu",
+      "title": "Lojërat",
+      "description": "Testo njohuritë me mini lojëra dhe fito XP! Ke {xp} XP.",
+      "categoriesHeading": "Kategoritë",
+      "comingSoonHeading": "Së shpejti"
+    },
+    "categories": {
+      "all": {
+        "name": "Të gjitha"
+      },
+      "educational": {
+        "name": "Edukative"
+      },
+      "memory": {
+        "name": "Memorie"
+      },
+      "word": {
+        "name": "Fjalë"
+      },
+      "trivia": {
+        "name": "Trivia"
+      },
+      "timeline": {
+        "name": "Kronologji"
+      },
+      "visual": {
+        "name": "Vizuale"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "Kuizet",
+        "description": "Përgjigju pyetjeve aktuale dhe mblidh XP nga lajmet, kultura dhe sporti.",
+        "estimatedTime": "5-15 min"
+      },
+      "memoryGame": {
+        "title": "Memoria e lajmeve",
+        "description": "Përshtat titujt dhe forco kujtesën.",
+        "estimatedTime": "3-8 min"
+      },
+      "wordPuzzle": {
+        "title": "Puzzle fjalësh",
+        "description": "Gjej fjalë të frymëzuara nga lajmet dhe zgjero fjalorin.",
+        "estimatedTime": "4-10 min"
+      },
+      "newsTrivia": {
+        "title": "Trivia lajmesh",
+        "description": "Pyetje të shpejta për ngjarjet më të fundit.",
+        "estimatedTime": "2-5 min"
+      },
+      "timelineGame": {
+        "title": "Sfida kronologjike",
+        "description": "Vër ngjarjet në rend për të provuar historinë.",
+        "estimatedTime": "8-15 min"
+      },
+      "spotTheDifference": {
+        "title": "Gjej ndryshimin",
+        "description": "Krahaso fotografi lajmesh dhe mpreh vëmendjen.",
+        "estimatedTime": "5-12 min"
+      },
+      "wordle": {
+        "title": "Wordle",
+        "description": "Gjeje fjalën me pesë shkronja në gjashtë prova — sfidë e re çdo ditë.",
+        "estimatedTime": "3-8 min"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "E lehtë",
+        "medium": "Mesatare",
+        "hard": "E vështirë"
+      },
+      "labels": {
+        "xpReward": "Shpërblim XP",
+        "progress": "Progresi",
+        "comingSoon": "Së shpejti",
+        "playAgain": "Luaj sërish",
+        "start": "Fillo lojën"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "Kthehu",
+      "title": "Kuizet",
+      "description": "Provo veten dhe fito XP. Ke {xp} XP.",
+      "categoriesHeading": "Kategoritë",
+      "categoryTitle": "Kuizet {category}",
+      "allTitle": "Të gjitha kuizet",
+      "showAll": "Shfaq të gjitha"
+    },
+    "categories": {
+      "news": {
+        "name": "Lajme",
+        "description": "Pyetje mbi titujt dhe ngjarjet kryesore."
+      },
+      "general": {
+        "name": "Njohuri të përgjithshme",
+        "description": "Histori, gjeografi, shkencë dhe kulturë."
+      },
+      "sports": {
+        "name": "Sport",
+        "description": "Futboll, basketboll dhe më shumë."
+      },
+      "technology": {
+        "name": "Teknologji",
+        "description": "AI, programim dhe trende digjitale."
+      },
+      "economy": {
+        "name": "Ekonomi",
+        "description": "Financa, tregje dhe biznes."
+      },
+      "science": {
+        "name": "Shkencë",
+        "description": "Fizikë, kimi, biologji dhe matematikë."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "Numri i kuizeve",
+        "completed": "Të përfunduara",
+        "progress": "Progresi"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "E lehtë",
+        "medium": "Mesatare",
+        "hard": "E vështirë"
+      },
+      "empty": {
+        "title": "Në këtë kategori nuk ka kuize",
+        "description": "Zgjidh një kategori tjetër për të vazhduar."
+      },
+      "labels": {
+        "time": "{minutes} min",
+        "questions": "{count} pyetje"
+      },
+      "actions": {
+        "retry": "Luaj sërish",
+        "start": "Fillo kuizin"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "Mungojnë të dhënat e kuizit",
+        "description": "Ky kuiz ende nuk ka mjaft pyetje. Zgjidh një tjetër."
+      },
+      "actions": {
+        "close": "Mbyll",
+        "previous": "Prapa",
+        "submit": "Përfundo",
+        "next": "Tjetër",
+        "retry": "Luaj sërish"
+      },
+      "labels": {
+        "questionProgress": "Pyetja {current} nga {total}"
+      },
+      "results": {
+        "title": "Kuizi përfundoi!",
+        "subtitle": "Bravo, e përfundove me sukses kuizin.",
+        "correctAnswers": "Përgjigjet e sakta",
+        "xpEarned": "XP e fituar"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Tabela e renditjes",
+    "filters": {
+      "onlyLeague": "Vetëm liga ime",
+      "periods": {
+        "weekly": "Javore",
+        "monthly": "Mujore",
+        "all-time": "Gjithmonë"
+      }
+    },
+    "table": {
+      "currentUser": "(Ti)",
+      "xpLabel": "XP",
+      "topBadge": "TOP"
+    },
+    "page": {
+      "back": "Kthehu"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "Anëtar i ri",
+      "ACTIVE_READER": "Lexues aktiv",
+      "KNOWLEDGE_SHARER": "Ndaj njohuri",
+      "EXPERT_COMMENTER": "Komentues ekspert",
+      "COMMUNITY_LEADER": "Lider komuniteti"
+    },
+    "leagues": {
+      "BRONZE": "Bronz",
+      "SILVER": "Argjend",
+      "GOLD": "Ar",
+      "DIAMOND": "Diamant"
     }
   }
 }

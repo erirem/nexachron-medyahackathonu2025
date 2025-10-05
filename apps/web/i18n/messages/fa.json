@@ -111,7 +111,7 @@
         "default": "به Nexachron بپیوند و خبرها را در قالب بازی تجربه کن.",
         "submitting": "در حال بررسی اطلاعات...",
         "invalid": "فرم را بررسی کن",
-      "success": "خوش آمدی! در حال انتقال به داشبورد...",
+        "success": "خوش آمدی! در حال انتقال به داشبورد...",
         "error": "در ورود مشکلی پیش آمد."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "ثبت‌نام در حال انجام است...",
         "invalid": "لطفاً فیلدهای ضروری را بررسی کن",
         "successEmail": "ثبت‌نام انجام شد! برای تأیید ایمیل را بررسی کن.",
-      "successRedirect": "خوش آمدی! در حال انتقال به داشبورد...",
+        "successRedirect": "خوش آمدی! در حال انتقال به داشبورد...",
         "error": "در ثبت‌نام مشکلی ایجاد شد."
       },
       "supabase": {
@@ -348,6 +348,208 @@
       "none": "برای شروع استریک، خبرهای امروز را مرور کن.",
       "low": "استریک {count} روزه! ادامه بده.",
       "high": "استریک {count} روزه 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "بازگشت",
+      "title": "بازی‌ها",
+      "description": "با مینی‌بازی‌ها دانش خود را محک بزنید و XP دریافت کنید! شما {xp} XP دارید.",
+      "categoriesHeading": "دسته‌بندی‌ها",
+      "comingSoonHeading": "به‌زودی"
+    },
+    "categories": {
+      "all": {
+        "name": "همه"
+      },
+      "educational": {
+        "name": "آموزشی"
+      },
+      "memory": {
+        "name": "حافظه"
+      },
+      "word": {
+        "name": "کلمات"
+      },
+      "trivia": {
+        "name": "تریویا"
+      },
+      "timeline": {
+        "name": "خط زمانی"
+      },
+      "visual": {
+        "name": "تصویری"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "کوئیزها",
+        "description": "به پرسش‌های روز پاسخ دهید و در اخبار، فرهنگ و ورزش XP جمع کنید.",
+        "estimatedTime": "5-15 دقیقه"
+      },
+      "memoryGame": {
+        "title": "حافظه خبر",
+        "description": "تیترها را جفت کنید و حافظه خود را تقویت کنید.",
+        "estimatedTime": "3-8 دقیقه"
+      },
+      "wordPuzzle": {
+        "title": "معمای کلمات",
+        "description": "کلمات الهام‌گرفته از خبرها را پیدا کنید و دایره لغات خود را گسترش دهید.",
+        "estimatedTime": "4-10 دقیقه"
+      },
+      "newsTrivia": {
+        "title": "تریویای خبر",
+        "description": "سوالات سریع درباره تازه‌ترین رویدادها.",
+        "estimatedTime": "2-5 دقیقه"
+      },
+      "timelineGame": {
+        "title": "چالش زمانی",
+        "description": "رویدادها را به ترتیب بچینید و تاریخ را دوره کنید.",
+        "estimatedTime": "8-15 دقیقه"
+      },
+      "spotTheDifference": {
+        "title": "اختلاف را پیدا کن",
+        "description": "عکس‌های خبری را مقایسه کنید و دقت خود را بالا ببرید.",
+        "estimatedTime": "5-12 دقیقه"
+      },
+      "wordle": {
+        "title": "وردل",
+        "description": "کلمه پنج‌حرفی را در شش تلاش حدس بزنید؛ هر روز یک چالش تازه.",
+        "estimatedTime": "3-8 دقیقه"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "آسان",
+        "medium": "متوسط",
+        "hard": "سخت"
+      },
+      "labels": {
+        "xpReward": "پاداش XP",
+        "progress": "پیشرفت",
+        "comingSoon": "به‌زودی",
+        "playAgain": "دوباره بازی کن",
+        "start": "شروع بازی"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "بازگشت",
+      "title": "کوئیزها",
+      "description": "خودت را محک بزن و XP بگیر! شما {xp} XP دارید.",
+      "categoriesHeading": "دسته‌بندی‌ها",
+      "categoryTitle": "کوئیز {category}",
+      "allTitle": "همهٔ کوئیزها",
+      "showAll": "نمایش همه"
+    },
+    "categories": {
+      "news": {
+        "name": "اخبار",
+        "description": "سوال‌هایی درباره مهم‌ترین تیترها و رویدادها."
+      },
+      "general": {
+        "name": "دانش عمومی",
+        "description": "تاریخ، جغرافیا، علم و فرهنگ."
+      },
+      "sports": {
+        "name": "ورزش",
+        "description": "فوتبال، بسکتبال و رشته‌های دیگر."
+      },
+      "technology": {
+        "name": "فناوری",
+        "description": "هوش مصنوعی، برنامه‌نویسی و ترندهای تکنولوژی."
+      },
+      "economy": {
+        "name": "اقتصاد",
+        "description": "مالی، بازارها و کسب‌وکار."
+      },
+      "science": {
+        "name": "علم",
+        "description": "فیزیک، شیمی، زیست و ریاضیات."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "تعداد کوئیز",
+        "completed": "تکمیل شده",
+        "progress": "پیشرفت"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "آسان",
+        "medium": "متوسط",
+        "hard": "سخت"
+      },
+      "empty": {
+        "title": "در این دسته فعلاً کوئیزی وجود ندارد",
+        "description": "برای ادامه، دسته دیگری را انتخاب کنید."
+      },
+      "labels": {
+        "time": "{minutes} دقیقه",
+        "questions": "{count} سؤال"
+      },
+      "actions": {
+        "retry": "دوباره حل کن",
+        "start": "شروع کوئیز"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "داده‌های کوئیز موجود نیست",
+        "description": "این کوئیز هنوز سؤال کافی ندارد. لطفاً کوئیز دیگری انتخاب کنید."
+      },
+      "actions": {
+        "close": "بستن",
+        "previous": "قبلی",
+        "submit": "اتمام",
+        "next": "بعدی",
+        "retry": "دوباره حل کن"
+      },
+      "labels": {
+        "questionProgress": "سؤال {current} از {total}"
+      },
+      "results": {
+        "title": "کوئیز تمام شد!",
+        "subtitle": "آفرین، کوئیز را با موفقیت گذراندی.",
+        "correctAnswers": "پاسخ‌های درست",
+        "xpEarned": "XP دریافت‌شده"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "جدول امتیازات",
+    "filters": {
+      "onlyLeague": "فقط لیگ من",
+      "periods": {
+        "weekly": "هفتگی",
+        "monthly": "ماهانه",
+        "all-time": "همهٔ زمان‌ها"
+      }
+    },
+    "table": {
+      "currentUser": "(شما)",
+      "xpLabel": "XP",
+      "topBadge": "برتر"
+    },
+    "page": {
+      "back": "بازگشت"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "عضو تازه",
+      "ACTIVE_READER": "خواننده فعال",
+      "KNOWLEDGE_SHARER": "به‌اشتراک‌گذار دانش",
+      "EXPERT_COMMENTER": "نظر‌دهنده خبره",
+      "COMMUNITY_LEADER": "رهبر جامعه"
+    },
+    "leagues": {
+      "BRONZE": "برنز",
+      "SILVER": "نقره‌ای",
+      "GOLD": "طلایی",
+      "DIAMOND": "الماس"
     }
   }
 }
