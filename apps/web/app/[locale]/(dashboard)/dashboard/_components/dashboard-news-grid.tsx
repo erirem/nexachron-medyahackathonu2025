@@ -72,17 +72,6 @@ export function DashboardNewsGrid({
               </p>
             )}
           </div>
-          {showAll && (
-            <button
-              type="button"
-              className="group flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/80 transition-all hover:border-white/40 hover:bg-white/10 hover:text-white"
-            >
-              Tümünü Gör
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-hover:translate-x-1">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-          )}
         </div>
 
 
