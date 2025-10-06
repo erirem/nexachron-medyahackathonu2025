@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { JSX } from "react";
 
 import type { DashboardNewsItem } from "./types";
+import { SafeImage } from "./safe-image";
 
 const sentimentTone: Record<DashboardNewsItem["sentiment"], { readonly label: string; readonly badge: string; readonly dot: string }> = {
   positive: {
@@ -39,10 +40,9 @@ export function NewsCard({ item }: NewsCardProps): JSX.Element {
       className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-[#d5e1f3] bg-white/95 shadow-[0_22px_60px_rgba(21,61,125,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#b9d2f2] hover:shadow-[0_30px_90px_rgba(21,61,125,0.12)]"
     >
       <figure className="relative h-40 w-full overflow-hidden">
-        <Image
+        <SafeImage
           src={item.imageUrl}
           alt={item.title}
-          fill
           sizes="(min-width: 1536px) 20vw, (min-width: 1280px) 30vw, (min-width: 768px) 45vw, 80vw"
           className="object-cover transition duration-500 group-hover:scale-105"
           priority={false}

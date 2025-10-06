@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from './types';
+import { SafeImage } from './safe-image';
 
 interface DashboardNewsCardProps {
   readonly item: DashboardNewsItem;
@@ -415,12 +416,11 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         </header>
 
         <div className={`relative overflow-hidden rounded-[20px] border border-white/10 ${theme.imageTint} aspect-[16/10] group`}>
-          <Image
+          <SafeImage
             src={item.imageUrl}
             alt={item.title}
-            fill
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
           
