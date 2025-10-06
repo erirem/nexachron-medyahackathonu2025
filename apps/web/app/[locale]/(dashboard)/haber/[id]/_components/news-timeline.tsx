@@ -3,6 +3,7 @@
 import { useState, type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from '../../../dashboard/_components/types';
 
 interface NewsTimelineProps {
@@ -28,6 +29,7 @@ function parseArticleDate(article: DashboardNewsItem): Date | null {
 
 export function NewsTimeline({ currentArticle, allNews }: NewsTimelineProps): JSX.Element | null {
   const [isExpanded, setIsExpanded] = useState(true);
+  const locale = useLocale();
 
   // If no storyId, this article doesn't belong to a timeline
   if (!currentArticle.storyId) {
@@ -225,7 +227,7 @@ export function NewsTimeline({ currentArticle, allNews }: NewsTimelineProps): JS
                     {/* Content */}
                     <div className="flex-1 pb-8">
                       <Link 
-                        href={`/haber/${article.id}`}
+                        href={`/${locale}/haber/${article.id}`}
                         className={`
                           group/timeline block p-6 rounded-2xl border backdrop-blur-sm
                           transition-all duration-300 transform hover:scale-[1.02]
@@ -238,13 +240,22 @@ export function NewsTimeline({ currentArticle, allNews }: NewsTimelineProps): JS
                         <div className="flex gap-4">
                           {/* Thumbnail */}
                           <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
-                            <Image
-                              src={article.imageUrl}
-                              alt={article.title}
-                              fill
-                              className="object-cover transition-transform duration-300 group-hover/timeline:scale-110"
-                              sizes="80px"
-                            />
+                            {article.imageUrl ? (
+                              <Image
+                                src={article.imageUrl}
+                                alt={article.title}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover/timeline:scale-110"
+                                sizes="80px"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center text-slate-300">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <path d="M21 15l-5-5-11 11" />
+                                </svg>
+                              </div>
+                            )}
                             {isCurrent && (
                               <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                                 <span className="text-white text-xs font-bold bg-blue-500/80 px-2 py-1 rounded">

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { PostgrestResponse } from '@supabase/supabase-js';
+import type { PostgrestError, PostgrestResponse } from '@supabase/supabase-js';
 import type {
   CategoriesOverviewResponse,
   FindNewsOptions,
@@ -198,33 +198,29 @@ export class NewsService {
     return query;
   }
 
-  async getNewsById(id: string) {
-    return this.supabaseService.supabase
-      .from('news')
-      .select(
-        `
-        *,
-        comments(
-          id,
-          body,
-          likes,
-          created_at,
-          user_id
-        ),
-        reactions(
-          emoji,
-          user_id
-        ),
-        quizzes(
-          id,
-          question,
-          options,
-          correct_index
-        )
-      `,
-      )
-      .eq('id', id)
-      .single();
+  async getNewsById(id: string): Promise<{
+    data: NewsWithMediaDto | null;
+    error: PostgrestError | null;
+  }> {
+    try {
+      const response = await this.createBaseQuery(false)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (response.error) {
+        return { data: null, error: response.error };
+      }
+
+      const row = response.data as NewsRow | null;
+
+      return {
+        data: row ? this.mapNewsRow(row) : null,
+        error: null,
+      };
+    } catch (error) {
+      this.logger.error('Error in getNewsById:', error);
+      throw error;
+    }
   }
 
   async getPopularNews(limit = 10) {

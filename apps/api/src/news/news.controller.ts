@@ -4,6 +4,7 @@ import {
   Get,
   Headers,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   Post,
   Query,
@@ -298,7 +299,18 @@ export class NewsController {
     const { data, error } = await this.newsService.getNewsById(id);
 
     if (error) {
+      if (error.code === 'PGRST116') {
+        throw new NotFoundException(
+          translate(locale, 'errors.fetchById'),
+        );
+      }
       throw new InternalServerErrorException(
+        translate(locale, 'errors.fetchById'),
+      );
+    }
+
+    if (!data) {
+      throw new NotFoundException(
         translate(locale, 'errors.fetchById'),
       );
     }

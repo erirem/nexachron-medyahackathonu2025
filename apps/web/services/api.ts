@@ -220,7 +220,7 @@ export async function fetchNewsById(
   id: string,
   config: RequestConfig = {},
 ) {
-  const envelope = await apiFetch<ApiResponseEnvelope<{ data: NewsWithMediaDto }>>(
+  const envelope = await apiFetch<ApiResponseEnvelope<NewsWithMediaDto>>(
     `/api/news/${id}`,
     { signal: config.signal },
   );

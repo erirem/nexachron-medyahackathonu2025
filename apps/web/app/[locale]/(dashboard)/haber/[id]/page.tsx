@@ -7,10 +7,11 @@ import { SmoothScrollWrapper } from './_components/smooth-scroll-wrapper';
 import { DynamicScrollbarWrapper } from './_components/dynamic-scrollbar-wrapper';
 import type { DashboardNewsItem } from '../../dashboard/_components/types';
 import { fetchNewsById, fetchNewsList } from '@/services/api';
+import type { DashboardNewsItem, NewsImage } from '../../dashboard/_components/types';
 import './_components/scrollbar.css';
 
 export default async function NewsPage({ params }: { params: Promise<{ id: string; locale: string }> }): Promise<JSX.Element> {
-  const { id } = await params;
+  const { id, locale } = await params;
   
   try {
     // Fetch the specific news article by ID
@@ -53,7 +54,7 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
     const recentNews = recentNewsData.items
       .map(transformNewsDataToDashboardItem);
 
-    const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://nexachron.com'}/haber/${article.id}`;
+    const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://nexachron.com'}/${locale}/haber/${article.id}`;
     
     return (
       <>
@@ -101,9 +102,31 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
 }
 
 // Helper function to transform news data to dashboard item format
+const DEFAULT_NEWS_IMAGE_URL =
+  'https://images.unsplash.com/photo-1521292270410-a8c4d716d518?auto=format&fit=crop&w=1200&q=80&sat=-100&blend=111827&blend-mode=multiply';
+
+type MediaSummaryImage = {
+  readonly url: string;
+  readonly width?: number | null;
+  readonly height?: number | null;
+  readonly caption?: string | null;
+  readonly alt_text?: string | null;
+  readonly credit?: string | null;
+};
+
+type MediaSummary = {
+  readonly image_count?: number;
+  readonly total_count?: number;
+  readonly video_count?: number;
+  readonly featured_image?: string | null;
+  readonly featured_video?: string | null;
+  readonly gallery_images?: readonly MediaSummaryImage[];
+  readonly credit?: string | null;
+};
+
 function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
   // Parse media_summary if it exists and is a string
-  let mediaSummary = null;
+  let mediaSummary: MediaSummary | null = null;
   if (item.media_summary) {
     try {
       // Check if it's already an object or a string that needs parsing
@@ -116,41 +139,71 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
     }
   }
 
-  // Extract images from media_summary if available, otherwise use other image sources
-  let extractedImages = [];
-  let primaryImageUrl = '';
+  const collectedImages: NewsImage[] = [];
+  const seenUrls = new Set<string>();
 
-  if (mediaSummary && mediaSummary.gallery_images && Array.isArray(mediaSummary.gallery_images)) {
-    extractedImages = mediaSummary.gallery_images.map((img: any) => ({
-      url: img.url,
-      alt: item.title,
-      caption: img.caption || undefined,
-      credit: undefined,
-    }));
-    
-    // Set featured image as primary if available
-    if (mediaSummary.featured_image) {
-      primaryImageUrl = mediaSummary.featured_image;
-    } else if (extractedImages.length > 0) {
-      primaryImageUrl = extractedImages[0].url;
+  const addImage = (source?: { url?: string | null; alt?: string | null; caption?: string | null; credit?: string | null }) => {
+    const trimmedUrl = source?.url?.trim();
+    if (!trimmedUrl || seenUrls.has(trimmedUrl)) {
+      return;
     }
-  } else {
-    // Fallback to other image sources
-    extractedImages = item.media?.map((media: any) => ({
-      url: media.url,
-      alt: item.title,
-      caption: media.caption || undefined,
-      credit: undefined,
-    })) || [];
-    
-    if (item.media?.[0]?.url) {
-      primaryImageUrl = item.media[0].url;
-    } else if (item.image_url) {
-      primaryImageUrl = item.image_url;
-    } else if (item.primaryMedia?.url) {
-      primaryImageUrl = item.primaryMedia.url;
-    }
+
+    seenUrls.add(trimmedUrl);
+    collectedImages.push({
+      url: trimmedUrl,
+      alt: source?.alt?.trim() || item.title || 'Haber görseli',
+      caption: source?.caption?.trim() || undefined,
+      credit: source?.credit?.trim() || undefined,
+    });
+  };
+
+  if (mediaSummary?.featured_image) {
+    const meta = mediaSummary.gallery_images?.find((img) => img?.url === mediaSummary?.featured_image);
+    addImage({
+      url: mediaSummary.featured_image,
+      alt: meta?.alt_text ?? item.title,
+      caption: meta?.caption ?? undefined,
+      credit: meta?.credit ?? mediaSummary.credit ?? undefined,
+    });
   }
+
+  mediaSummary?.gallery_images?.forEach((img) => {
+    if (!img?.url) {
+      return;
+    }
+
+    addImage({
+      url: img.url,
+      alt: img.alt_text ?? item.title,
+      caption: img.caption ?? undefined,
+      credit: img.credit ?? mediaSummary?.credit ?? undefined,
+    });
+  });
+
+  if (Array.isArray(item.media)) {
+    item.media.forEach((media: any) => {
+      addImage({
+        url: media?.url,
+        alt: media?.alt ?? media?.caption ?? item.title,
+        caption: media?.caption ?? undefined,
+        credit: media?.credit ?? undefined,
+      });
+    });
+  }
+
+  addImage({ url: item.image_url, alt: item.title });
+
+  if (item.primaryMedia?.url) {
+    addImage({
+      url: item.primaryMedia.url,
+      alt: item.primaryMedia.alt ?? item.primaryMedia.caption ?? item.title,
+      caption: item.primaryMedia.caption ?? undefined,
+      credit: item.primaryMedia.credit ?? undefined,
+    });
+  }
+
+  const primaryImageUrl = collectedImages[0]?.url ?? DEFAULT_NEWS_IMAGE_URL;
+  const inlineImages = collectedImages.filter((image) => image.url !== primaryImageUrl);
 
   return {
     id: item.id,
@@ -165,9 +218,11 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
     storyDate: item.publishedAt || item.createdAt || new Date().toISOString(),
     readingTime: estimateReadingTime(item.content || ''),
     dateline: item.city || 'Türkiye',
-    tags: [item.categoryId || item.category || 'genel'],
+    tags: Array.isArray(item.tags) && item.tags.length > 0
+      ? item.tags
+      : [item.categoryId || item.category || 'genel'],
     imageUrl: primaryImageUrl,
-    images: extractedImages,
+    images: inlineImages,
     sentiment: item.isPopular ? 'positive' : 'neutral',
     impact: item.isPopular ? 'Yüksek' : 'Orta',
     viewCount: undefined, // Not available in the API response
