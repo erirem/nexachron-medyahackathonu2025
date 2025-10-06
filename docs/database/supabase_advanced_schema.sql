@@ -126,6 +126,7 @@ CREATE TABLE news (
     tts_url TEXT,
     mode mode_enum NOT NULL,
     city TEXT,
+    category TEXT, -- News category (changed from category_id)
     geo GEOMETRY(POINT, 4326), -- PostGIS point for location
     is_popular BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

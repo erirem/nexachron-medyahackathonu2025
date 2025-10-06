@@ -4,6 +4,7 @@ import { getMessages, unstable_setRequestLocale } from "next-intl/server";
 
 import { locales } from "@/i18n/locales";
 import { GamificationProvider } from "@/contexts/gamification-context";
+import { ReactQueryProvider } from "@/contexts/react-query-provider";
 
 import { LocaleSwitcher } from "./_components/locale-switcher";
 
@@ -29,8 +30,10 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <GamificationProvider>
-        <LocaleSwitcher />
-        {children}
+        <ReactQueryProvider>
+          <LocaleSwitcher />
+          {children}
+        </ReactQueryProvider>
       </GamificationProvider>
     </NextIntlClientProvider>
   );

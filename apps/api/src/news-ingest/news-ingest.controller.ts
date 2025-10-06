@@ -8,13 +8,17 @@ import {
   Logger,
 } from '@nestjs/common';
 import { NewsIngestService } from './news-ingest.service';
+import { MediaStorageService } from './services/media-storage.service';
 import { AACategory } from './dto/news-item.dto';
 
 @Controller('news-ingest')
 export class NewsIngestController {
   private readonly logger = new Logger(NewsIngestController.name);
 
-  constructor(private readonly newsIngestService: NewsIngestService) {}
+  constructor(
+    private readonly newsIngestService: NewsIngestService,
+    private readonly mediaStorageService: MediaStorageService,
+  ) {}
 
   /**
    * Manuel tüm kategorilerden haber çekme
@@ -139,6 +143,47 @@ export class NewsIngestController {
         name: 'Sağlık',
         description: 'Health and medical',
       },
+      // New expanded categories
+      {
+        key: AACategory.POLITIKA,
+        name: 'Politika',
+        description: 'Politics and government news',
+      },
+      {
+        key: AACategory.ANALIZ,
+        name: 'Analiz',
+        description: 'Analysis and opinion pieces',
+      },
+      {
+        key: AACategory.KULTUR,
+        name: 'Kültür',
+        description: 'Culture and arts',
+      },
+      {
+        key: AACategory.EGITIM,
+        name: 'Eğitim',
+        description: 'Education news',
+      },
+      {
+        key: AACategory.FUTBOL,
+        name: 'Futbol',
+        description: 'Football/Soccer news',
+      },
+      {
+        key: AACategory.BASKETBOL,
+        name: 'Basketbol',
+        description: 'Basketball news',
+      },
+      {
+        key: AACategory.KORONAVIRUS,
+        name: 'Koronavirüs',
+        description: 'COVID-19 related news',
+      },
+      {
+        key: AACategory.VIDEO,
+        name: 'Video',
+        description: 'Video content',
+      },
     ];
 
     return { categories: categoryInfo };
@@ -175,5 +220,126 @@ export class NewsIngestController {
         hasImage: !!item.enclosure?.url,
       })),
     };
+  }
+
+  /**
+   * Get AI usage statistics for budget monitoring
+   * GET /api/news-ingest/ai-usage
+   */
+  @Get('ai-usage')
+  getAiUsage() {
+    const stats = this.newsIngestService.getAiUsageStats();
+
+    return {
+      message: 'AI usage statistics',
+      ...stats,
+      budgetStatus:
+        stats.remainingDailyRequests > 10
+          ? 'healthy'
+          : stats.remainingDailyRequests > 0
+            ? 'warning'
+            : 'exceeded',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get media statistics for monitoring
+   * GET /api/news-ingest/media-stats
+   */
+  @Get('media-stats')
+  async getMediaStats() {
+    const stats = await this.mediaStorageService.getMediaStats();
+    
+    return {
+      message: 'Media statistics',
+      ...stats,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get recent media statistics to see improvement
+   * GET /api/news-ingest/recent-media/:limit
+   * GET /api/news-ingest/recent-media (defaults to 10)
+   */
+  @Get('recent-media/:limit')
+  async getRecentMediaStatsWithLimit(@Param('limit') limit: string) {
+    const numLimit = parseInt(limit) || 10;
+    const stats = await this.mediaStorageService.getRecentMediaStats(numLimit);
+    
+    return {
+      message: `Recent media statistics for last ${numLimit} articles`,
+      ...stats,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('recent-media')
+  async getRecentMediaStats() {
+    const stats = await this.mediaStorageService.getRecentMediaStats(10);
+    
+    return {
+      message: 'Recent media statistics for last 10 articles',
+      ...stats,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Test single URL processing
+   * POST /api/news-ingest/single
+   */
+  @Post('single')
+  async processSingleUrl(@Body() body: { url: string }): Promise<{
+    message: string;
+    success: boolean;
+    result?: any;
+    error?: string;
+  }> {
+    const { url } = body;
+
+    if (!url) {
+      throw new BadRequestException('URL is required');
+    }
+
+    // Validate AA URL
+    if (!url.includes('aa.com.tr')) {
+      throw new BadRequestException('Only Anadolu Ajansı URLs are supported');
+    }
+
+    this.logger.log(`Single URL processing requested: ${url}`);
+
+    try {
+      const result = await this.newsIngestService.processSingleUrl(url);
+      
+      return {
+        message: 'Successfully processed single URL',
+        success: true,
+        result: {
+          title: result.title,
+          content_length: result.content?.length || 0,
+          image_url: result.image_url,
+          video_url: result.video_url,
+          media_gallery: {
+            images_count: result.media_gallery?.images?.length || 0,
+            videos_count: result.media_gallery?.videos?.length || 0,
+            featured_image: result.media_gallery?.featured_image,
+            featured_video: result.media_gallery?.featured_video,
+            sample_images: result.media_gallery?.images?.slice(0, 3) || [] // Show first 3 images
+          },
+          city: result.city,
+          category: result.category,
+          published_at: result.published_at,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Failed to process single URL: ${url}`, error);
+      return {
+        message: 'Failed to process URL',
+        success: false,
+        error: error.message,
+      };
+    }
   }
 }

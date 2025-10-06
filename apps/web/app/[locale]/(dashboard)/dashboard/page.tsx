@@ -1,8 +1,15 @@
 import type { JSX } from "react";
+import type {
+  CategoriesOverviewResponse,
+  CategoryNewsDetailResponse,
+  DashboardNewsDataPayload,
+  NewsListDataPayload,
+} from "@nexachron/shared-types";
+
+import { fetchCategories, fetchDashboardNews, fetchPopularNews } from "@/services/api";
 
 import { Dashboard } from "./_components/dashboard";
 import type { DashboardTopic } from "./_components/types";
-import { newsItems } from "./_components/news-data";
 
 const topics: DashboardTopic[] = [
   {
@@ -55,6 +62,63 @@ const topics: DashboardTopic[] = [
   },
 ];
 
-export default function DashboardPage(): JSX.Element {
-  return <Dashboard news={newsItems} topics={topics} />;
+function buildInitialNewsPayload(data: DashboardNewsDataPayload): NewsListDataPayload {
+  const items = data.items ?? [];
+  const total = data.total ?? items.length;
+  const pageSize = items.length || 10;
+
+  return {
+    items,
+    pagination: {
+      page: 1,
+      pageSize,
+      total,
+      hasMore: total > pageSize,
+    },
+  };
+}
+
+function isCategoriesOverview(
+  value: CategoriesOverviewResponse | CategoryNewsDetailResponse,
+): value is CategoriesOverviewResponse {
+  return !('items' in value);
+}
+
+export default async function DashboardPage(): Promise<JSX.Element> {
+  const [categoriesResult, popularResult] = await Promise.allSettled([
+    fetchCategories(),
+    fetchPopularNews(5), // Fetch 5 popular news items
+  ]);
+
+  const categoriesOverview: CategoriesOverviewResponse | undefined =
+    categoriesResult.status === 'fulfilled' &&
+    'categories' in categoriesResult.value &&
+    isCategoriesOverview(categoriesResult.value)
+      ? categoriesResult.value
+      : undefined;
+
+  const popularNews: DashboardNewsDataPayload =
+    popularResult.status === 'fulfilled'
+      ? popularResult.value
+      : { items: [], total: 0 };
+
+  // Don't pre-fetch news on the server, instead let the client handle infinite scrolling
+  const initialNews = {
+    items: [],
+    pagination: {
+      page: 1,
+      pageSize: 10,
+      total: 0,
+      hasMore: true,
+    },
+  };
+
+  return (
+    <Dashboard
+      initialNews={initialNews}
+      topics={topics}
+      categoriesOverview={categoriesOverview}
+      initialPopularNews={popularNews}
+    />
+  );
 }
