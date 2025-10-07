@@ -9,6 +9,7 @@ import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget
 import type { DashboardNewsItem, DashboardTopic } from "./types";
 import { useCategories } from "@/hooks/use-categories";
 import { usePopularNews } from "@/hooks/use-popular-news";
+import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useInfiniteNews } from "@/hooks/use-infinite-news";
 import type {
   CategoriesOverviewResponse,
@@ -124,7 +125,13 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           isNextPageLoadingRef.current = true;
           setIsLoadingMore(true);
 
-          loadMore().finally(() => {
+          if (typeof loadMore !== 'function') {
+            setIsLoadingMore(false);
+            isNextPageLoadingRef.current = false;
+            return;
+          }
+
+          Promise.resolve(loadMore()).finally(() => {
             setIsLoadingMore(false);
             isNextPageLoadingRef.current = false;
           });
@@ -169,16 +176,22 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     [apiNewsItems],
   );
 
+  // Bookmarks
+  const { bookmarkedIds, isLoading: isBookmarksLoading } = useBookmarks();
+
   // Filter news by selected categories
   const filteredNews = useMemo(() => {
     if (selectedCategoryIds.length === 0) {
+      if (activeCategory === 'saved') {
+        return mappedNews.filter((n) => bookmarkedIds.has(n.id));
+      }
       return mappedNews;
     }
     
     return mappedNews.filter((newsItem) => {
       return newsItem.categoryId && selectedCategoryIds.includes(newsItem.categoryId);
     });
-  }, [mappedNews, selectedCategoryIds]);
+  }, [mappedNews, selectedCategoryIds, activeCategory, bookmarkedIds]);
 
   const categoryInfo = useMemo(() => {
     if (selectedCategoryIds.length > 0) {
@@ -390,11 +403,15 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                     />
                   ) : isNewsLoading && apiNewsItems.length === 0 ? (
                     <NewsGridSkeleton />
+                  ) : activeCategory === 'saved' && !isBookmarksLoading && filteredNews.length === 0 ? (
+                    <EmptyState
+                      message="Henüz kaydedilmiş haberin yok. Kartlardaki Kaydet butonuna tıklayarak ekleyebilirsin."
+                    />
                   ) : apiNewsItems.length > 0 ? (
                     <>
                       <DashboardNewsGrid
                         key={apiNewsItems.length} // Key prop to force re-render when new items are added
-                        items={apiNewsItems.map(transformNewsItem)}
+                        items={filteredNews}
                         title={categoryInfo.title}
                         subtitle={categoryInfo.subtitle}
                         showAll={true}

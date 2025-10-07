@@ -1,5 +1,7 @@
 import Image from "next/image";
 import type { JSX } from "react";
+import { useState } from "react";
+import { addBookmark, removeBookmark } from "@/services/api";
 
 import type { DashboardNewsItem } from "./types";
 import { SafeImage } from "./safe-image";
@@ -34,6 +36,8 @@ type NewsCardProps = {
 
 export function NewsCard({ item }: NewsCardProps): JSX.Element {
   const sentiment = sentimentTone[item.sentiment];
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   return (
     <article
@@ -89,7 +93,24 @@ export function NewsCard({ item }: NewsCardProps): JSX.Element {
               <ActionButton label="Ses ile dinle">
                 <WaveIcon />
               </ActionButton>
-              <ActionButton label="Kaydet">
+              <ActionButton
+                label={saved ? "Kaydedildi" : "Kaydet"}
+                onClick={async () => {
+                  if (saving) return;
+                  try {
+                    setSaving(true);
+                    if (!saved) {
+                      await addBookmark(item.id);
+                      setSaved(true);
+                    } else {
+                      await removeBookmark(item.id);
+                      setSaved(false);
+                    }
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >
                 <BookmarkIcon />
               </ActionButton>
             </div>
