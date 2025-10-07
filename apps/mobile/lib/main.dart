@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mobile/l10n/gen/app_localizations.dart';
 
@@ -12,7 +13,10 @@ import 'core/services/locale_controller.dart';
 import 'core/services/locale_scope.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/pages/landing_page.dart';
-import 'features/auth/presentation/pages/profile_screen.dart';
+import 'features/news/presentation/pages/main_navigation.dart';
+import 'features/games/presentation/pages/quizzes_page.dart';
+import 'features/games/presentation/pages/wordle_page.dart';
+import 'features/games/presentation/pages/news_guessr_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +29,9 @@ Future<void> main() async {
     anonKey: AppConfig.supabaseAnonKey,
   );
 
-  runApp(NexachronApp(localeController: localeController));
+  runApp(
+    ProviderScope(child: NexachronApp(localeController: localeController)),
+  );
 }
 
 class NexachronApp extends StatelessWidget {
@@ -67,6 +73,11 @@ class NexachronApp extends StatelessWidget {
               return Locale(defaultLocaleCode);
             },
             home: const _AuthRoot(),
+            routes: {
+              '/quizzes': (context) => const QuizzesPage(),
+              '/wordle': (context) => const WordlePage(),
+              '/news-guessr': (context) => const NewsGuessrPage(),
+            },
           ),
         );
       },
@@ -107,7 +118,7 @@ class _AuthRootState extends State<_AuthRoot> {
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
-      child: _session == null ? const LandingPage() : const ProfileScreen(),
+      child: _session == null ? const LandingPage() : const MainNavigation(),
     );
   }
 }

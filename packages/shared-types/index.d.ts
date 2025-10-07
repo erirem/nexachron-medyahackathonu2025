@@ -181,6 +181,7 @@ export interface NewsWithMediaDto {
   content: string;
   summary: string;
   categoryId: string | null;
+  category?: string | null; // Category label/name
   city: string | null;
   isPopular: boolean;
   createdAt: string;
