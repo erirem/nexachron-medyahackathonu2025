@@ -7,6 +7,7 @@ import { SmoothScrollWrapper } from './_components/smooth-scroll-wrapper';
 import { DynamicScrollbarWrapper } from './_components/dynamic-scrollbar-wrapper';
 import type { DashboardNewsItem } from '../../dashboard/_components/types';
 import { fetchNewsById, fetchNewsList } from '@/services/api';
+import type { NewsWithMediaDto } from '@nexachron/shared-types';
 import './_components/scrollbar.css';
 
 export default async function NewsPage({ params }: { params: Promise<{ id: string; locale: string }> }): Promise<JSX.Element> {
@@ -101,15 +102,16 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
 }
 
 // Helper function to transform news data to dashboard item format
-function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
+function transformNewsDataToDashboardItem(item: Partial<NewsWithMediaDto>): DashboardNewsItem {
   // Parse media_summary if it exists and is a string
   let mediaSummary = null;
-  if (item.media_summary) {
+  if (item && (item as any).media_summary) {
     try {
       // Check if it's already an object or a string that needs parsing
-      mediaSummary = typeof item.media_summary === 'string' 
-        ? JSON.parse(item.media_summary) 
-        : item.media_summary;
+      const mediaSummaryRaw = (item as any).media_summary;
+      mediaSummary = typeof mediaSummaryRaw === 'string' 
+        ? JSON.parse(mediaSummaryRaw) 
+        : mediaSummaryRaw;
     } catch (e) {
       console.error('Error parsing media_summary:', e);
       mediaSummary = null;
@@ -117,11 +119,11 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
   }
 
   // Extract images from media_summary if available, otherwise use other image sources
-  let extractedImages = [];
+  let extractedImages: Array<{ url: string; alt: string; caption?: string; credit?: string } | undefined> = [];
   let primaryImageUrl = '';
 
   if (mediaSummary && mediaSummary.gallery_images && Array.isArray(mediaSummary.gallery_images)) {
-    extractedImages = mediaSummary.gallery_images.map((img: any) => ({
+    extractedImages = mediaSummary.gallery_images.map((img: { url: string; caption?: string | null }) => ({
       url: img.url,
       alt: item.title,
       caption: img.caption || undefined,
@@ -136,7 +138,7 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
     }
   } else {
     // Fallback to other image sources
-    extractedImages = item.media?.map((media: any) => ({
+    extractedImages = item.media?.map((media: { url: string; caption?: string | null }) => ({
       url: media.url,
       alt: item.title,
       caption: media.caption || undefined,
@@ -145,8 +147,6 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
     
     if (item.media?.[0]?.url) {
       primaryImageUrl = item.media[0].url;
-    } else if (item.image_url) {
-      primaryImageUrl = item.image_url;
     } else if (item.primaryMedia?.url) {
       primaryImageUrl = item.primaryMedia.url;
     }
@@ -154,7 +154,7 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
 
   return {
     id: item.id,
-    category: item.categoryId || item.category || 'Diğer',
+    category: item.categoryId || 'Diğer',
     categoryId: item.categoryId || null,
     title: item.title || 'Başlık yok',
     summary: item.summary || item.content?.substring(0, 100) + '...' || '',
@@ -165,7 +165,7 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
     storyDate: item.publishedAt || item.createdAt || new Date().toISOString(),
     readingTime: estimateReadingTime(item.content || ''),
     dateline: item.city || 'Türkiye',
-    tags: [item.categoryId || item.category || 'genel'],
+    tags: [item.categoryId || 'genel'],
     imageUrl: primaryImageUrl,
     images: extractedImages,
     sentiment: item.isPopular ? 'positive' : 'neutral',

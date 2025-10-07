@@ -7,7 +7,7 @@ import { WordleGame } from '../_components/wordle-game';
 
 export default function WordlePage(): JSX.Element {
   const [isGameOpen, setIsGameOpen] = useState(true);
-  const { userProfile, addXp } = useGamification();
+  const { userProfile, addXP } = useGamification();
   const router = useRouter();
 
   const handleGameComplete = (isWon: boolean, attempts: number) => {
@@ -17,7 +17,8 @@ export default function WordlePage(): JSX.Element {
       const bonusXp = Math.max(0, (7 - attempts) * 5); // Her deneme için 5 XP bonus
       const totalXp = baseXp + bonusXp;
       
-      addXp(totalXp, 'wordle_win');
+      // Gamification sisteminde özel bir aksiyon tipi yerine custom XP ile veriyoruz
+      addXP('QUIZ_COMPLETE', totalXp);
       
       // Başarı mesajı göster
       setTimeout(() => {
@@ -25,7 +26,7 @@ export default function WordlePage(): JSX.Element {
       }, 1000);
     } else {
       // Kaybetme durumunda da az XP ver
-      addXp(5, 'wordle_attempt');
+      addXP('QUIZ_COMPLETE', 5);
       
       setTimeout(() => {
         alert(`😔 Kelimeyi bulamadınız.\n+5 XP kazandınız!`);
@@ -61,7 +62,7 @@ export default function WordlePage(): JSX.Element {
             <span>Wordle</span>
           </h1>
           <p className="text-[#8fb8ff] text-lg">
-            5 harfli Türkçe kelimeyi 6 denemede bulun! {userProfile?.xp || 0} XP'niz var.
+            5 harfli Türkçe kelimeyi 6 denemede bulun! {userProfile?.xp || 0} XP&apos;niz var.
           </p>
         </div>
 

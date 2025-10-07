@@ -123,10 +123,16 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           isNextPageLoadingRef.current = true;
           setIsLoadingMore(true);
 
-          loadMore().finally(() => {
+          const promise = loadMore();
+          if (promise && typeof (promise as Promise<unknown>).finally === 'function') {
+            (promise as Promise<unknown>).finally(() => {
+              setIsLoadingMore(false);
+              isNextPageLoadingRef.current = false;
+            });
+          } else {
             setIsLoadingMore(false);
             isNextPageLoadingRef.current = false;
-          });
+          }
         }
       },
       { threshold: 0.1, rootMargin: '100px' } // Trigger when 100px before the element
@@ -1071,7 +1077,7 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   let primaryImageUrl = '';
 
   if (mediaSummary && mediaSummary.gallery_images && Array.isArray(mediaSummary.gallery_images)) {
-    extractedImages = mediaSummary.gallery_images.map((img: any) => ({
+    extractedImages = mediaSummary.gallery_images.map((img: { url: string; caption?: string | null }) => ({
       url: img.url,
       alt: item.title,
       caption: img.caption || undefined,

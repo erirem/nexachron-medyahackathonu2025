@@ -308,7 +308,7 @@
                 "26f14fd0-6df8-4c1a-835c-839133830985"
               ]
             },
-            "description": "Belirli bir haber ID'sine göre haber detaylarını getirir."
+            "description": "Belirli bir haber ID'sine göre haber detaylarını getirir. Not: Geçersiz UUID için 400, bulunamayan kayıt için 404 döner."
           }
         },
         {
@@ -367,6 +367,30 @@
               ]
             },
             "description": "Belirli bir habere tepki (emoji) ekler."
+          }
+        },
+        {
+          "name": "Test Kategorileri (internal)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/test-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "test-categories"
+              ]
+            },
+            "description": "Haber kategorileri için test endpoint'i (iç kullanım)."
           }
         }
       ]

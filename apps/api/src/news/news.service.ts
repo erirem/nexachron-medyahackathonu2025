@@ -214,17 +214,11 @@ export class NewsService {
         reactions(
           emoji,
           user_id
-        ),
-        quizzes(
-          id,
-          question,
-          options,
-          correct_index
         )
       `,
       )
       .eq('id', id)
-      .single();
+      .maybeSingle();
   }
 
   async getPopularNews(limit = 10) {
