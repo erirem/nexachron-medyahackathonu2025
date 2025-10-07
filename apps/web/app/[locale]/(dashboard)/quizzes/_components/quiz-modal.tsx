@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { useTranslations } from 'next-intl';
@@ -24,6 +25,25 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+
+  const getCorrectAnswerCount = useCallback(() => {
+    let correctCount = 0;
+    for (let i = 0; i < progress.answers.length; i++) {
+      const given = progress.answers[i];
+      if (given === null) continue;
+      const expected = quiz.questions[i]?.correctAnswer;
+      if (typeof expected === 'number' && given === expected) {
+        correctCount += 1;
+      }
+    }
+    return correctCount;
+  }, [progress.answers, quiz.questions]);
+
+  const handleSubmit = useCallback(() => {
+    setIsCompleted(true);
+    setShowResults(true);
+    onComplete(quiz, getCorrectAnswerCount());
+  }, [getCorrectAnswerCount, onComplete, quiz]);
 
   // Timer effect
   useEffect(() => {
@@ -100,17 +120,7 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
     }
   };
 
-  const handleSubmit = useCallback(() => {
-    setIsCompleted(true);
-    setShowResults(true);
-    
-    // Calculate score
-    const correctAnswers = progress.answers.reduce((count, answer, index) => {
-      return count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0);
-    }, 0);
-    
-    onComplete(quiz, correctAnswers);
-  }, [onComplete, progress.answers, quiz]);
+  
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -264,20 +274,12 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
             {/* Results Stats */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-white/5 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-white">
-                  {progress.answers.reduce((count, answer, index) => 
-                    count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0), 0
-                  )} / {quiz.questionCount}
-                </div>
+                <div className="text-2xl font-bold text-white">{getCorrectAnswerCount()} / {quiz.questionCount}</div>
                 <div className="text-sm text-white/70">{t('results.correctAnswers')}</div>
               </div>
               
               <div className="bg-white/5 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-400">
-                  +{Math.floor(quiz.xpReward * (progress.answers.reduce((count, answer, index) => 
-                    count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0), 0
-                  ) / quiz.questionCount))}
-                </div>
+                <div className="text-2xl font-bold text-yellow-400">+{Math.floor(quiz.xpReward * (getCorrectAnswerCount() / quiz.questionCount))}</div>
                 <div className="text-sm text-white/70">{t('results.xpEarned')}</div>
               </div>
             </div>
