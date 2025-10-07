@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { type JSX } from 'react';
 import type { QuizCategory } from '../_types/quiz-types';
 
@@ -49,6 +50,7 @@ const colorClasses = {
 };
 
 export function QuizCategoryCard({ category, isSelected, onSelect }: QuizCategoryCardProps): JSX.Element {
+  const t = useTranslations('quizzes.categoryCard');
   const colors = colorClasses[category.color];
   const progressPercentage = (category.completedCount / category.quizCount) * 100;
 
@@ -87,14 +89,14 @@ export function QuizCategoryCard({ category, isSelected, onSelect }: QuizCategor
         {/* Stats */}
         <div className="space-y-3">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-white/70">Quiz Sayısı</span>
+            <span className="text-white/70">{t('labels.quizCount')}</span>
             <span className={`font-semibold ${colors.accent}`}>
               {category.quizCount}
             </span>
           </div>
           
           <div className="flex justify-between items-center text-sm">
-            <span className="text-white/70">Tamamlanan</span>
+            <span className="text-white/70">{t('labels.completed')}</span>
             <span className={`font-semibold ${colors.accent}`}>
               {category.completedCount}
             </span>
@@ -103,7 +105,7 @@ export function QuizCategoryCard({ category, isSelected, onSelect }: QuizCategor
           {/* Progress Bar */}
           <div className="space-y-2">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-white/60">İlerleme</span>
+              <span className="text-white/60">{t('labels.progress')}</span>
               <span className={`${colors.accent} font-medium`}>
                 %{Math.round(progressPercentage)}
               </span>

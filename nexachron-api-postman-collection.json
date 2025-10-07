@@ -1,0 +1,661 @@
+{
+  "info": {
+    "name": "Nexachron API Collection",
+    "description": "Nexachron haber uygulaması için tüm API endpoint'leri",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "API health check endpoint"
+          }
+        },
+        {
+          "name": "Supabase Test",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/supabase-test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "supabase-test"
+              ]
+            },
+            "description": "Test Supabase connection"
+          }
+        }
+      ]
+    },
+    {
+      "name": "News API",
+      "item": [
+        {
+          "name": "Haberleri Listele",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr",
+                "description": "Dil parametresi (tr, en, ru, fr, es, fa, id, bs, sq, mk)"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news?page=1&pageSize=10&categoryId=ekonomi&city=istanbul&isPopular=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Sayfa numarası"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10",
+                  "description": "Sayfa boyutu (max 100)"
+                },
+                {
+                  "key": "categoryId",
+                  "value": "ekonomi",
+                  "description": "Kategori ID'si",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "istanbul",
+                  "description": "Şehir adı",
+                  "disabled": true
+                },
+                {
+                  "key": "isPopular",
+                  "value": "true",
+                  "description": "Popüler haberler için true",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Limit (used when no pagination params)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Tüm haberleri getirir. Pagination, kategori, şehir ve popülerlik filtreleme destekler."
+          }
+        },
+        {
+          "name": "Dashboard Haberleri",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "dashboard"
+              ]
+            },
+            "description": "Dashboard için özet haberleri getirir (limit: 10)"
+          }
+        },
+        {
+          "name": "Kategorileri ve Haberleri",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/categories?categoryId=ekonomi&page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "ekonomi",
+                  "description": "Belirli kategori için haberler getir"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Kategori özetini ve belirli kategorideki haberleri getirir."
+          }
+        },
+        {
+          "name": "Trend Haberleri",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/trending?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "trending"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Getirilecek trend haber sayısı (default: 20, max: 50)"
+                }
+              ]
+            },
+            "description": "Trend haberleri getirir."
+          }
+        },
+        {
+          "name": "Popüler Haberler",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/popular?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "popular"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Getirilecek popüler haber sayısı (default: 10, max: 50)"
+                }
+              ]
+            },
+            "description": "Popüler haberleri getirir."
+          }
+        },
+        {
+          "name": "Mod'a Göre Haberler",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/mode/WORLD?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "mode",
+                "WORLD"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Getirilecek haber sayısı (default: 20, max: 100)"
+                }
+              ]
+            },
+            "description": "Belirli mod (kategorize edilmiş içerik türü) göre haberleri getirir."
+          }
+        },
+        {
+          "name": "Haber ID ile Getir",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/26f14fd0-6df8-4c1a-835c-839133830985",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "26f14fd0-6df8-4c1a-835c-839133830985"
+              ]
+            },
+            "description": "Belirli bir haber ID'sine göre haber detaylarını getirir. Not: Geçersiz UUID için 400, bulunamayan kayıt için 404 döner."
+          }
+        },
+        {
+          "name": "Habere Yorum Ekle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user123\",\n  \"comment\": \"Bu haber çok ilginçmiş.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/26f14fd0-6df8-4c1a-835c-839133830985/comment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "26f14fd0-6df8-4c1a-835c-839133830985",
+                "comment"
+              ]
+            },
+            "description": "Belirli bir habere yorum ekler."
+          }
+        },
+        {
+          "name": "Habere Tepki Ekle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user123\",\n  \"emoji\": \"👍\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news/26f14fd0-6df8-4c1a-835c-839133830985/reaction",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "26f14fd0-6df8-4c1a-835c-839133830985",
+                "reaction"
+              ]
+            },
+            "description": "Belirli bir habere tepki (emoji) ekler."
+          }
+        },
+        {
+          "name": "Test Kategorileri (internal)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/news/test-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news",
+                "test-categories"
+              ]
+            },
+            "description": "Haber kategorileri için test endpoint'i (iç kullanım)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "News Ingest API",
+      "item": [
+        {
+          "name": "Manuel Haber Çekme",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/manual",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "manual"
+              ]
+            },
+            "description": "Tüm kategorilerden manuel olarak haber çeker ve veritabanına kaydeder."
+          }
+        },
+        {
+          "name": "Kategori Bazlı Haber Çekme",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/category/guncel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "category",
+                "guncel"
+              ]
+            },
+            "description": "Belirli bir kategoriden haber çeker. Geçerli kategoriler: guncel, ekonomi, spor, dunya, teknoloji, yasam, saglik, politika, analiz, kultur, egitim, futbol, basketbol, koronavirus, video"
+          }
+        },
+        {
+          "name": "İstatistikler",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "stats"
+              ]
+            },
+            "description": "Haber ingestion istatistiklerini getirir."
+          }
+        },
+        {
+          "name": "Kategorileri Listele",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "categories"
+              ]
+            },
+            "description": "Mevcut tüm kategorileri ve açıklamalarını listeler."
+          }
+        },
+        {
+          "name": "Kategori Test",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/test/guncel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "test",
+                "guncel"
+              ]
+            },
+            "description": "Belirli bir kategorinin RSS feed'ini test eder, veritabanına kaydetmez."
+          }
+        },
+        {
+          "name": "AI Kullanım İstatistikleri",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/ai-usage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "ai-usage"
+              ]
+            },
+            "description": "AI kullanım istatistiklerini ve bütçe durumunu gösterir."
+          }
+        },
+        {
+          "name": "Medya İstatistikleri",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/media-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "media-stats"
+              ]
+            },
+            "description": "Medya (resim/video) istatistiklerini getirir."
+          }
+        },
+        {
+          "name": "Son Medya İstatistikleri",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/recent-media/10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "recent-media",
+                "10"
+              ]
+            },
+            "description": "Son 10 haberin medya istatistiklerini getirir."
+          }
+        },
+        {
+          "name": "Son Medya İstatistikleri (Varsayılan)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/recent-media",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "recent-media"
+              ]
+            },
+            "description": "Son 10 haberin medya istatistiklerini getirir (varsayılan limit)."
+          }
+        },
+        {
+          "name": "Tek URL İşleme",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://www.aa.com.tr/tr/ekonomi/borsa-istanbul-rekor-hacimle-haftayi-tamamladi/123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/news-ingest/single",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "news-ingest",
+                "single"
+              ]
+            },
+            "description": "Tek bir Anadolu Ajansı URL'sini işler ve içeriği analiz eder."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users API",
+      "item": [
+        {
+          "name": "Kullanıcı Profili",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "accept-language",
+                "value": "tr"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me"
+              ]
+            },
+            "description": "Oturum açmış kullanıcının profil bilgilerini ve istatistiklerini getirir."
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Eğer auth token varsa otomatik ekle",
+          "if (pm.environment.get('auth_token')) {",
+          "    pm.request.headers.add({",
+          "        key: 'Authorization',",
+          "        value: 'Bearer ' + pm.environment.get('auth_token')",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

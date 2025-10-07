@@ -1,7 +1,9 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback, type JSX } from 'react';
-import type { Quiz, QuizProgress, QuizResult } from '../_types/quiz-types';
+import type { Quiz, QuizProgress } from '../_types/quiz-types';
 
 interface QuizModalProps {
   quiz: Quiz;
@@ -11,6 +13,7 @@ interface QuizModalProps {
 }
 
 export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps): JSX.Element {
+  const t = useTranslations('quizzes.modal');
   const [progress, setProgress] = useState<QuizProgress>({
     currentQuestion: 0,
     totalQuestions: quiz.questionCount,
@@ -22,6 +25,25 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+
+  const getCorrectAnswerCount = useCallback(() => {
+    let correctCount = 0;
+    for (let i = 0; i < progress.answers.length; i++) {
+      const given = progress.answers[i];
+      if (given === null) continue;
+      const expected = quiz.questions[i]?.correctAnswer;
+      if (typeof expected === 'number' && given === expected) {
+        correctCount += 1;
+      }
+    }
+    return correctCount;
+  }, [progress.answers, quiz.questions]);
+
+  const handleSubmit = useCallback(() => {
+    setIsCompleted(true);
+    setShowResults(true);
+    onComplete(quiz, getCorrectAnswerCount());
+  }, [getCorrectAnswerCount, onComplete, quiz]);
 
   // Timer effect
   useEffect(() => {
@@ -42,7 +64,7 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, isCompleted, showResults]);
+  }, [handleSubmit, isOpen, isCompleted, showResults]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -84,7 +106,7 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
         currentQuestion: prev.currentQuestion + 1,
         answers: newAnswers
       }));
-      setSelectedAnswer(prev => newAnswers[progress.currentQuestion + 1]);
+      setSelectedAnswer(newAnswers[progress.currentQuestion + 1]);
     }
   };
 
@@ -94,21 +116,11 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
         ...prev,
         currentQuestion: prev.currentQuestion - 1
       }));
-      setSelectedAnswer(prev => progress.answers[progress.currentQuestion - 1]);
+      setSelectedAnswer(progress.answers[progress.currentQuestion - 1]);
     }
   };
 
-  const handleSubmit = () => {
-    setIsCompleted(true);
-    setShowResults(true);
-    
-    // Calculate score
-    const correctAnswers = progress.answers.reduce((count, answer, index) => {
-      return count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0);
-    }, 0);
-    
-    onComplete(quiz, correctAnswers);
-  };
+  
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -119,6 +131,28 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
   const currentQuestion = quiz.questions[progress.currentQuestion];
 
   if (!isOpen) return <></>;
+
+  // Quiz verisi eksikse hata göster
+  if (!currentQuestion) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-md bg-[#1a2234] rounded-2xl border border-white/10 shadow-2xl p-6">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-white mb-4">{t('dataMissing.title')}</h2>
+            <p className="text-white/70 mb-6">{t('dataMissing.description')}</p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-medium transition-all duration-200"
+            >
+              {t('actions.close')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -149,8 +183,13 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
               
               {/* Progress */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm text-white/70">
-                  <span>Soru {progress.currentQuestion + 1} / {progress.totalQuestions}</span>
+              <div className="flex items-center justify-between text-sm text-white/70">
+                  <span>
+                    {t('labels.questionProgress', {
+                      current: progress.currentQuestion + 1,
+                      total: progress.totalQuestions,
+                    })}
+                  </span>
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -209,7 +248,7 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
                 disabled={progress.currentQuestion === 0}
                 className="px-6 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
               >
-                Önceki
+                {t('actions.previous')}
               </button>
               
               <button
@@ -217,7 +256,9 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
                 disabled={selectedAnswer === null}
                 className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-medium transition-all duration-200"
               >
-                {progress.currentQuestion === progress.totalQuestions - 1 ? 'Tamamla' : 'Sonraki'}
+                {progress.currentQuestion === progress.totalQuestions - 1
+                  ? t('actions.submit')
+                  : t('actions.next')}
               </button>
             </div>
           </>
@@ -226,28 +267,20 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
           <div className="p-6">
             <div className="text-center mb-8">
               <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-3xl font-bold text-white mb-2">Quiz Tamamlandı!</h2>
-              <p className="text-white/70">Tebrikler, quiz'i başarıyla tamamladınız.</p>
+              <h2 className="text-3xl font-bold text-white mb-2">{t('results.title')}</h2>
+              <p className="text-white/70">{t('results.subtitle')}</p>
             </div>
 
             {/* Results Stats */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-white/5 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-white">
-                  {progress.answers.reduce((count, answer, index) => 
-                    count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0), 0
-                  )} / {quiz.questionCount}
-                </div>
-                <div className="text-sm text-white/70">Doğru Cevap</div>
+                <div className="text-2xl font-bold text-white">{getCorrectAnswerCount()} / {quiz.questionCount}</div>
+                <div className="text-sm text-white/70">{t('results.correctAnswers')}</div>
               </div>
               
               <div className="bg-white/5 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-400">
-                  +{Math.floor(quiz.xpReward * (progress.answers.reduce((count, answer, index) => 
-                    count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0), 0
-                  ) / quiz.questionCount))}
-                </div>
-                <div className="text-sm text-white/70">XP Kazandınız</div>
+                <div className="text-2xl font-bold text-yellow-400">+{Math.floor(quiz.xpReward * (getCorrectAnswerCount() / quiz.questionCount))}</div>
+                <div className="text-sm text-white/70">{t('results.xpEarned')}</div>
               </div>
             </div>
 
@@ -257,7 +290,7 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
                 onClick={onClose}
                 className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-medium transition-all duration-200"
               >
-                Kapat
+                {t('actions.close')}
               </button>
               
               <button
@@ -275,7 +308,7 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
                 }}
                 className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium transition-colors"
               >
-                Tekrar Çöz
+                {t('actions.retry')}
               </button>
             </div>
           </div>

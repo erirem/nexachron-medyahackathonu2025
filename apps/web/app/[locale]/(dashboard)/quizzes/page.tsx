@@ -1,49 +1,54 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import { useState, type JSX } from 'react';
+import { useMemo, useState, type JSX } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+
 import { useGamification } from '@/contexts/gamification-context';
+
 import { QuizCategoryCard } from './_components/quiz-category-card';
 import { QuizList } from './_components/quiz-list';
 import { QuizModal } from './_components/quiz-modal';
 import type { Quiz, QuizCategory } from './_types/quiz-types';
 
-// Mock quiz data
+// Mock quiz data (content placeholders)
 const mockQuizzes: Quiz[] = [
   {
     id: '1',
-    title: 'Güncel Haberler Quiz\'i',
+    title: "Güncel Haberler Quiz'i",
     description: 'Son 24 saatteki önemli haberler hakkında bilginizi test edin',
     category: 'news',
     difficulty: 'easy',
-    questionCount: 5,
-    timeLimit: 300, // 5 dakika
+    questionCount: 2,
+    timeLimit: 300,
     xpReward: 50,
     isCompleted: false,
     questions: [
       {
         id: '1',
-        question: 'Türkiye\'nin yeni uzay programı hangi yılda başlatıldı?',
+        question: "Türkiye'nin yeni uzay programı hangi yılda başlatıldı?",
         options: ['2020', '2021', '2022', '2023'],
         correctAnswer: 1,
         explanation: 'Türkiye Uzay Ajansı 2021 yılında kuruldu ve uzay programı başlatıldı.'
       },
       {
         id: '2',
-        question: 'Hangi ülke 2024 yılında Dünya Kupası\'nı kazandı?',
+        question: "Hangi ülke 2024 yılında Dünya Kupası'nı kazandı?",
         options: ['Brezilya', 'Arjantin', 'Fransa', 'Almanya'],
         correctAnswer: 1,
-        explanation: 'Arjantin 2024 Dünya Kupası\'nı kazandı.'
+        explanation: "Arjantin 2024 Dünya Kupası'nı kazandı."
       }
     ]
   },
   {
     id: '2',
-    title: 'Genel Kültür Quiz\'i',
+    title: "Genel Kültür Quiz'i",
     description: 'Tarih, coğrafya ve kültür hakkında sorular',
     category: 'general',
     difficulty: 'medium',
-    questionCount: 10,
-    timeLimit: 600, // 10 dakika
+    questionCount: 1,
+    timeLimit: 600,
     xpReward: 100,
     isCompleted: false,
     questions: [
@@ -58,12 +63,12 @@ const mockQuizzes: Quiz[] = [
   },
   {
     id: '3',
-    title: 'Spor Quiz\'i',
+    title: "Spor Quiz'i",
     description: 'Futbol, basketbol ve diğer spor dalları hakkında sorular',
     category: 'sports',
     difficulty: 'hard',
-    questionCount: 15,
-    timeLimit: 900, // 15 dakika
+    questionCount: 1,
+    timeLimit: 900,
     xpReward: 150,
     isCompleted: false,
     questions: [
@@ -72,17 +77,15 @@ const mockQuizzes: Quiz[] = [
         question: 'Galatasaray kaç kez UEFA Kupası kazandı?',
         options: ['1', '2', '3', '4'],
         correctAnswer: 0,
-        explanation: 'Galatasaray 2000 yılında UEFA Kupası\'nı kazandı.'
+        explanation: "Galatasaray 2000 yılında UEFA Kupası'nı kazandı."
       }
     ]
   }
 ];
 
-const quizCategories: QuizCategory[] = [
+const baseCategories: readonly Omit<QuizCategory, 'name' | 'description'>[] = [
   {
     id: 'news',
-    name: 'Haber Quizleri',
-    description: 'Güncel haberler ve olaylar hakkında quizler',
     icon: '📰',
     color: 'blue',
     quizCount: 12,
@@ -90,8 +93,6 @@ const quizCategories: QuizCategory[] = [
   },
   {
     id: 'general',
-    name: 'Genel Kültür',
-    description: 'Tarih, coğrafya, bilim ve kültür quizleri',
     icon: '🧠',
     color: 'purple',
     quizCount: 25,
@@ -99,8 +100,6 @@ const quizCategories: QuizCategory[] = [
   },
   {
     id: 'sports',
-    name: 'Spor',
-    description: 'Futbol, basketbol ve diğer spor dalları',
     icon: '⚽',
     color: 'green',
     quizCount: 18,
@@ -108,8 +107,6 @@ const quizCategories: QuizCategory[] = [
   },
   {
     id: 'technology',
-    name: 'Teknoloji',
-    description: 'Yapay zeka, programlama ve teknoloji trendleri',
     icon: '💻',
     color: 'cyan',
     quizCount: 15,
@@ -117,8 +114,6 @@ const quizCategories: QuizCategory[] = [
   },
   {
     id: 'economy',
-    name: 'Ekonomi',
-    description: 'Finans, ekonomi ve iş dünyası',
     icon: '💰',
     color: 'yellow',
     quizCount: 10,
@@ -126,8 +121,6 @@ const quizCategories: QuizCategory[] = [
   },
   {
     id: 'science',
-    name: 'Bilim',
-    description: 'Fizik, kimya, biyoloji ve matematik',
     icon: '🔬',
     color: 'red',
     quizCount: 20,
@@ -140,6 +133,19 @@ export default function QuizzesPage(): JSX.Element {
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const { userProfile, completeQuiz } = useGamification();
+  const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('quizzes');
+
+  const categories = useMemo(
+    () =>
+      baseCategories.map((category) => ({
+        ...category,
+        name: t(`categories.${category.id}.name`),
+        description: t(`categories.${category.id}.description`),
+      })),
+    [t],
+  );
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -151,30 +157,43 @@ export default function QuizzesPage(): JSX.Element {
   };
 
   const handleQuizComplete = (quiz: Quiz, score: number) => {
-    // Gamification sistemine quiz tamamlama bildir
     completeQuiz(quiz.id, score, quiz.questionCount);
   };
 
-  const filteredQuizzes = selectedCategory 
-    ? mockQuizzes.filter(quiz => quiz.category === selectedCategory)
+  const filteredQuizzes = selectedCategory
+    ? mockQuizzes.filter((quiz) => quiz.category === selectedCategory)
     : mockQuizzes;
+
+  const activeCategory = selectedCategory
+    ? categories.find((category) => category.id === selectedCategory)
+    : null;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
+        <div className="mb-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-white/70 hover:text-white"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {t('page.back')}
+          </button>
+        </div>
+
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Quizler</h1>
+          <h1 className="text-4xl font-bold mb-2">{t('page.title')}</h1>
           <p className="text-[#8fb8ff] text-lg">
-            Bilginizi test edin ve XP kazanın! {userProfile?.xp || 0} XP'niz var.
+            {t('page.description', { xp: (userProfile?.xp ?? 0).toLocaleString(locale) })}
           </p>
         </div>
 
-        {/* Categories */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-6">Kategoriler</h2>
+          <h2 className="text-2xl font-semibold mb-6">{t('page.categoriesHeading')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quizCategories.map((category) => (
+            {categories.map((category) => (
               <QuizCategoryCard
                 key={category.id}
                 category={category}
@@ -185,21 +204,19 @@ export default function QuizzesPage(): JSX.Element {
           </div>
         </div>
 
-        {/* Quiz List */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold">
-              {selectedCategory 
-                ? `${quizCategories.find(c => c.id === selectedCategory)?.name} Quizleri`
-                : 'Tüm Quizler'
-              }
+              {activeCategory
+                ? t('page.categoryTitle', { category: activeCategory.name })
+                : t('page.allTitle')}
             </h2>
             {selectedCategory && (
               <button
                 onClick={() => setSelectedCategory(null)}
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
               >
-                Tümünü Göster
+                {t('page.showAll')}
               </button>
             )}
           </div>
@@ -210,7 +227,6 @@ export default function QuizzesPage(): JSX.Element {
           />
         </div>
 
-        {/* Quiz Modal */}
         {selectedQuiz && (
           <QuizModal
             quiz={selectedQuiz}

@@ -111,7 +111,7 @@
         "default": "Bergabunglah dengan Nexachron dan nikmati berita yang bergamifikasi.",
         "submitting": "Sedang memverifikasi data...",
         "invalid": "Periksa kembali formulir",
-      "success": "Selamat datang kembali! Mengarahkan ke dasbor Anda...",
+        "success": "Selamat datang kembali! Mengarahkan ke dasbor Anda...",
         "error": "Terjadi kesalahan saat masuk."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Memulai pendaftaran...",
         "invalid": "Periksa kolom wajib",
         "successEmail": "Registrasi sukses! Cek email Anda untuk verifikasi.",
-      "successRedirect": "Selamat datang! Mengarahkan ke dasbor...",
+        "successRedirect": "Selamat datang! Mengarahkan ke dasbor...",
         "error": "Terjadi kesalahan saat membuat akun."
       },
       "supabase": {
@@ -348,6 +348,208 @@
       "none": "Mulai streak Anda dengan menjelajah berita hari ini.",
       "low": "Streak {count} hari! Pertahankan.",
       "high": "Streak {count} hari 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "Kembali",
+      "title": "Permainan",
+      "description": "Uji pengetahuanmu dengan mini game dan raih XP! Kamu memiliki {xp} XP.",
+      "categoriesHeading": "Kategori",
+      "comingSoonHeading": "Segera hadir"
+    },
+    "categories": {
+      "all": {
+        "name": "Semua"
+      },
+      "educational": {
+        "name": "Edukasi"
+      },
+      "memory": {
+        "name": "Memori"
+      },
+      "word": {
+        "name": "Kata"
+      },
+      "trivia": {
+        "name": "Trivia"
+      },
+      "timeline": {
+        "name": "Linimasa"
+      },
+      "visual": {
+        "name": "Visual"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "Kuis",
+        "description": "Jawab pertanyaan terkini dan kumpulkan XP dari berita, budaya, dan olahraga.",
+        "estimatedTime": "5-15 menit"
+      },
+      "memoryGame": {
+        "title": "Memori berita",
+        "description": "Pasangkan judul untuk menguatkan ingatanmu.",
+        "estimatedTime": "3-8 menit"
+      },
+      "wordPuzzle": {
+        "title": "Teka kata",
+        "description": "Temukan kata-kata bertema berita dan perluas kosakata.",
+        "estimatedTime": "4-10 menit"
+      },
+      "newsTrivia": {
+        "title": "Trivia berita",
+        "description": "Pertanyaan singkat tentang kabar terbaru.",
+        "estimatedTime": "2-5 menit"
+      },
+      "timelineGame": {
+        "title": "Tantangan linimasa",
+        "description": "Urutkan peristiwa dan uji pengetahuan sejarahmu.",
+        "estimatedTime": "8-15 menit"
+      },
+      "spotTheDifference": {
+        "title": "Cari perbedaan",
+        "description": "Bandingkan foto berita dan asah fokusmu.",
+        "estimatedTime": "5-12 menit"
+      },
+      "wordle": {
+        "title": "Wordle",
+        "description": "Tebak kata lima huruf dalam enam percobaan — tantangan baru setiap hari.",
+        "estimatedTime": "3-8 menit"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "Mudah",
+        "medium": "Sedang",
+        "hard": "Sulit"
+      },
+      "labels": {
+        "xpReward": "Hadiah XP",
+        "progress": "Progres",
+        "comingSoon": "Segera hadir",
+        "playAgain": "Main lagi",
+        "start": "Mulai permainan"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "Kembali",
+      "title": "Kuis",
+      "description": "Uji dirimu dan raih XP. Kamu memiliki {xp} XP.",
+      "categoriesHeading": "Kategori",
+      "categoryTitle": "Kuis {category}",
+      "allTitle": "Semua kuis",
+      "showAll": "Tampilkan semua"
+    },
+    "categories": {
+      "news": {
+        "name": "Berita",
+        "description": "Pertanyaan seputar tajuk penting dan peristiwa terbaru."
+      },
+      "general": {
+        "name": "Pengetahuan umum",
+        "description": "Sejarah, geografi, sains, dan budaya."
+      },
+      "sports": {
+        "name": "Olahraga",
+        "description": "Sepak bola, basket, dan cabang lainnya."
+      },
+      "technology": {
+        "name": "Teknologi",
+        "description": "AI, pemrograman, dan tren digital."
+      },
+      "economy": {
+        "name": "Ekonomi",
+        "description": "Keuangan, pasar, dan bisnis."
+      },
+      "science": {
+        "name": "Sains",
+        "description": "Fisika, kimia, biologi, dan matematika."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "Jumlah kuis",
+        "completed": "Selesai",
+        "progress": "Progres"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "Mudah",
+        "medium": "Sedang",
+        "hard": "Sulit"
+      },
+      "empty": {
+        "title": "Belum ada kuis di kategori ini",
+        "description": "Pilih kategori lain untuk mengeksplor."
+      },
+      "labels": {
+        "time": "{minutes} menit",
+        "questions": "{count} pertanyaan"
+      },
+      "actions": {
+        "retry": "Mainkan lagi",
+        "start": "Mulai kuis"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "Data kuis belum tersedia",
+        "description": "Kuis ini belum memiliki cukup pertanyaan. Pilih kuis lain."
+      },
+      "actions": {
+        "close": "Tutup",
+        "previous": "Sebelumnya",
+        "submit": "Selesai",
+        "next": "Berikutnya",
+        "retry": "Mainkan lagi"
+      },
+      "labels": {
+        "questionProgress": "Pertanyaan {current} dari {total}"
+      },
+      "results": {
+        "title": "Kuis selesai!",
+        "subtitle": "Hebat, kamu menyelesaikan kuis dengan sukses.",
+        "correctAnswers": "Jawaban benar",
+        "xpEarned": "XP diperoleh"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Papan peringkat",
+    "filters": {
+      "onlyLeague": "Hanya ligaku",
+      "periods": {
+        "weekly": "Mingguan",
+        "monthly": "Bulanan",
+        "all-time": "Sepanjang waktu"
+      }
+    },
+    "table": {
+      "currentUser": "(Kamu)",
+      "xpLabel": "XP",
+      "topBadge": "TOP"
+    },
+    "page": {
+      "back": "Kembali"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "Anggota baru",
+      "ACTIVE_READER": "Pembaca aktif",
+      "KNOWLEDGE_SHARER": "Pembagi pengetahuan",
+      "EXPERT_COMMENTER": "Pengomentar ahli",
+      "COMMUNITY_LEADER": "Pemimpin komunitas"
+    },
+    "leagues": {
+      "BRONZE": "Perunggu",
+      "SILVER": "Perak",
+      "GOLD": "Emas",
+      "DIAMOND": "Berlian"
     }
   }
 }

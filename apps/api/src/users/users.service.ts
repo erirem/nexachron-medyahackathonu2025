@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import type { PostgrestError, User } from '@supabase/supabase-js';
 
-import type { Database } from '../supabase/database.types';
+import type { Database } from '@nexachron/shared-types';
 import { SupabaseService } from '../supabase/supabase.service';
 
 type UserRow = Database['public']['Tables']['users']['Row'];

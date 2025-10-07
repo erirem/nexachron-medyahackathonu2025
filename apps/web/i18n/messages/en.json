@@ -111,7 +111,7 @@
         "default": "Join Nexachron and experience gamified news.",
         "submitting": "Verifying your details...",
         "invalid": "Please review the form",
-      "success": "Welcome back! Redirecting to your dashboard...",
+        "success": "Welcome back! Redirecting to your dashboard...",
         "error": "Something went wrong during sign-in."
       },
       "supabase": {
@@ -273,7 +273,7 @@
         "submitting": "Starting your registration...",
         "invalid": "Please check the required fields",
         "successEmail": "All set! Check your inbox to verify your email.",
-      "successRedirect": "Welcome aboard! Redirecting to your dashboard...",
+        "successRedirect": "Welcome aboard! Redirecting to your dashboard...",
         "error": "Something went wrong while creating your account."
       },
       "supabase": {
@@ -348,6 +348,208 @@
       "none": "Start your streak by exploring today's stories.",
       "low": "{count}-day streak! Keep it up.",
       "high": "{count}-day streak 🔥"
+    }
+  },
+  "games": {
+    "page": {
+      "back": "Back",
+      "title": "Games",
+      "description": "Test your knowledge with mini experiences and earn XP! You have {xp} XP.",
+      "categoriesHeading": "Categories",
+      "comingSoonHeading": "Coming Soon"
+    },
+    "categories": {
+      "all": {
+        "name": "All"
+      },
+      "educational": {
+        "name": "Educational"
+      },
+      "memory": {
+        "name": "Memory"
+      },
+      "word": {
+        "name": "Word"
+      },
+      "trivia": {
+        "name": "Trivia"
+      },
+      "timeline": {
+        "name": "Timeline"
+      },
+      "visual": {
+        "name": "Visual"
+      }
+    },
+    "gamesList": {
+      "quizzes": {
+        "title": "Quizzes",
+        "description": "Answer current affairs questions and collect XP across news, culture, and sport.",
+        "estimatedTime": "5-15 min"
+      },
+      "memoryGame": {
+        "title": "News Memory",
+        "description": "Match headlines and strengthen your recall.",
+        "estimatedTime": "3-8 min"
+      },
+      "wordPuzzle": {
+        "title": "Word Puzzle",
+        "description": "Find news-inspired words and grow your vocabulary.",
+        "estimatedTime": "4-10 min"
+      },
+      "newsTrivia": {
+        "title": "News Trivia",
+        "description": "Quick-fire questions about the latest stories.",
+        "estimatedTime": "2-5 min"
+      },
+      "timelineGame": {
+        "title": "Timeline Challenge",
+        "description": "Place events in order to test your sense of history.",
+        "estimatedTime": "8-15 min"
+      },
+      "spotTheDifference": {
+        "title": "Spot the Difference",
+        "description": "Compare news photos and sharpen your focus.",
+        "estimatedTime": "5-12 min"
+      },
+      "wordle": {
+        "title": "Wordle",
+        "description": "Guess the five-letter word in six tries—new challenge every day.",
+        "estimatedTime": "3-8 min"
+      }
+    },
+    "card": {
+      "difficulty": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
+      "labels": {
+        "xpReward": "XP Reward",
+        "progress": "Progress",
+        "comingSoon": "Coming Soon",
+        "playAgain": "Play Again",
+        "start": "Start Game"
+      }
+    }
+  },
+  "quizzes": {
+    "page": {
+      "back": "Back",
+      "title": "Quizzes",
+      "description": "Test yourself and earn XP! You have {xp} XP.",
+      "categoriesHeading": "Categories",
+      "categoryTitle": "{category} Quizzes",
+      "allTitle": "All Quizzes",
+      "showAll": "Show All"
+    },
+    "categories": {
+      "news": {
+        "name": "News",
+        "description": "Quizzes about the latest headlines and events."
+      },
+      "general": {
+        "name": "General Knowledge",
+        "description": "History, geography, science, and culture quizzes."
+      },
+      "sports": {
+        "name": "Sports",
+        "description": "Football, basketball, and other competitions."
+      },
+      "technology": {
+        "name": "Technology",
+        "description": "Artificial intelligence, programming, and tech trends."
+      },
+      "economy": {
+        "name": "Economy",
+        "description": "Finance, markets, and business insights."
+      },
+      "science": {
+        "name": "Science",
+        "description": "Physics, chemistry, biology, and mathematics."
+      }
+    },
+    "categoryCard": {
+      "labels": {
+        "quizCount": "Quiz count",
+        "completed": "Completed",
+        "progress": "Progress"
+      }
+    },
+    "list": {
+      "difficulty": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
+      "empty": {
+        "title": "No quizzes in this category",
+        "description": "Pick another category to explore new quizzes."
+      },
+      "labels": {
+        "time": "{minutes} min",
+        "questions": "{count} questions"
+      },
+      "actions": {
+        "retry": "Try Again",
+        "start": "Start Quiz"
+      }
+    },
+    "modal": {
+      "dataMissing": {
+        "title": "Quiz data missing",
+        "description": "This quiz doesn't have enough questions yet. Please choose another quiz."
+      },
+      "actions": {
+        "close": "Close",
+        "previous": "Previous",
+        "submit": "Submit",
+        "next": "Next",
+        "retry": "Play Again"
+      },
+      "labels": {
+        "questionProgress": "Question {current} of {total}"
+      },
+      "results": {
+        "title": "Quiz Completed!",
+        "subtitle": "Great job, you finished the quiz successfully.",
+        "correctAnswers": "Correct Answers",
+        "xpEarned": "XP Earned"
+      }
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "filters": {
+      "onlyLeague": "Only my league",
+      "periods": {
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "all-time": "All time"
+      }
+    },
+    "table": {
+      "currentUser": "(You)",
+      "xpLabel": "XP",
+      "topBadge": "TOP"
+    },
+    "page": {
+      "back": "Back"
+    }
+  },
+  "gamification": {
+    "ranks": {
+      "NEW_MEMBER": "New Member",
+      "ACTIVE_READER": "Active Reader",
+      "KNOWLEDGE_SHARER": "Knowledge Sharer",
+      "EXPERT_COMMENTER": "Expert Commenter",
+      "COMMUNITY_LEADER": "Community Leader"
+    },
+    "leagues": {
+      "BRONZE": "Bronze",
+      "SILVER": "Silver",
+      "GOLD": "Gold",
+      "DIAMOND": "Diamond"
     }
   }
 }
