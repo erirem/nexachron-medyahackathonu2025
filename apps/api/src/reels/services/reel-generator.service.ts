@@ -33,17 +33,19 @@ export class ReelGeneratorService {
   /**
    * Generate a reel from news item
    */
-  async generateReel(newsItem: ProcessedNewsItem, request?: Partial<ReelGenerationRequest>): Promise<Reel> {
+  async generateReel(newsItem: ProcessedNewsItem, request?: Partial<ReelGenerationRequest>, newsId?: string): Promise<Reel> {
     const reelId = crypto.randomUUID();
     
     this.logger.log(`Starting reel generation for news: ${newsItem.title}`);
 
-    // 1. First determine source type from ProcessedNewsItem
-    let sourceType = await this.determineSourceType(newsItem);
+    // 1. Determine source type from ProcessedNewsItem and news_media table
+    let sourceType = await this.determineSourceType(newsItem, newsId);
     
-    // 2. If no media found in ProcessedNewsItem, we need to check news_media table
-    // But we need to save the news first to get the newsId
-    // For now, we'll proceed with the initial determination and update later if needed
+    // 2. Get media analysis for asset preparation
+    let mediaAnalysis: Awaited<ReturnType<typeof this.analyzeNewsMedia>> | null = null;
+    if (newsId) {
+      mediaAnalysis = await this.analyzeNewsMedia(newsId);
+    }
     
     const template = request?.template || this.selectTemplate(newsItem, sourceType);
 
@@ -55,14 +57,8 @@ export class ReelGeneratorService {
       template: template,
       status: ReelStatus.PROCESSING,
       content: await this.generateReelContent(newsItem),
-      assets: {
-        video_url: undefined,
-        thumbnail_url: undefined,
-        audio_url: undefined,
-        background_image: undefined,
-        overlay_elements: []
-      },
-      duration_seconds: this.calculateOptimalDuration(newsItem),
+      assets: this.prepareAssetsFromMediaAnalysis(sourceType, mediaAnalysis, newsItem),
+      duration_seconds: await this.calculateOptimalDuration(newsItem, request?.tts_speed || 1.0),
       aspect_ratio: '9:16',
       resolution: { width: 1080, height: 1920 },
       tts_voice: request?.tts_voice || this.selectOptimalVoice(newsItem),
@@ -87,7 +83,7 @@ export class ReelGeneratorService {
           await this.processVideoSource(reel, newsItem);
           break;
         case ReelSourceType.IMAGE:
-          await this.processImageSource(reel, newsItem);
+          await this.processImageSource(reel, newsItem, newsId);
           break;
         case ReelSourceType.TEXT_ONLY:
           await this.processTextOnlySource(reel, newsItem);
@@ -123,12 +119,21 @@ export class ReelGeneratorService {
   }
 
   /**
-   * Determine source type from news item
+   * Determine source type from news item and media database
    */
-  private async determineSourceType(newsItem: ProcessedNewsItem): Promise<ReelSourceType> {
+  private async determineSourceType(newsItem: ProcessedNewsItem, newsId?: string): Promise<ReelSourceType> {
     // First check ProcessedNewsItem data
-    if (newsItem.video_url || (newsItem.media_gallery?.videos && newsItem.media_gallery.videos.length > 0)) {
+    const isYouTube = (url: string | undefined) => !!url && (url.includes('youtube.com') || url.includes('youtu.be'));
+
+    // Prefer non-YouTube direct videos; skip YouTube videos
+    if (newsItem.video_url && !isYouTube(newsItem.video_url)) {
       return ReelSourceType.VIDEO;
+    }
+    if (newsItem.media_gallery?.videos && newsItem.media_gallery.videos.length > 0) {
+      const hasNonYouTube = newsItem.media_gallery.videos.some(v => !isYouTube((v as any)?.url));
+      if (hasNonYouTube) {
+        return ReelSourceType.VIDEO;
+      }
     }
     
     if (newsItem.image_url || (newsItem.media_gallery?.images && newsItem.media_gallery.images.length > 0)) {
@@ -136,10 +141,198 @@ export class ReelGeneratorService {
     }
 
     // If no media in ProcessedNewsItem, check news_media table
-    // Note: We need newsId for this, but we don't have it yet in this context
-    // We'll handle this in the main generateReel method
+    if (newsId) {
+      const mediaAnalysis = await this.analyzeNewsMedia(newsId);
+      return mediaAnalysis.sourceType;
+    }
     
     return ReelSourceType.TEXT_ONLY;
+  }
+
+  /**
+   * Analyze media from news_media table to determine source type
+   */
+  private async analyzeNewsMedia(newsId: string): Promise<{
+    sourceType: ReelSourceType;
+    videoCount: number;
+    imageCount: number;
+    hasVideo: boolean;
+    hasImages: boolean;
+    mediaUrls: {
+      videos: string[];
+      images: string[];
+    };
+  }> {
+    try {
+      // Query news_media table for this news item
+      const { data: mediaItems, error } = await this.supabaseService.supabase
+        .from('news_media')
+        .select('media_type, url')
+        .eq('news_id', newsId);
+
+      if (error) {
+        this.logger.error(`Failed to query news_media for ${newsId}:`, error);
+        return {
+          sourceType: ReelSourceType.TEXT_ONLY,
+          videoCount: 0,
+          imageCount: 0,
+          hasVideo: false,
+          hasImages: false,
+          mediaUrls: { videos: [], images: [] }
+        };
+      }
+
+      const videos = mediaItems?.filter(item => item.media_type === 'VIDEO') || [];
+      const images = mediaItems?.filter(item => item.media_type === 'IMAGE') || [];
+
+      // Exclude YouTube videos to avoid 403 issues; we will skip them
+      const nonYouTubeVideos = videos.filter(v => {
+        const url = (v as any).url as string;
+        return url && !url.includes('youtube.com') && !url.includes('youtu.be');
+      });
+
+      const hasVideo = nonYouTubeVideos.length > 0;
+      const hasImages = images.length > 0;
+
+      let sourceType: ReelSourceType;
+      if (hasVideo) {
+        sourceType = ReelSourceType.VIDEO;
+      } else if (hasImages) {
+        sourceType = ReelSourceType.IMAGE;
+      } else {
+        sourceType = ReelSourceType.TEXT_ONLY;
+      }
+
+      this.logger.log(`Media analysis for ${newsId}: ${videos.length} videos, ${images.length} images, source: ${sourceType}`);
+
+      return {
+        sourceType,
+        videoCount: nonYouTubeVideos.length,
+        imageCount: images.length,
+        hasVideo,
+        hasImages,
+        mediaUrls: {
+          videos: nonYouTubeVideos.map(v => (v as any).url),
+          images: images.map(i => (i as any).url)
+        }
+      };
+
+    } catch (error) {
+      this.logger.error(`Error analyzing news media for ${newsId}:`, error);
+      return {
+        sourceType: ReelSourceType.TEXT_ONLY,
+        videoCount: 0,
+        imageCount: 0,
+        hasVideo: false,
+        hasImages: false,
+        mediaUrls: { videos: [], images: [] }
+      };
+    }
+  }
+
+  /**
+   * Prepare assets based on media analysis
+   */
+  private prepareAssetsFromMediaAnalysis(
+    sourceType: ReelSourceType, 
+    mediaAnalysis: any, 
+    newsItem: ProcessedNewsItem
+  ): any {
+    const assets: any = {
+      video_url: undefined,
+      thumbnail_url: undefined,
+      audio_url: undefined,
+      background_image: undefined,
+      additional_images: [],
+      overlay_elements: []
+    };
+
+    switch (sourceType) {
+      case ReelSourceType.VIDEO:
+        // Use first video from media analysis or ProcessedNewsItem
+        if (mediaAnalysis?.mediaUrls?.videos?.length > 0) {
+          assets.video_url = mediaAnalysis.mediaUrls.videos[0];
+        } else if (newsItem.video_url) {
+          assets.video_url = newsItem.video_url;
+        }
+        break;
+
+      case ReelSourceType.IMAGE:
+        // Use images from media analysis or ProcessedNewsItem
+        if (mediaAnalysis?.mediaUrls?.images?.length > 0) {
+          assets.background_image = mediaAnalysis.mediaUrls.images[0];
+          // Add additional images if more than one
+          if (mediaAnalysis.mediaUrls.images.length > 1) {
+            assets.additional_images = mediaAnalysis.mediaUrls.images.slice(1);
+          }
+        } else if (newsItem.image_url) {
+          assets.background_image = newsItem.image_url;
+        } else {
+          const galleryImages = newsItem.media_gallery?.images ?? [];
+          if (galleryImages.length > 0) {
+            assets.background_image = galleryImages[0];
+            if (galleryImages.length > 1) {
+              assets.additional_images = galleryImages.slice(1);
+            }
+          }
+        }
+        break;
+
+      case ReelSourceType.TEXT_ONLY:
+        // No media assets - will be handled by AI generation
+        this.logger.log('No media found - will use AI-generated visuals');
+        // AI images will be generated during video composition
+        break;
+    }
+
+    return assets;
+  }
+
+  /**
+   * Generate AI images for text-only reels
+   */
+  private async generateAIImages(newsItem: ProcessedNewsItem): Promise<string[]> {
+    try {
+      this.logger.log(`Generating AI images for: ${newsItem.title}`);
+      
+      // Create prompt based on news content
+      const prompt = this.createImagePrompt(newsItem);
+      
+      // TODO: Integrate with AI image generation service (DALL-E, Midjourney, etc.)
+      // For now, return placeholder URLs
+      const aiImages = [
+        'https://example.com/ai-image-1.jpg',
+        'https://example.com/ai-image-2.jpg',
+        'https://example.com/ai-image-3.jpg'
+      ];
+      
+      this.logger.log(`Generated ${aiImages.length} AI images for text-only reel`);
+      return aiImages;
+      
+    } catch (error) {
+      this.logger.error('Failed to generate AI images:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Create image generation prompt from news content
+   */
+  private createImagePrompt(newsItem: ProcessedNewsItem): string {
+    const category = newsItem.category || 'genel';
+    const title = newsItem.title;
+    
+    // Create category-specific prompts
+    const categoryPrompts: Record<string, string> = {
+      'spor': `Sports news image: ${title}. Dynamic, energetic, professional sports photography style.`,
+      'teknoloji': `Technology news image: ${title}. Modern, sleek, high-tech aesthetic.`,
+      'ekonomi': `Economic news image: ${title}. Professional, business-focused, financial charts and graphs.`,
+      'siyaset': `Political news image: ${title}. Serious, professional, government building or political figures.`,
+      'sağlık': `Health news image: ${title}. Medical, healthcare, clean and professional.`,
+      'genel': `News image: ${title}. Professional journalism, clear and informative.`
+    };
+    
+    return categoryPrompts[category] || categoryPrompts['genel'];
   }
 
   /**
@@ -195,7 +388,7 @@ export class ReelGeneratorService {
       headline,
       summary_sentences: sentences,
       hashtags,
-      captions: sentences.join(' '), // Use sentences as captions
+      captions: sentences.join('\n\n'), // Show TTS sentences in description with line breaks
       call_to_action: callToAction
     };
   }
@@ -214,13 +407,14 @@ export class ReelGeneratorService {
       });
 
       if (summaryResponse && summaryResponse.summary) {
-        // Split summary into sentences and take first 2-3
+        // Split summary into sentences and take more sentences for better content
         const sentences = summaryResponse.summary
           .split(/[.!?]+/)
           .map(s => s.trim())
           .filter(s => s.length > 10)
-          .slice(0, 3);
+          .slice(0, 5); // Take up to 5 sentences instead of 3
 
+        this.logger.log(`AI generated ${sentences.length} sentences: ${sentences.join(' | ')}`);
         return sentences.length >= 2 ? sentences : this.fallbackSentences(newsItem);
       }
     } catch (error) {
@@ -291,15 +485,42 @@ export class ReelGeneratorService {
   }
 
   /**
-   * Calculate optimal duration based on content
+   * Calculate optimal duration based on content and TTS audio duration
    */
-  private calculateOptimalDuration(newsItem: ProcessedNewsItem): number {
-    const contentLength = newsItem.content.length;
+  private async calculateOptimalDuration(newsItem: ProcessedNewsItem, ttsSpeed: number = 1.0): Promise<number> {
+    // Generate the same content that will be used for TTS
+    const content = await this.generateReelContent(newsItem);
+    const ttsText = content.summary_sentences.join('. ');
     
-    if (contentLength < 500) return 15; // Short news: 15s
-    if (contentLength < 1000) return 20; // Medium news: 20s
-    if (contentLength < 2000) return 25; // Long news: 25s
-    return 30; // Very long news: 30s (max)
+    const ttsDuration = this.estimateTTSTextDuration(ttsText, ttsSpeed);
+    
+    this.logger.log(`Estimated TTS duration: ${ttsDuration}s for text: ${ttsText.substring(0, 100)}...`);
+    
+    // Add some buffer for video transitions and effects
+    const videoDuration = Math.max(ttsDuration + 2, 15); // Minimum 15s, add 2s buffer
+    
+    this.logger.log(`Final video duration: ${videoDuration}s`);
+    
+    // Cap at 30 seconds maximum
+    return Math.min(videoDuration, 30);
+  }
+
+  /**
+   * Estimate TTS text duration based on content length and speed
+   */
+  private estimateTTSTextDuration(text: string, speed: number): number {
+    // More conservative speaking rate: ~120 words per minute for Turkish (slower)
+    const wordsPerMinute = 120 * speed;
+    const wordCount = text.split(/\s+/).length;
+    const durationMinutes = wordCount / wordsPerMinute;
+    
+    // Add extra buffer for natural pauses and sentence breaks
+    const baseDuration = Math.ceil(durationMinutes * 60);
+    const bufferedDuration = Math.ceil(baseDuration * 1.3); // 30% buffer
+    
+    this.logger.log(`TTS estimation: ${wordCount} words, ${wordsPerMinute} WPM, base: ${baseDuration}s, buffered: ${bufferedDuration}s`);
+    
+    return bufferedDuration;
   }
 
   /**
@@ -386,7 +607,7 @@ export class ReelGeneratorService {
   /**
    * Process image source type
    */
-  private async processImageSource(reel: Reel, newsItem: ProcessedNewsItem): Promise<void> {
+  private async processImageSource(reel: Reel, newsItem: ProcessedNewsItem, newsId?: string): Promise<void> {
     this.logger.log(`Processing image source for reel: ${reel.id}`);
     
     reel.processing_log?.push({
@@ -402,14 +623,14 @@ export class ReelGeneratorService {
       throw new Error('No image source found for IMAGE type reel');
     }
 
-    // TODO: Implement image processing
-    // - Download source image
-    // - Create animated background (ken burns effect, parallax)
-    // - Add text overlays with animations
-    // - Create 15-30s video from static image
-    // - Add transition effects
+    // Get additional images for transitions
+    const additionalImages = await this.getAdditionalImagesFromNews(newsItem, newsId);
     
     reel.assets.background_image = imageUrl;
+    if (additionalImages.length > 0) {
+      reel.assets.additional_images = additionalImages;
+      this.logger.log(`Found ${additionalImages.length} additional images for transitions`);
+    }
     
     reel.processing_log?.push({
       step: 'image_processing',
@@ -462,11 +683,11 @@ export class ReelGeneratorService {
       timestamp: new Date()
     });
 
-    // Prepare text for TTS
-    const ttsText = [
-      reel.content.headline,
-      ...reel.content.summary_sentences
-    ].join('. ');
+    // Prepare text for TTS - use only summary_sentences to avoid duplication
+    const ttsText = reel.content.summary_sentences.join('. ');
+    
+    this.logger.log(`TTS text (${reel.content.summary_sentences.length} sentences): ${ttsText}`);
+    this.logger.log(`Individual sentences: ${reel.content.summary_sentences.join(' | ')}`);
 
     // TODO: Implement TTS generation
     // Options:
@@ -574,7 +795,7 @@ export class ReelGeneratorService {
   /**
    * Get media data from news_media table for a specific news item
    */
-  private async getNewsMedia(newsId: string): Promise<{
+  async getNewsMedia(newsId: string): Promise<{
     videos: any[];
     images: any[];
     hasVideo: boolean;
@@ -594,8 +815,8 @@ export class ReelGeneratorService {
         return { videos: [], images: [], hasVideo: false, hasImage: false };
       }
 
-      const videos = mediaData?.filter(item => item.media_type === 'video') || [];
-      const images = mediaData?.filter(item => item.media_type === 'image') || [];
+      const videos = mediaData?.filter(item => item.media_type === 'VIDEO') || [];
+      const images = mediaData?.filter(item => item.media_type === 'IMAGE') || [];
       
       return {
         videos,
@@ -643,6 +864,40 @@ export class ReelGeneratorService {
     
     // Fallback to category-based solid color
     return this.getCategoryColorBackground(newsItem.category);
+  }
+
+  private async getAdditionalImagesFromNews(newsItem: ProcessedNewsItem, newsId?: string): Promise<string[]> {
+    const additionalImages: string[] = [];
+    
+    this.logger.log(`Getting additional images for newsId: ${newsId}`);
+    this.logger.log(`Media gallery images count: ${newsItem.media_gallery?.images?.length || 0}`);
+    
+    // Get additional images from media gallery
+    if (newsItem.media_gallery?.images && newsItem.media_gallery.images.length > 1) {
+      const images = newsItem.media_gallery.images
+        .sort((a, b) => b.quality_score - a.quality_score)
+        .slice(1) // Skip the first (best) image as it's used as main background
+        .map(img => img.url);
+      additionalImages.push(...images);
+      this.logger.log(`Found ${images.length} additional images from media_gallery`);
+    }
+
+    // If we have newsId, check news_media table for additional images
+    if (newsId) {
+      const mediaData = await this.getNewsMedia(newsId);
+      this.logger.log(`News_media images count: ${mediaData.images.length}`);
+      if (mediaData.images.length > 1) {
+        const extraImages = mediaData.images
+          .sort((a, b) => b.quality_score - a.quality_score)
+          .slice(1) // Skip the first (best) image
+          .map(img => img.url);
+        additionalImages.push(...extraImages);
+        this.logger.log(`Found ${extraImages.length} additional images from news_media`);
+      }
+    }
+    
+    this.logger.log(`Total additional images found: ${additionalImages.length}`);
+    return additionalImages;
   }
 
   private getCategoryColorBackground(category: string): string {

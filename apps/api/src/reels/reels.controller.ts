@@ -142,6 +142,106 @@ export class ReelsController {
   }
 
   /**
+   * Find news with video media
+   * GET /api/reels/video-news
+   */
+  @Get('video-news')
+  async findNewsWithVideo(@Query() query: {
+    limit?: string;
+  }): Promise<{
+    news_with_video: Array<{
+      id: string;
+      title: string;
+      created_at: string;
+      video_count: number;
+      image_count: number;
+    }>;
+    total_found: number;
+  }> {
+    const limit = Math.min(parseInt(query.limit || '10'), 50);
+    
+    try {
+      const result = await this.reelsService.findNewsWithVideo(limit);
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to find news with video', error);
+      throw new InternalServerErrorException('Failed to find news with video');
+    }
+  }
+
+  @Get('media/:newsId')
+  async getNewsMedia(@Param('newsId') newsId: string) {
+    try {
+      const media = await this.reelsService.getNewsMedia(newsId);
+      return {
+        success: true,
+        data: media
+      };
+    } catch (error) {
+      this.logger.error('Failed to get news media', error);
+      throw new InternalServerErrorException('Failed to get news media');
+    }
+  }
+
+  /**
+   * Get reels list for frontend
+   * GET /api/reels/list
+   */
+  @Get('list')
+  async getReelsList(@Query() query: {
+    limit?: string;
+    offset?: string;
+    status?: string;
+  }): Promise<{
+    reels: Array<{
+      id: string;
+      title: string;
+      description: string;
+      video_url?: string;
+      thumbnail_url?: string;
+      duration_seconds: number;
+      category: string;
+      created_at: string;
+      status: ReelStatus;
+    }>;
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
+    try {
+      const limit = Math.min(parseInt(query.limit || '20'), 100);
+      const offset = parseInt(query.offset || '0');
+      const status = query.status as ReelStatus | undefined;
+
+      const result = await this.reelsService.getReelsList({
+        limit,
+        offset,
+        status
+      });
+
+      return {
+        reels: result.reels.map(reel => ({
+          id: reel.id,
+          title: reel.content.headline,
+          description: reel.content.captions || '',
+          video_url: reel.assets.video_url,
+          thumbnail_url: reel.assets.thumbnail_url,
+          duration_seconds: reel.duration_seconds,
+          category: reel.category,
+          created_at: typeof reel.created_at === 'string' ? reel.created_at : reel.created_at.toISOString(),
+          status: reel.status
+        })),
+        total: result.total,
+        limit,
+        offset
+      };
+    } catch (error) {
+      this.logger.error('Failed to get reels list', error);
+      throw new InternalServerErrorException('Failed to get reels list');
+    }
+  }
+
+  /**
    * Get single reel details
    * GET /api/reels/:id
    */
@@ -248,6 +348,7 @@ export class ReelsController {
       throw new InternalServerErrorException('Failed to get reel status');
     }
   }
+
 
   /**
    * Get reels statistics
@@ -475,5 +576,10 @@ export class ReelsController {
       this.logger.error('Failed to get trending reels', error);
       throw new InternalServerErrorException('Failed to load trending reels');
     }
+  }
+
+  @Get('test/media/:newsId')
+  async testMedia(@Param('newsId') newsId: string): Promise<any> {
+    return this.reelsService.testMediaForNews(newsId);
   }
 }

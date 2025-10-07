@@ -144,9 +144,18 @@ export class VideoComposerService {
     const sourceImagePath = path.join(workDir, 'source.jpg');
     await this.downloadFile(sourceImageUrl, sourceImagePath);
 
-    // Create animated background from image
+    // Create animated background from image(s)
     const animatedBgPath = path.join(workDir, 'animated_bg.mp4');
-    await this.createAnimatedBackground(sourceImagePath, animatedBgPath, reel.duration_seconds);
+    
+    // Check if we have additional images for multi-image reel
+    if (reel.assets.additional_images && reel.assets.additional_images.length > 0) {
+      // Multi-image reel with transitions
+      const allImages = [sourceImageUrl, ...reel.assets.additional_images];
+      await this.createMultiImageBackground(allImages, animatedBgPath, reel.duration_seconds);
+    } else {
+      // Single image reel with Ken Burns effect
+      await this.createAnimatedBackground(sourceImagePath, animatedBgPath, reel.duration_seconds);
+    }
 
     // Create overlay elements
     const overlayPath = await this.createImageOverlay(reel, workDir);
@@ -166,7 +175,8 @@ export class VideoComposerService {
       audio: audioPath,
       output: outputPath,
       duration: reel.duration_seconds,
-      template: reel.template
+      template: reel.template,
+      reel: reel
     });
 
     // Generate thumbnail
@@ -193,7 +203,7 @@ export class VideoComposerService {
     await this.createTextOnlyBackground(reel, backgroundPath);
 
     // Create text overlay
-    const overlayPath = await this.createTextOnlyOverlay(reel, workDir);
+    const overlayPath = await this.createVideoOverlay(reel, workDir);
 
     // Download audio if available
     let audioPath: string | undefined;
@@ -232,125 +242,19 @@ export class VideoComposerService {
    * Create video overlay with text and branding
    */
   private async createVideoOverlay(reel: Reel, workDir: string): Promise<string> {
-    // Use simple drawtext instead of SRT for now
-    // This ensures font size changes are applied
-    return 'drawtext'; // Signal to use drawtext filter
+    // No overlay needed - we'll show text in description instead
+    return '';
   }
 
-  /**
-   * Create dynamic subtitles that sync with audio
-   */
-  private async createDynamicSubtitles(reel: Reel, workDir: string): Promise<string> {
-    const subtitlePath = path.join(workDir, 'subtitles.srt');
-    
-    // Create SRT subtitle file with timing
-    const subtitleContent = this.generateSubtitleContent(reel);
-    await fs.writeFile(subtitlePath, subtitleContent);
-    
-    this.logger.log(`SRT subtitle file created: ${subtitlePath}`);
-    this.logger.log(`Subtitle content: ${subtitleContent.substring(0, 100)}...`);
-    
-    return subtitlePath;
-  }
-
-  /**
-   * Generate subtitle content with timing
-   */
-  private generateSubtitleContent(reel: Reel): string {
-    const sentences = reel.content.summary_sentences;
-    const duration = reel.duration_seconds || 30;
-    const segmentDuration = duration / sentences.length;
-    
-    let srtContent = '';
-    
-    sentences.forEach((sentence, index) => {
-      const startTime = index * segmentDuration;
-      const endTime = (index + 1) * segmentDuration;
-      
-      srtContent += `${index + 1}\n`;
-      srtContent += `${this.formatTime(startTime)} --> ${this.formatTime(endTime)}\n`;
-      srtContent += `${this.truncateText(sentence, 50)}\n\n`;
-    });
-    
-    return srtContent;
-  }
-
-  /**
-   * Format time for SRT format
-   */
-  private formatTime(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    const ms = Math.floor((seconds % 1) * 1000);
-    
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
-  }
-
-  /**
-   * Get FFmpeg subtitle filter
-   */
-  private getSubtitleFilter(overlayPath?: string): string {
-    if (overlayPath && overlayPath.endsWith('.srt')) {
-      // Use SRT subtitles with medium font
-      return `subtitles=${overlayPath}:force_style='FontSize=20,PrimaryColour=&Hffffff,OutlineColour=&H000000,Outline=2'`;
-    } else if (overlayPath === 'drawtext') {
-      // Use drawtext with medium font for news content
-      return `drawtext=text='Haber':fontsize=20:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2:x=(w-text_w)/2:y=h-80`;
-    } else {
-      // Use simple drawtext for static subtitle with medium font
-      return `drawtext=text='Haber':fontsize=20:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2:x=(w-text_w)/2:y=h-80`;
-    }
-  }
-
-  /**
-   * Get subtitle configuration for better readability
-   */
-  private getSubtitleConfig(template: ReelTemplate): {
-    titleSize: number;
-    titleColor: string;
-    titleStroke: string;
-    titleY: number;
-    subtitleSize: number;
-    subtitleColor: string;
-    subtitleStroke: string;
-    subtitleY: number;
-  } {
-    return {
-      titleSize: 32, // Medium size
-      titleColor: 'white',
-      titleStroke: 'black',
-      titleY: 80,
-      subtitleSize: 20, // Medium but readable
-      subtitleColor: 'white',
-      subtitleStroke: 'black',
-      subtitleY: 120
-    };
-  }
-
-  /**
-   * Truncate text to fit video dimensions
-   */
-  private truncateText(text: string, maxLength: number): string {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength - 3) + '...';
-  }
 
   /**
    * Create image overlay
    */
   private async createImageOverlay(reel: Reel, workDir: string): Promise<string> {
-    // Similar to video overlay but optimized for static images
-    return this.createVideoOverlay(reel, workDir);
+    // Subtitles/overlays disabled — show text only in description
+    return '';
   }
 
-  /**
-   * Create text-only overlay
-   */
-  private async createTextOnlyOverlay(reel: Reel, workDir: string): Promise<string> {
-    // More elaborate text presentation for text-only reels
-    return this.createVideoOverlay(reel, workDir);
-  }
 
   /**
    * Get image dimensions using ffprobe
@@ -378,6 +282,66 @@ export class VideoComposerService {
   }
 
   /**
+   * Create multi-image background with transitions
+   */
+  private async createMultiImageBackground(imageUrls: string[], outputPath: string, duration: number): Promise<void> {
+    const workDir = path.dirname(outputPath);
+    const imagePaths: string[] = [];
+    
+    // Download all images
+    for (let i = 0; i < imageUrls.length; i++) {
+      const imagePath = path.join(workDir, `image_${i}.jpg`);
+      await this.downloadFile(imageUrls[i], imagePath);
+      imagePaths.push(imagePath);
+    }
+    
+    // Calculate duration per image (each image gets equal time)
+    const durationPerImage = duration / imageUrls.length;
+    
+    this.logger.log(`Creating multi-image background with ${imageUrls.length} images, duration: ${duration}s, per image: ${durationPerImage}s`);
+    
+    // Build inputs - each image loops for the full duration
+    let inputs = '';
+    for (let i = 0; i < imagePaths.length; i++) {
+      inputs += ` -loop 1 -t ${duration} -i "${imagePaths[i]}"`;
+    }
+    
+    // Build filter complex for scaling and transitions
+    let filterComplex = '';
+    let currentOutput = '';
+    
+    for (let i = 0; i < imagePaths.length; i++) {
+      // No zoompan effect for multi-images - just scale and pad
+      const scaleFilter = `[${i}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black[v${i}]`;
+      
+      if (i === 0) {
+        filterComplex = scaleFilter;
+        currentOutput = 'v0';
+      } else {
+        filterComplex += `;${scaleFilter}`;
+        
+        // Add transition - each transition starts at the beginning of each image's time slot
+        const transitionOffset = durationPerImage * i;
+        const transitionFilter = `;[${currentOutput}][v${i}]xfade=transition=fade:duration=0.5:offset=${transitionOffset}[v0${i}]`;
+        filterComplex += transitionFilter;
+        currentOutput = `v0${i}`;
+      }
+    }
+    
+    const command = `ffmpeg${inputs} -filter_complex "${filterComplex}" -map "[${currentOutput}]" -c:v libx264 -pix_fmt yuv420p -y "${outputPath}"`;
+    
+    this.logger.log(`Executing multi-image FFmpeg command: ${command}`);
+    
+    try {
+      await execAsync(command);
+      this.logger.log(`Multi-image background created successfully: ${outputPath}`);
+    } catch (error) {
+      this.logger.error('Multi-image background creation failed', error);
+      throw new Error('Failed to create multi-image background');
+    }
+  }
+
+  /**
    * Create animated background from static image
    */
   private async createAnimatedBackground(imagePath: string, outputPath: string, duration: number): Promise<void> {
@@ -400,9 +364,9 @@ export class VideoComposerService {
     
     this.logger.log(`Scale factor: ${scaleFactor}, scaled dimensions: ${scaledWidth}x${scaledHeight}`);
     
-    // Scale up the image first, then crop to exact size
+    // Show full image without cropping - fill screen completely
     const command = `ffmpeg -loop 1 -i "${imagePath}" \\
-      -vf "scale=${scaledWidth}:${scaledHeight},crop=${targetWidth}:${targetHeight},zoompan=z='min(zoom+0.0015,1.5)':d=${duration * 30}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${targetWidth}x${targetHeight}" \\
+      -vf "scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='min(zoom+0.0015,1.5)':d=${duration * 30}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${targetWidth}x${targetHeight}" \\
       -t ${duration} -pix_fmt yuv420p -y "${outputPath}"`;
 
     try {
@@ -441,6 +405,7 @@ export class VideoComposerService {
     output: string;
     duration: number;
     template: ReelTemplate;
+    reel?: any;
   }): Promise<void> {
     
     let command = `ffmpeg -i "${options.sourceVideo}"`;
@@ -455,33 +420,16 @@ export class VideoComposerService {
       command += ` -i "${options.overlay}"`;
     }
 
-    // Add subtitle filter for dynamic text
-    const subtitleFilter = this.getSubtitleFilter(options.overlay);
-    
-    // Use filter_complex for overlay, simple vf for no overlay
-    if (options.overlay && options.overlay.endsWith('.png')) {
-      // Complex filter for overlay
-      command += ` -filter_complex "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2[bg];[bg][2:v]overlay=0:0[out]" -map "[out]"`;
-    } else if (options.overlay && options.overlay.endsWith('.srt')) {
-      // Use SRT subtitles
-      command += ` -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${subtitleFilter}"`;
-    } else {
-      // Simple filter with subtitles
-      command += ` -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${subtitleFilter}"`;
-    }
+    // Determine scaling strategy based on source type
+    const scalingFilter = this.getScalingFilter(options.sourceVideo, options.template);
+    command += ` -vf "${scalingFilter}"`;
     
     // Always map video stream
     command += ` -map 0:v`;
     
     // Audio mapping and options
     if (options.audio) {
-      if (options.overlay && options.overlay.endsWith('.png')) {
-        // Audio is input 1 when we have overlay (input 2)
-        command += ' -map 1:a -c:a aac -b:a 128k -shortest';
-      } else {
-        // Audio is input 1 when no overlay
-        command += ' -map 1:a -c:a aac -b:a 128k -shortest';
-      }
+      command += ' -map 1:a -c:a aac -b:a 128k';
     } else {
       command += ' -an'; // No audio
     }
@@ -515,6 +463,23 @@ export class VideoComposerService {
     } catch (error) {
       this.logger.error('Thumbnail generation failed', error);
       throw new Error('Failed to generate thumbnail');
+    }
+  }
+
+  /**
+   * Get scaling filter based on source type
+   */
+  private getScalingFilter(sourceVideo: string, template: ReelTemplate): string {
+    const isVideoFile = /\.(mp4|avi|mov|mkv|webm|flv)$/i.test(sourceVideo);
+    
+    if (isVideoFile) {
+      // For video files: scale to fill the entire frame, crop if necessary
+      this.logger.log('Using video scaling: scale to fill 1080x1920 frame');
+      return 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920';
+    } else {
+      // For image files: scale to fit, pad remaining area
+      this.logger.log('Using image scaling: scale to fit 1080x1920 with padding');
+      return 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black';
     }
   }
 

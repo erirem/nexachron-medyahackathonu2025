@@ -21,8 +21,7 @@ export interface TTSResponse {
 @Injectable()
 export class TTSService {
   private readonly logger = new Logger(TTSService.name);
-  private readonly azureKey: string;
-  private readonly azureRegion: string;
+  private readonly openaiApiKey: string;
   private readonly isEnabled: boolean;
 
   constructor(
@@ -30,19 +29,18 @@ export class TTSService {
     private readonly httpService: HttpService,
     private readonly supabaseService: SupabaseService
   ) {
-    this.azureKey = this.configService.get<string>('AZURE_SPEECH_KEY') || '';
-    this.azureRegion = this.configService.get<string>('AZURE_SPEECH_REGION') || 'westeurope';
-    this.isEnabled = !!this.azureKey;
+    this.openaiApiKey = this.configService.get<string>('OPENAI_API_KEY') || '';
+    this.isEnabled = !!this.openaiApiKey;
 
     if (this.isEnabled) {
-      this.logger.log('Azure Speech Services initialized for TTS');
+      this.logger.log('OpenAI GPT TTS initialized');
     } else {
-      this.logger.warn('Azure Speech Services not configured. Set AZURE_SPEECH_KEY to enable TTS.');
+      this.logger.warn('OpenAI API not configured. Set OPENAI_API_KEY to enable TTS.');
     }
   }
 
   /**
-   * Generate TTS audio from text
+   * Generate TTS audio from text using OpenAI GPT TTS
    */
   async generateTTS(request: TTSRequest): Promise<TTSResponse> {
     if (!this.isEnabled) {
@@ -52,19 +50,13 @@ export class TTSService {
     this.logger.log(`Generating TTS for ${request.text.length} characters with voice: ${request.voice}`);
 
     try {
-      // 1. Get access token
-      const accessToken = await this.getAccessToken();
+      // 1. Call OpenAI TTS API
+      const audioBuffer = await this.callOpenAITTS(request);
 
-      // 2. Prepare SSML
-      const ssml = this.buildSSML(request);
-
-      // 3. Call Azure Speech API
-      const audioBuffer = await this.callAzureSpeechAPI(ssml, accessToken);
-
-      // 4. Upload to storage and get URL
+      // 2. Upload to storage and get URL
       const audioUrl = await this.uploadAudioToStorage(audioBuffer);
 
-      // 5. Calculate duration (approximate)
+      // 3. Calculate duration (approximate)
       const duration = this.estimateAudioDuration(request.text, request.speed);
 
       return {
@@ -74,81 +66,40 @@ export class TTSService {
       };
 
     } catch (error) {
-      this.logger.error(`Azure TTS failed: ${error.message}`);
+      this.logger.error(`OpenAI TTS failed: ${error.message}`);
       this.logger.error('Full error:', error);
-      // For debugging, let's not fall back to mock - throw the error
       throw new Error(`TTS generation failed: ${error.message}`);
     }
   }
 
   /**
-   * Get Azure access token
+   * Call OpenAI TTS API
    */
-  private async getAccessToken(): Promise<string> {
-    const tokenUrl = `https://${this.azureRegion}.api.cognitive.microsoft.com/sts/v1.0/issueToken`;
+  private async callOpenAITTS(request: TTSRequest): Promise<Buffer> {
+    const openaiUrl = 'https://api.openai.com/v1/audio/speech';
 
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(tokenUrl, null, {
-          headers: {
-            'Ocp-Apim-Subscription-Key': this.azureKey,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        })
-      );
-
-      return response.data;
-    } catch (error) {
-      throw new Error(`Failed to get Azure access token: ${error.message}`);
-    }
-  }
-
-  /**
-   * Build SSML for Azure Speech
-   */
-  private buildSSML(request: TTSRequest): string {
+    // Map our voice enum to OpenAI voice names
     const voiceMap = {
-      [TTSVoice.FEMALE_TR]: 'tr-TR-EmelNeural',
-      [TTSVoice.MALE_TR]: 'tr-TR-AhmetNeural',
-      [TTSVoice.FEMALE_EN]: 'en-US-AriaNeural',
-      [TTSVoice.MALE_EN]: 'en-US-DavisNeural'
+      [TTSVoice.FEMALE_TR]: 'nova', // Turkish-like voice
+      [TTSVoice.MALE_TR]: 'onyx',   // Turkish-like voice
+      [TTSVoice.FEMALE_EN]: 'nova',  // English female
+      [TTSVoice.MALE_EN]: 'onyx'     // English male
     };
 
-    const voiceName = voiceMap[request.voice];
-    
-    // Simplified SSML without prosody for debugging
-    const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${request.language}"><voice name="${voiceName}">${this.escapeSSMLText(request.text)}</voice></speak>`;
-    
-    this.logger.log(`Generated SSML: ${ssml}`);
-    return ssml;
-  }
-
-  /**
-   * Escape text for SSML
-   */
-  private escapeSSMLText(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
-  }
-
-  /**
-   * Call Azure Speech API
-   */
-  private async callAzureSpeechAPI(ssml: string, accessToken: string): Promise<Buffer> {
-    const speechUrl = `https://${this.azureRegion}.tts.speech.microsoft.com/cognitiveservices/v1`;
+    const openaiVoice = voiceMap[request.voice];
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post(speechUrl, ssml, {
+        this.httpService.post(openaiUrl, {
+          model: 'tts-1', // or 'tts-1-hd' for higher quality
+          input: request.text,
+          voice: openaiVoice,
+          response_format: 'mp3',
+          speed: request.speed
+        }, {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/ssml+xml',
-            'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
-            'User-Agent': 'Nexachron-Reels-TTS'
+            'Authorization': `Bearer ${this.openaiApiKey}`,
+            'Content-Type': 'application/json'
           },
           responseType: 'arraybuffer'
         })
@@ -156,7 +107,12 @@ export class TTSService {
 
       return Buffer.from(response.data);
     } catch (error) {
-      throw new Error(`Azure Speech API call failed: ${error.message}`);
+      this.logger.error(`OpenAI TTS API call failed: ${error.message}`);
+      if (error.response) {
+        this.logger.error(`Response status: ${error.response.status}`);
+        this.logger.error(`Response data: ${JSON.stringify(error.response.data)}`);
+      }
+      throw new Error(`OpenAI TTS API call failed: ${error.message}`);
     }
   }
 
@@ -323,7 +279,7 @@ export class TTSService {
 
     try {
       const testRequest: TTSRequest = {
-        text: 'Bu bir test mesajıdır. TTS servisi çalışıyor.',
+        text: 'Bu bir test mesajıdır. OpenAI TTS servisi çalışıyor.',
         voice: TTSVoice.FEMALE_TR,
         speed: 1.0,
         language: 'tr-TR'
@@ -333,10 +289,10 @@ export class TTSService {
       
       return { 
         success: true, 
-        message: `TTS test successful. Audio duration: ${result.duration_seconds}s, Size: ${result.file_size_bytes} bytes` 
+        message: `OpenAI TTS test successful. Audio duration: ${result.duration_seconds}s, Size: ${result.file_size_bytes} bytes` 
       };
     } catch (error) {
-      return { success: false, message: `TTS test failed: ${error.message}` };
+      return { success: false, message: `OpenAI TTS test failed: ${error.message}` };
     }
   }
 }

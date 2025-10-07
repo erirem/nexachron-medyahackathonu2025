@@ -50,6 +50,8 @@ export const ReelAssetsSchema = z.object({
   thumbnail_url: z.string().url().optional(), // Thumbnail for preview
   audio_url: z.string().url().optional(), // TTS audio file
   background_image: z.string().url().optional(), // Background image for text-only reels
+  additional_images: z.array(z.string().url()).optional(), // Additional images for transitions
+  ai_generated_images: z.array(z.string().url()).optional(), // AI-generated images for text-only reels
   overlay_elements: z.array(z.object({
     type: z.enum(['logo', 'watermark', 'category_badge', 'timestamp']),
     position: z.object({
@@ -117,6 +119,7 @@ export const ReelGenerationRequestSchema = z.object({
   news_id: z.string().uuid(),
   template: z.nativeEnum(ReelTemplate).optional(), // Auto-detect if not provided
   tts_voice: z.nativeEnum(TTSVoice).optional(),
+  tts_speed: z.number().min(0.8).max(1.2).default(1.0).optional(),
   priority: z.number().min(1).max(10).default(5),
   custom_content: ReelContentSchema.partial().optional() // Override auto-generated content
 });

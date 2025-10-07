@@ -71,7 +71,7 @@ export class ReelsService {
       }
 
       // 3. Generate reel
-      const reel = await this.reelGeneratorService.generateReel(newsItem, request);
+      const reel = await this.reelGeneratorService.generateReel(newsItem, request, request.news_id);
       
       // 4. Set news_id after generation
       reel.news_id = request.news_id;
@@ -351,6 +351,45 @@ export class ReelsService {
   }
 
   /**
+   * Get reels list for frontend
+   */
+  async getReelsList(options: {
+    limit: number;
+    offset: number;
+    status?: ReelStatus;
+  }): Promise<{
+    reels: any[];
+    total: number;
+  }> {
+    try {
+      let query = this.supabaseService.adminSupabase
+        .from('reels')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(options.offset, options.offset + options.limit - 1);
+
+      if (options.status) {
+        query = query.eq('status', options.status);
+      }
+
+      const { data: reels, error, count } = await query;
+
+      if (error) {
+        this.logger.error('Failed to fetch reels list', error);
+        throw new Error(`Failed to fetch reels: ${error.message}`);
+      }
+
+      return {
+        reels: reels || [],
+        total: count || 0
+      };
+    } catch (error) {
+      this.logger.error('Error fetching reels list', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get reels statistics
    */
   async getReelsStats(options: { period: string; category?: string }): Promise<any> {
@@ -615,6 +654,43 @@ export class ReelsService {
     }
   }
 
+  async getNewsMedia(newsId: string): Promise<{
+    videos: any[];
+    images: any[];
+    hasVideo: boolean;
+    hasImage: boolean;
+    bestVideo?: any;
+    bestImage?: any;
+  }> {
+    try {
+      const { data: mediaData, error } = await this.supabaseService.adminSupabase
+        .from('news_media')
+        .select('*')
+        .eq('news_id', newsId)
+        .order('quality_score', { ascending: false });
+
+      if (error) {
+        this.logger.error(`Failed to fetch media for news ${newsId}:`, error);
+        return { videos: [], images: [], hasVideo: false, hasImage: false };
+      }
+
+      const videos = mediaData?.filter(item => item.media_type === 'VIDEO') || [];
+      const images = mediaData?.filter(item => item.media_type === 'IMAGE') || [];
+      
+      return {
+        videos,
+        images,
+        hasVideo: videos.length > 0,
+        hasImage: images.length > 0,
+        bestVideo: videos[0],
+        bestImage: images[0]
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching media for news ${newsId}:`, error);
+      return { videos: [], images: [], hasVideo: false, hasImage: false };
+    }
+  }
+
   private async getRecentNewsForReels(request: BulkGenerationRequest): Promise<any[]> {
     const startDate = new Date(Date.now() - request.hoursBack * 60 * 60 * 1000);
 
@@ -655,6 +731,7 @@ export class ReelsService {
           status: reel.status,
           content: reel.content,
           assets: reel.assets,
+          additional_images: reel.assets.additional_images || [],
           duration_seconds: reel.duration_seconds,
           aspect_ratio: reel.aspect_ratio,
           resolution: reel.resolution,
@@ -794,6 +871,107 @@ export class ReelsService {
       return { success: true, message: 'Storage service is ready' };
     } catch (error) {
       return { success: false, message: `Storage test failed: ${error.message}` };
+    }
+  }
+
+  async testMediaForNews(newsId: string): Promise<any> {
+    try {
+      // Get news item
+      const newsItem = await this.getNewsById(newsId);
+      if (!newsItem) {
+        return { error: 'News item not found' };
+      }
+
+      // Get media data
+      const mediaData = await this.reelGeneratorService.getNewsMedia(newsId);
+      
+      return {
+        newsId,
+        newsTitle: newsItem.title,
+        mediaGallery: newsItem.media_gallery,
+        newsMedia: mediaData,
+        totalImages: mediaData.images.length,
+        totalVideos: mediaData.videos.length
+      };
+    } catch (error) {
+      this.logger.error(`Failed to test media for news ${newsId}:`, error);
+      return { error: error.message };
+    }
+  }
+
+  /**
+   * Find news items that have video media
+   */
+  async findNewsWithVideo(limit: number = 10): Promise<{
+    news_with_video: Array<{
+      id: string;
+      title: string;
+      created_at: string;
+      video_count: number;
+      image_count: number;
+    }>;
+    total_found: number;
+  }> {
+    try {
+      // Simple query to get news with video media
+      const { data: videoMedia, error: videoError } = await this.supabaseService.adminSupabase
+        .from('news_media')
+        .select('news_id, media_type')
+        .eq('media_type', 'VIDEO')
+        .limit(50);
+
+      if (videoError) {
+        this.logger.error('Failed to fetch video media:', videoError);
+        return {
+          news_with_video: [],
+          total_found: 0
+        };
+      }
+
+      if (!videoMedia || videoMedia.length === 0) {
+        return {
+          news_with_video: [],
+          total_found: 0
+        };
+      }
+
+      // Get unique news IDs
+      const uniqueNewsIds = [...new Set(videoMedia.map(item => item.news_id))].slice(0, limit);
+
+      // Get news details for these IDs
+      const { data: newsData, error: newsError } = await this.supabaseService.adminSupabase
+        .from('news')
+        .select('id, title, created_at')
+        .in('id', uniqueNewsIds)
+        .order('created_at', { ascending: false });
+
+      if (newsError) {
+        this.logger.error('Failed to fetch news details:', newsError);
+        return {
+          news_with_video: [],
+          total_found: 0
+        };
+      }
+
+      // Simple response with basic info
+      const newsWithVideo = (newsData || []).map(news => ({
+        id: news.id,
+        title: news.title,
+        created_at: news.created_at,
+        video_count: 1, // Assume 1 video for now
+        image_count: 0
+      }));
+
+      return {
+        news_with_video: newsWithVideo,
+        total_found: newsWithVideo.length
+      };
+    } catch (error) {
+      this.logger.error('Error finding news with video:', error);
+      return {
+        news_with_video: [],
+        total_found: 0
+      };
     }
   }
 }
