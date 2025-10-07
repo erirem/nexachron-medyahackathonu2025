@@ -413,6 +413,9 @@
       },
       "visual": {
         "name": "Visual"
+      },
+      "arcade": {
+        "name": "Arcade"
       }
     },
     "gamesList": {
@@ -455,6 +458,41 @@
         "title": "NewsGuessr",
         "description": "Read a headline and guess which city it happened in.",
         "estimatedTime": "3-6 min"
+      },
+      "flappyAABird": {
+        "title": "Flappy AA Bird",
+        "description": "Help AA Bird fly through obstacles and collect points!",
+        "estimatedTime": "2-5 min"
+      }
+    },
+    "newsTrivia": {
+      "title": "News Trivia",
+      "description": "Quick-fire questions about the latest stories.",
+      "estimatedTime": "2-5 min",
+      "game": {
+        "start": "Start Game",
+        "back": "Back",
+        "loading": "Loading...",
+        "noNews": "Not enough news found. Please try again later.",
+        "difficulty": "Easy",
+        "time": "2-5 min",
+        "xpReward": "XP Reward",
+        "question": "Question",
+        "next": "Next Question",
+        "finish": "See Results",
+        "completed": "Game Completed!",
+        "score": "Score:",
+        "accuracy": "Accuracy:",
+        "earnedXp": "Earned XP:",
+        "playAgain": "Play Again",
+        "backToGames": "Back to Games",
+        "explanation": "Explanation:",
+        "messages": {
+          "excellent": "Excellent! 🎉",
+          "good": "Good job! 👍",
+          "okay": "Not bad! 😊",
+          "needsWork": "Keep practicing! 💪"
+        }
       }
     },
     "card": {

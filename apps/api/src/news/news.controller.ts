@@ -9,7 +9,10 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import type { FindNewsResult, PaginatedResultMeta } from '@nexachron/shared-types';
+import type {
+  FindNewsResult,
+  PaginatedResultMeta,
+} from '@nexachron/shared-types';
 
 import { resolveLocale, translate } from '../i18n/i18n';
 import { NewsService } from './news.service';
@@ -78,10 +81,10 @@ export class NewsController {
     const hasPagination = page !== undefined || pageSize !== undefined;
 
     const pageValue = hasPagination
-      ? this.parsePositiveNumber(page ?? '1', 1) ?? 1
+      ? (this.parsePositiveNumber(page ?? '1', 1) ?? 1)
       : undefined;
     const pageSizeValue = hasPagination
-      ? this.parsePositiveNumber(pageSize ?? '20', 20) ?? 20
+      ? (this.parsePositiveNumber(pageSize ?? '20', 20) ?? 20)
       : undefined;
     const limitValue = hasPagination
       ? undefined
@@ -160,10 +163,8 @@ export class NewsController {
       }
 
       const pageValue = this.parsePositiveNumber(page ?? '1', 1) ?? 1;
-      const pageSizeValue = this.parsePositiveNumber(
-        pageSize ?? '20',
-        20,
-      ) ?? 20;
+      const pageSizeValue =
+        this.parsePositiveNumber(pageSize ?? '20', 20) ?? 20;
 
       const result = await this.newsService.getNewsByCategory(
         categoryId,
@@ -177,7 +178,11 @@ export class NewsController {
           categoryId,
           categories: overview.categories,
           items: result.items,
-          pagination: this.buildPaginationMeta(result, pageValue, pageSizeValue),
+          pagination: this.buildPaginationMeta(
+            result,
+            pageValue,
+            pageSizeValue,
+          ),
         },
       };
     } catch (error) {
@@ -191,7 +196,9 @@ export class NewsController {
   async testCategories() {
     try {
       // Test mevcut category alanını kontrol et
-      const { data: testData, error: testError } = await this.newsService['supabaseService'].supabase
+      const { data: testData, error: testError } = await this.newsService[
+        'supabaseService'
+      ].supabase
         .from('news')
         .select('id, title, category')
         .limit(10);
@@ -201,14 +208,16 @@ export class NewsController {
         data: {
           testData,
           testError,
-          sampleCategories: testData?.map(item => item.category).filter(Boolean)
-        }
+          sampleCategories: testData
+            ?.map((item) => item.category)
+            .filter(Boolean),
+        },
       };
     } catch (error) {
       console.error('Error testing categories:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -219,10 +228,7 @@ export class NewsController {
     @Headers('accept-language') acceptLanguage?: string,
   ) {
     const locale = resolveLocale(acceptLanguage);
-    const limitValue = this.parsePositiveNumber(
-      limit ?? '20',
-      20,
-    ) ?? 20;
+    const limitValue = this.parsePositiveNumber(limit ?? '20', 20) ?? 20;
 
     try {
       const result = await this.newsService.getTrendingNews(limitValue);
@@ -300,9 +306,7 @@ export class NewsController {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        throw new NotFoundException(
-          translate(locale, 'errors.fetchById'),
-        );
+        throw new NotFoundException(translate(locale, 'errors.fetchById'));
       }
       throw new InternalServerErrorException(
         translate(locale, 'errors.fetchById'),
@@ -310,9 +314,7 @@ export class NewsController {
     }
 
     if (!data) {
-      throw new NotFoundException(
-        translate(locale, 'errors.fetchById'),
-      );
+      throw new NotFoundException(translate(locale, 'errors.fetchById'));
     }
 
     return {

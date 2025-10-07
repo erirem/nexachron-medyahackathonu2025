@@ -240,7 +240,7 @@ export function TurkeyMap({ selected, correct, disabled, onSelect }: TurkeyMapPr
   };
 
   return (
-    <svg viewBox="0 0 400 280" className="w-full h-auto md:h-[380px] lg:h-[480px]" preserveAspectRatio="xMidYMid meet" onClick={handleSvgClick}>
+    <svg viewBox="0 0 400 280" className="w-full h-auto" onClick={handleSvgClick}>
       <rect x="0" y="0" width="400" height="280" rx="16" className="fill-[#0f1624]" />
 
       {/* simplified outline */}

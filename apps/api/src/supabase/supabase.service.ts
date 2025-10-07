@@ -21,7 +21,9 @@ export class SupabaseService implements OnModuleInit {
     );
 
     if (!supabaseUrl) {
-      throw new Error('Missing Supabase configuration: SUPABASE_URL is required.');
+      throw new Error(
+        'Missing Supabase configuration: SUPABASE_URL is required.',
+      );
     }
     if (!anonKey && !serviceKey) {
       throw new Error(

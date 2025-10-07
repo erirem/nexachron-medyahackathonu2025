@@ -211,7 +211,7 @@ export class NewsService {
         return { data: null, error: response.error };
       }
 
-      const row = response.data as NewsRow | null;
+      const row = response.data;
 
       return {
         data: row ? this.mapNewsRow(row) : null,
@@ -318,7 +318,7 @@ export class NewsService {
       typeof row.media_summary === 'string'
         ? row.media_summary
         : JSON.stringify(row.media_summary);
-    
+
     const mediaSummary = this.parseMediaSummary(mediaSummaryJson);
     const media = this.extractMediaFromSummary(mediaSummary);
     const primaryMedia = media.length > 0 ? media[0] : null;

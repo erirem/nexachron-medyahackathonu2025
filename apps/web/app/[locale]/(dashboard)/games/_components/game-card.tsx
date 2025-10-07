@@ -51,6 +51,13 @@ const colorClasses = {
     accent: 'text-red-400',
     hover: 'hover:border-red-400/50',
     button: 'from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+  },
+  orange: {
+    bg: 'bg-gradient-to-br from-orange-500/20 to-orange-600/30',
+    border: 'border-orange-400/30',
+    accent: 'text-orange-400',
+    hover: 'hover:border-orange-400/50',
+    button: 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
   }
 };
 
@@ -93,9 +100,19 @@ export function GameCard({ game, onSelect }: GameCardProps): JSX.Element {
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
-            <div className={`text-4xl ${isDisabled ? 'opacity-50' : colors.accent}`}>
-              {game.icon}
-            </div>
+            {game.id === 'flappy-aa-bird' ? (
+              <div className={`w-12 h-12 ${isDisabled ? 'opacity-50' : ''}`}>
+                <img 
+                  src="/mascot.svg" 
+                  alt="AA Mascot" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className={`text-4xl ${isDisabled ? 'opacity-50' : colors.accent}`}>
+                {game.icon}
+              </div>
+            )}
             <div>
               <h3 className={`text-xl font-bold transition-colors ${
                 isDisabled ? 'text-white/50' : 'text-white group-hover:text-white/90'

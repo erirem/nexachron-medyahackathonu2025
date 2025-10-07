@@ -110,6 +110,18 @@ const baseGames: readonly BaseGame[] = [
     isCompleted: false,
     completionRate: 0,
   },
+  {
+    id: 'flappy-aa-bird',
+    translationKey: 'flappyAABird',
+    icon: '🐦',
+    color: 'orange',
+    category: 'arcade',
+    difficulty: 'medium',
+    xpReward: 20,
+    isAvailable: true,
+    isCompleted: false,
+    completionRate: 0,
+  },
 ];
 
 const baseCategories: readonly { readonly id: string; readonly icon: string }[] = [
@@ -120,6 +132,7 @@ const baseCategories: readonly { readonly id: string; readonly icon: string }[] 
   { id: 'trivia', icon: '⚡' },
   { id: 'timeline', icon: '📅' },
   { id: 'visual', icon: '🔍' },
+  { id: 'arcade', icon: '🎯' },
 ];
 
 export default function GamesPage(): JSX.Element {
@@ -167,6 +180,8 @@ export default function GamesPage(): JSX.Element {
       router.push(`/${locale}/quizzes`);
     } else if (game.id === 'wordle') {
       router.push(`/${locale}/games/wordle`);
+    } else if (game.id === 'flappy-aa-bird') {
+      router.push(`/${locale}/games/flappy-aa-bird`);
     } else {
       router.push(`/${locale}/games/${game.id}`);
     }

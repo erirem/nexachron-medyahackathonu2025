@@ -413,6 +413,9 @@
       },
       "visual": {
         "name": "Görsel"
+      },
+      "arcade": {
+        "name": "Arcade"
       }
     },
     "gamesList": {
@@ -455,6 +458,41 @@
         "title": "NewsGuessr",
         "description": "Manşeti oku, olayın hangi şehirde yaşandığını tahmin et.",
         "estimatedTime": "3-6 dk"
+      },
+      "flappyAABird": {
+        "title": "Flappy AA Kuşu",
+        "description": "AA Kuşu'na engellerden uçmasında yardım et ve puan topla!",
+        "estimatedTime": "2-5 dk"
+      }
+    },
+    "newsTrivia": {
+      "title": "Haber Trivia",
+      "description": "Güncel gelişmeler hakkında kısa sorular.",
+      "estimatedTime": "2-5 dk",
+      "game": {
+        "start": "Oyunu Başlat",
+        "back": "Geri",
+        "loading": "Yükleniyor...",
+        "noNews": "Yeterli haber bulunamadı. Lütfen daha sonra tekrar deneyin.",
+        "difficulty": "Kolay",
+        "time": "2-5 dk",
+        "xpReward": "XP Ödülü",
+        "question": "Soru",
+        "next": "Sonraki Soru",
+        "finish": "Sonuçları Gör",
+        "completed": "Oyun Tamamlandı!",
+        "score": "Skor:",
+        "accuracy": "Doğruluk:",
+        "earnedXp": "Kazanılan XP:",
+        "playAgain": "Tekrar Oyna",
+        "backToGames": "Oyunlara Dön",
+        "explanation": "Açıklama:",
+        "messages": {
+          "excellent": "Mükemmel! 🎉",
+          "good": "İyi iş! 👍",
+          "okay": "Fena değil! 😊",
+          "needsWork": "Daha çok çalışmalısın! 💪"
+        }
       }
     },
     "card": {
