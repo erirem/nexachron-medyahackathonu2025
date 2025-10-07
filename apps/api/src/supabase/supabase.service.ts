@@ -75,6 +75,24 @@ export class SupabaseService implements OnModuleInit {
     return this.serviceClient;
   }
 
+  // Kullanıcı JWT'siyle yetkilendirilmiş (RLS'e tabi) client oluştur
+  getUserClient(accessToken: string): SupabaseClient<Database, 'public', any> {
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const anonKey =
+      this.configService.get<string>('SUPABASE_ANON_KEY') ??
+      this.configService.get<string>('SUPABASE_KEY');
+
+    if (!supabaseUrl || !anonKey) {
+      throw new Error('Supabase URL/ANON key eksik.');
+    }
+
+    return createClient<Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      db: { schema: 'public' },
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    });
+  }
+
   // Test connection method
   async testConnection(): Promise<boolean> {
     try {

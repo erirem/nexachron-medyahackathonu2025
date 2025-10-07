@@ -323,12 +323,42 @@ export class NewsService {
     const media = this.extractMediaFromSummary(mediaSummary);
     const primaryMedia = media.length > 0 ? media[0] : null;
 
+    // Category mapping
+    const categoryLabels: Record<string, string> = {
+      gundem: 'Gündem',
+      spor: 'Spor',
+      ekonomi: 'Ekonomi',
+      teknoloji: 'Teknoloji',
+      dunya: 'Dünya',
+      politika: 'Politika',
+      finans: 'Finans',
+      savunma: 'Savunma',
+      enerji: 'Enerji',
+      saglik: 'Sağlık',
+      diplomasi: 'Diplomasi',
+      cevre: 'Çevre',
+      turizm: 'Turizm',
+      tarim: 'Tarım',
+      kultur: 'Kültür',
+      sanat: 'Sanat',
+      egitim: 'Eğitim',
+      bilim: 'Bilim',
+      yasam: 'Yaşam',
+      magazin: 'Magazin',
+    };
+
+    const categoryId = row.category || 'spor';
+    const categoryLabel =
+      categoryLabels[categoryId] ||
+      categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
+
     return {
       id: row.id,
       title: row.title || 'Başlıksız',
       content: row.content || '',
       summary: this.resolveSummary(row),
-      categoryId: row.category || 'spor',
+      categoryId,
+      category: categoryLabel,
       city: row.city || null,
       isPopular: !!row.is_popular,
       createdAt: row.created_at || new Date().toISOString(),
