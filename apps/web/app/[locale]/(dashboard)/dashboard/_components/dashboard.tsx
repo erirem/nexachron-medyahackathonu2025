@@ -266,6 +266,12 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         return;
       }
 
+      // Audio (podcast) ayrı bir sayfaya gider
+      if (categoryId === 'audio') {
+        router.push(`/${locale}/podcast`);
+        return;
+      }
+
       setActiveCategory(categoryId);
       if (categoryId !== 'overview') {
         setSelectedCategoryIds([]);

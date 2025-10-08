@@ -75,6 +75,8 @@ function ExploreSidebar() {
                 if (cat === 'reels') return;
                 if (cat === 'profile' || cat === 'leaderboard' || cat === 'quizzes') {
                     router.push(`/${currentLocale}/${cat}`);
+                } else if (cat === 'audio') {
+                    router.push(`/${currentLocale}/podcast`);
                 } else {
                     router.push(`/${currentLocale}/dashboard`);
                 }
