@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, type JSX } from 'react';
+import { useTrackEvent } from '@/hooks/use-track-event';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
@@ -19,13 +20,16 @@ interface NewsArticleProps {
 
 export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArticleProps): JSX.Element {
   const locale = useLocale();
+  const track = useTrackEvent();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(article.likeCount ?? 156);
   useEffect(() => {
-    console.debug('[NewsArticle] inline images', article.images);
-  }, [article.images]);
+    // page view event
+    void track({ eventType: 'view', itemId: String(article.id), metadata: { surface: 'detail' } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const allImages = [
     { url: article.imageUrl, alt: article.title, caption: article.title },
@@ -176,7 +180,10 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
         {/* Social Actions */}
         <div className="flex items-center gap-4 mb-8">
           <button
-            onClick={handleLike}
+            onClick={() => {
+              handleLike();
+              void track({ eventType: 'click', itemId: String(article.id), metadata: { action: 'like', surface: 'detail' } });
+            }}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
               isLiked 
                 ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
@@ -190,7 +197,10 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
           </button>
 
           <button
-            onClick={() => setIsSaved(!isSaved)}
+            onClick={() => {
+              setIsSaved(!isSaved);
+              void track({ eventType: 'click', itemId: String(article.id), metadata: { action: 'save', surface: 'detail' } });
+            }}
             className={`p-2.5 rounded-xl transition-all ${
               isSaved 
                 ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 

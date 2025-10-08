@@ -7,8 +7,9 @@ export class UserDataController {
   constructor(private readonly userDataService: UserDataService) {}
 
   @Post('events')
-  async ingestEvent(@Body() body: any) {
-    return this.userDataService.ingestEvent(body);
+  async ingestEvents(@Req() req: any, @Body() body: any) {
+    // Accepts single event or { events: [...] }
+    return this.userDataService.ingestEvents(body, req?.user?.id);
   }
 
   @UseGuards(SupabaseAuthGuard)

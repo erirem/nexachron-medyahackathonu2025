@@ -182,13 +182,16 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
 
   // Filter news by selected categories
   const filteredNews = useMemo(() => {
+    // No explicit category chips selected: rely on activeCategory filters
     if (selectedCategoryIds.length === 0) {
       if (activeCategory === 'saved') {
         return mappedNews.filter((n) => bookmarkedIds.has(n.id));
       }
-      return mappedNews;
+      // Apply local, semantic filters for tabs like audio/reports/briefs/watch/overview
+      return applyLocalFilters(mappedNews, activeCategory);
     }
 
+    // Chip-based filtering: include items whose categoryId matches any selected id
     return mappedNews.filter((newsItem) => {
       return newsItem.categoryId && selectedCategoryIds.includes(newsItem.categoryId);
     });
