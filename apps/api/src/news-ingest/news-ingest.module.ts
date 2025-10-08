@@ -11,9 +11,10 @@ import { MediaStorageService } from './services/media-storage.service';
 import { EmotionAnalysisService } from './services/emotion-analysis.service';
 import { BatchEmotionUpdaterService } from './services/batch-emotion-updater.service';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { TTSModule } from '../tts/tts.module';
 
 @Module({
-  imports: [HttpModule, ScheduleModule.forRoot(), SupabaseModule],
+  imports: [HttpModule, ScheduleModule.forRoot(), SupabaseModule, TTSModule],
   controllers: [NewsIngestController],
   providers: [
     NewsIngestService,

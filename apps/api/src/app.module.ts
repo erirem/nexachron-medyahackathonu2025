@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { GamesModule } from './games/games.module';
+import { TTSModule } from './tts/tts.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { GamesModule } from './games/games.module';
     NewsIngestModule,
     BookmarksModule,
     GamesModule,
+    TTSModule,
   ],
   controllers: [AppController],
   providers: [AppService],
