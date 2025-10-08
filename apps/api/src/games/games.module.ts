@@ -8,6 +8,7 @@ import { QuestionGenerationService } from './services/question-generation.servic
 import { MultiplayerService } from './services/multiplayer.service';
 import { GamificationService } from './services/gamification.service';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { UsersModule } from '../users/users.module';
 import { NewsIngestModule } from '../news-ingest/news-ingest.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { NewsIngestModule } from '../news-ingest/news-ingest.module';
     HttpModule,
     ScheduleModule.forRoot(),
     SupabaseModule,
+    UsersModule, // Kullanıcı yönetimi için
     NewsIngestModule, // AA haberleri için
   ],
   controllers: [GamesController],

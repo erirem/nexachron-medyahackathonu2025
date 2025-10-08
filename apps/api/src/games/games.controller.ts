@@ -15,6 +15,7 @@ import {
 import { GamesService } from './games.service';
 import { QuizGameService } from './services/quiz-game.service';
 import { MultiplayerService } from './services/multiplayer.service';
+import { SupabaseAuthGuard, type AuthenticatedRequest } from '../auth/supabase-auth.guard';
 import type {
   StartGameRequest,
   AnswerQuestionRequest,
@@ -62,17 +63,22 @@ export class GamesController {
    * Yeni oyun başlat
    * POST /api/games/start
    */
+  @UseGuards(SupabaseAuthGuard)
   @Post('start')
   async startGame(
     @Body() startRequest: StartGameRequest,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     const userId = req.user?.id;
     if (!userId) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
 
-    return this.gamesService.startGame(startRequest, userId);
+    const game = await this.gamesService.startGame(startRequest, userId);
+    return {
+      success: true,
+      data: game,
+    };
   }
 
   /**
@@ -125,18 +131,23 @@ export class GamesController {
    * Soru cevapla
    * POST /api/games/:gameId/answer
    */
+  @UseGuards(SupabaseAuthGuard)
   @Post(':gameId/answer')
   async answerQuestion(
     @Param('gameId') gameId: string,
     @Body() answerRequest: AnswerQuestionRequest,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     const userId = req.user?.id;
     if (!userId) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
 
-    return this.gamesService.answerQuestion(gameId, userId, answerRequest);
+    const result = await this.gamesService.answerQuestion(gameId, userId, answerRequest);
+    return {
+      success: true,
+      data: result,
+    };
   }
 
   /**

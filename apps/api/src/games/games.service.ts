@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { UsersService } from '../users/users.service';
 import { QuestionGenerationService } from './services/question-generation.service';
 import { QuizGameService } from './services/quiz-game.service';
 import { MultiplayerService } from './services/multiplayer.service';
@@ -21,11 +22,61 @@ export class GamesService {
 
   constructor(
     private readonly supabaseService: SupabaseService,
+    private readonly usersService: UsersService,
     private readonly questionGenerationService: QuestionGenerationService,
     private readonly quizGameService: QuizGameService,
     private readonly multiplayerService: MultiplayerService,
     private readonly gamificationService: GamificationService,
   ) {}
+
+  /**
+   * Kullanıcının var olup olmadığını kontrol et, yoksa oluştur
+   */
+  private async ensureUserExists(userId: string): Promise<void> {
+    try {
+      // Kullanıcının var olup olmadığını kontrol et
+      const { data: existingUser, error: fetchError } = await this.supabaseService.supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 = "not found" hatası, diğer hatalar gerçek hatalar
+        throw new Error(`Failed to check user existence: ${fetchError.message}`);
+      }
+
+      if (!existingUser) {
+        // Kullanıcı yoksa oluştur
+        this.logger.log(`User ${userId} not found, creating...`);
+        
+        // Supabase auth'dan kullanıcı bilgilerini al
+        const { data: authUser, error: authError } = await this.supabaseService.adminSupabase.auth.admin.getUserById(userId);
+        
+        if (authError || !authUser.user) {
+          throw new Error(`Failed to get user from auth: ${authError?.message || 'User not found in auth'}`);
+        }
+
+        // RLS'i bypass etmek için adminSupabase kullan
+        const { error: createError } = await this.supabaseService.adminSupabase
+          .from('users')
+          .insert({
+            id: userId,
+            email: authUser.user.email || `${userId}@temp.com`, // Email yoksa geçici email
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+        if (createError) {
+          throw new Error(`Failed to create user: ${createError.message}`);
+        }
+        this.logger.log(`User ${userId} created successfully`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to ensure user exists: ${error.message}`);
+      throw error;
+    }
+  }
 
   /**
    * Mevcut oyunları listele
@@ -127,6 +178,8 @@ export class GamesService {
     this.logger.log(`Starting ${startRequest.gameType} game for user ${userId}`);
 
     try {
+      // Kullanıcının var olup olmadığını kontrol et, yoksa oluştur
+      await this.ensureUserExists(userId);
       // Soru havuzundan soruları çek
       const questions = await this.questionGenerationService.getQuestions(
         startRequest.filter || { 
@@ -154,6 +207,9 @@ export class GamesService {
 
       // Veritabanına kaydet
       await this.saveGame(game);
+
+      // Kullanıcıyı oyuna kat
+      await this.addParticipant(game.id, userId);
 
       // Multiplayer ise oda oluştur
       if (startRequest.mode === GameMode.MULTIPLAYER) {
