@@ -1,20 +1,38 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, type JSX } from 'react';
+import { useState, useEffect, useRef, type JSX } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useGamification } from '@/contexts/gamification-context';
-import { useNews } from '@/hooks/use-news';
+import { startGame, answerQuestion } from '@/services/api';
 
-interface TriviaQuestion {
+interface GameQuestion {
   id: string;
   question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
-  newsId: string;
-  newsTitle: string;
+  type: 'multiple_choice' | 'true_false';
+  options?: string[];
+  correctAnswer: string;
+  explanation?: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  source: 'manual' | 'news_ai' | 'news_manual';
+  sourceNewsId?: string;
+  gameType: string;
+  createdAt: string;
+}
+
+interface Game {
+  id: string;
+  gameType: string;
+  mode: 'single' | 'multiplayer';
+  status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
+  timeLimit?: number;
+  startedAt?: string;
+  completedAt?: string;
+  questions: GameQuestion[];
+  currentQuestionIndex: number;
+  score: number;
+  totalQuestions: number;
 }
 
 interface GameState {
@@ -23,13 +41,13 @@ interface GameState {
   timeLeft: number;
   isGameActive: boolean;
   isGameComplete: boolean;
-  selectedAnswer: number | null;
+  selectedAnswer: string | null;
   showResult: boolean;
+  gameId: string | null;
 }
 
 const GAME_DURATION = 300; // 5 minutes in seconds
-const QUESTIONS_PER_GAME = 5;
-const XP_REWARD = 15;
+const XP_REWARD = 35;
 
 export default function NewsTriviaPage(): JSX.Element {
   const [gameState, setGameState] = useState<GameState>({
@@ -40,10 +58,12 @@ export default function NewsTriviaPage(): JSX.Element {
     isGameComplete: false,
     selectedAnswer: null,
     showResult: false,
+    gameId: null,
   });
 
-  const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [game, setGame] = useState<Game | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [shouldStartTimer, setShouldStartTimer] = useState(false);
 
@@ -52,271 +72,28 @@ export default function NewsTriviaPage(): JSX.Element {
   const locale = useLocale();
   const t = useTranslations('games.newsTrivia.game');
 
-  // Handle back navigation with multiple fallbacks
+  // Handle back navigation
   const handleBack = (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
     
     console.log('Back button clicked, navigating to:', `/${locale}/games`);
-    console.log('Current URL:', window.location.href);
     
-    // Method 1: Force navigation with window.location
     try {
       window.location.href = `/${locale}/games`;
-      console.log('window.location.href executed');
       return;
     } catch (error) {
       console.error('window.location.href failed:', error);
     }
     
-    // Method 2: Try router.replace (more forceful than push)
     try {
       router.replace(`/${locale}/games`);
-      console.log('router.replace executed');
     } catch (error) {
       console.error('router.replace failed:', error);
     }
-    
-    // Method 3: Try router.push as fallback
-    try {
-      router.push(`/${locale}/games`);
-      console.log('router.push executed');
-    } catch (error) {
-      console.error('router.push failed:', error);
-    }
-    
-    // Method 4: Try window.history.back as last resort
-    setTimeout(() => {
-      try {
-        window.history.back();
-        console.log('window.history.back executed');
-      } catch (error) {
-        console.error('window.history.back failed:', error);
-      }
-    }, 100);
   };
 
-  // Fetch news data
-  const { data: newsData, isLoading: newsLoading, error: newsError } = useNews({ 
-    limit: 50,
-    isPopular: true 
-  });
-
-
-  // Generate a single question from news item
-  const generateQuestionFromNews = (news: any, index: number): TriviaQuestion | null => {
-    if (!news.title || !news.summary) return null;
-
-    const questionTypes = [
-      () => generateCategoryQuestion(news),
-      () => generateLocationQuestion(news),
-      () => generateTimeQuestion(news),
-      () => generateContentQuestion(news),
-    ];
-
-    const questionGenerator = questionTypes[index % questionTypes.length];
-    return questionGenerator();
-  };
-
-  const generateCategoryQuestion = (news: any): TriviaQuestion | null => {
-    if (!news.category) return null;
-
-    const categories = ['Politika', 'Spor', 'Ekonomi', 'Teknoloji', 'Sağlık', 'Kültür', 'Dünya'];
-    const correctCategory = news.category;
-    const wrongCategories = categories.filter(cat => cat !== correctCategory)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const options = [correctCategory, ...wrongCategories].sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctCategory);
-
-    return {
-      id: `q-${news.id}-category`,
-      question: `"${news.title}" haberi hangi kategoride yer alır?`,
-      options,
-      correctAnswer: correctIndex,
-      explanation: `Bu haber ${correctCategory} kategorisinde yer almaktadır.`,
-      newsId: news.id,
-      newsTitle: news.title,
-    };
-  };
-
-  const generateLocationQuestion = (news: any): TriviaQuestion | null => {
-    if (!news.city) return null;
-
-    const cities = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana', 'Konya'];
-    const correctCity = news.city;
-    const wrongCities = cities.filter(city => city !== correctCity)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const options = [correctCity, ...wrongCities].sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctCity);
-
-    return {
-      id: `q-${news.id}-location`,
-      question: `"${news.title}" haberi hangi şehirde geçiyor?`,
-      options,
-      correctAnswer: correctIndex,
-      explanation: `Bu haber ${correctCity} şehrinde geçmektedir.`,
-      newsId: news.id,
-      newsTitle: news.title,
-    };
-  };
-
-  const generateTimeQuestion = (news: any): TriviaQuestion | null => {
-    if (!news.created_at) return null;
-
-    const newsDate = new Date(news.created_at);
-    const today = new Date();
-    const diffTime = today.getTime() - newsDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    let timeFrame: string;
-    let correctAnswer: number;
-
-    if (diffDays === 1) {
-      timeFrame = 'Dün';
-      correctAnswer = 0;
-    } else if (diffDays <= 7) {
-      timeFrame = 'Bu hafta';
-      correctAnswer = 1;
-    } else if (diffDays <= 30) {
-      timeFrame = 'Bu ay';
-      correctAnswer = 2;
-    } else {
-      timeFrame = 'Bu yıl';
-      correctAnswer = 3;
-    }
-
-    const options = ['Dün', 'Bu hafta', 'Bu ay', 'Bu yıl'];
-    const correctIndex = options.indexOf(timeFrame);
-
-    return {
-      id: `q-${news.id}-time`,
-      question: `"${news.title}" haberi ne zaman yayınlandı?`,
-      options,
-      correctAnswer: correctIndex,
-      explanation: `Bu haber ${timeFrame.toLowerCase()} yayınlandı.`,
-      newsId: news.id,
-      newsTitle: news.title,
-    };
-  };
-
-  const generateContentQuestion = (news: any): TriviaQuestion | null => {
-    if (!news.summary || news.summary.length < 50) return null;
-
-    // Extract key words from summary
-    const words = news.summary.split(' ').filter((word: string) => word.length > 4);
-    if (words.length < 2) return null;
-
-    const correctWord = words[Math.floor(Math.random() * words.length)];
-    const wrongWords = words.filter((word: string) => word !== correctWord)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const options = [correctWord, ...wrongWords].sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctWord);
-
-    return {
-      id: `q-${news.id}-content`,
-      question: `"${news.title}" haberinin özetinde hangi kelime geçiyor?`,
-      options,
-      correctAnswer: correctIndex,
-      explanation: `Bu haberin özetinde "${correctWord}" kelimesi geçmektedir.`,
-      newsId: news.id,
-      newsTitle: news.title,
-    };
-  };
-
-  // Fallback questions when API fails
-  const createFallbackQuestions = (): TriviaQuestion[] => {
-    return [
-      {
-        id: 'fallback-1',
-        question: 'Haber Trivia oyunu hangi tür sorular içerir?',
-        options: ['Sadece spor soruları', 'Güncel haberler hakkında sorular', 'Sadece tarih soruları', 'Sadece bilim soruları'],
-        correctAnswer: 1,
-        explanation: 'Haber Trivia oyunu güncel haberler hakkında sorular içerir.',
-        newsId: 'fallback',
-        newsTitle: 'Haber Trivia Oyunu',
-      },
-      {
-        id: 'fallback-2',
-        question: 'Haber kategorileri arasında hangisi bulunur?',
-        options: ['Müzik', 'Politika', 'Oyun', 'Moda'],
-        correctAnswer: 1,
-        explanation: 'Politika, haber kategorileri arasında yer alır.',
-        newsId: 'fallback',
-        newsTitle: 'Haber Kategorileri',
-      },
-      {
-        id: 'fallback-3',
-        question: 'Haber Trivia oyununda kaç soru sorulur?',
-        options: ['3', '5', '7', '10'],
-        correctAnswer: 1,
-        explanation: 'Haber Trivia oyununda 5 soru sorulur.',
-        newsId: 'fallback',
-        newsTitle: 'Oyun Kuralları',
-      },
-      {
-        id: 'fallback-4',
-        question: 'Haber Trivia oyununda kazanılan XP miktarı nedir?',
-        options: ['10 XP', '15 XP', '20 XP', '25 XP'],
-        correctAnswer: 1,
-        explanation: 'Haber Trivia oyununda 15 XP kazanılır.',
-        newsId: 'fallback',
-        newsTitle: 'XP Sistemi',
-      },
-      {
-        id: 'fallback-5',
-        question: 'Haber Trivia oyununun zorluk seviyesi nedir?',
-        options: ['Zor', 'Orta', 'Kolay', 'Çok Zor'],
-        correctAnswer: 2,
-        explanation: 'Haber Trivia oyununun zorluk seviyesi kolaydır.',
-        newsId: 'fallback',
-        newsTitle: 'Oyun Zorluğu',
-      },
-    ];
-  };
-
-  // Initialize questions when news data is loaded
-  useEffect(() => {
-    if (newsData && newsData.length > 0 && !isLoading) {
-      // Generate questions directly here to avoid useMemo dependency issues
-      const generatedQuestions: TriviaQuestion[] = [];
-      const shuffledNews = [...newsData].sort(() => Math.random() - 0.5);
-
-      for (let i = 0; i < Math.min(QUESTIONS_PER_GAME, shuffledNews.length); i++) {
-        const news = shuffledNews[i];
-        const question = generateQuestionFromNews(news, i);
-        if (question) {
-          generatedQuestions.push(question);
-        }
-      }
-      
-      setQuestions(generatedQuestions);
-      setIsLoading(false);
-    } else if (newsError || (!newsLoading && (!newsData || newsData.length === 0))) {
-      // If there's an error or no data, create fallback questions
-      setQuestions(createFallbackQuestions());
-      setIsLoading(false);
-    }
-  }, [isLoading, newsError, newsLoading, newsData]);
-
-  // Timeout fallback - if loading takes too long, use fallback questions
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (isLoading && questions.length === 0) {
-        setQuestions(createFallbackQuestions());
-        setIsLoading(false);
-      }
-    }, 10000); // 10 second timeout
-
-    return () => clearTimeout(timeout);
-  }, [isLoading, questions.length]);
-
-  // Timer effect - only runs when shouldStartTimer changes
+  // Timer effect
   useEffect(() => {
     if (shouldStartTimer && !timerRef.current) {
       timerRef.current = setInterval(() => {
@@ -356,48 +133,84 @@ export default function NewsTriviaPage(): JSX.Element {
     }
   }, [gameState.isGameActive, gameState.isGameComplete]);
 
-  const startGame = () => {
-    // Clear any existing timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  const startGameHandler = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Start the game directly with existing questions
+      console.log('Starting news trivia game with existing questions...');
+      const gameData = await startGame({
+        gameType: 'news_trivia',
+        mode: 'single',
+        filter: {
+          gameType: 'news_trivia',
+          limit: 5
+        }
+      });
+      
+      setGame(gameData);
+      setGameState({
+        currentQuestion: 0,
+        score: 0,
+        timeLeft: GAME_DURATION,
+        isGameActive: true,
+        isGameComplete: false,
+        selectedAnswer: null,
+        showResult: false,
+        gameId: gameData.id,
+      });
+      
+      // Start the timer
+      setShouldStartTimer(true);
+      
+    } catch (error) {
+      console.error('Failed to start game:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start game';
+      
+      // Eğer soru yoksa, kullanıcıya bilgi ver
+      if (errorMessage.includes('No questions available')) {
+        setError('Şu anda haber trivia soruları mevcut değil. Lütfen daha sonra tekrar deneyin.');
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setGameState({
-      currentQuestion: 0,
-      score: 0,
-      timeLeft: GAME_DURATION,
-      isGameActive: true,
-      isGameComplete: false,
-      selectedAnswer: null,
-      showResult: false,
-    });
-    
-    // Start the timer
-    setShouldStartTimer(true);
   };
 
-  const selectAnswer = (answerIndex: number) => {
-    if (gameState.showResult || gameState.isGameComplete) return;
+  const selectAnswer = async (answer: string) => {
+    if (gameState.showResult || gameState.isGameComplete || !gameState.gameId) return;
 
     setGameState(prev => ({
       ...prev,
-      selectedAnswer: answerIndex,
+      selectedAnswer: answer,
       showResult: true,
     }));
 
-    // Check if answer is correct
-    const currentQ = questions[gameState.currentQuestion];
-    if (currentQ && answerIndex === currentQ.correctAnswer) {
-      setGameState(prev => ({
-        ...prev,
-        score: prev.score + 1,
-      }));
+    try {
+      const currentQ = game?.questions[gameState.currentQuestion];
+      if (!currentQ) return;
+
+      const result = await answerQuestion(gameState.gameId, {
+        questionId: currentQ.id,
+        answer: answer,
+        timeSpent: GAME_DURATION - gameState.timeLeft,
+      });
+
+      if (result.isCorrect) {
+        setGameState(prev => ({
+          ...prev,
+          score: prev.score + 1,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to answer question:', error);
     }
   };
 
   const nextQuestion = () => {
-    if (gameState.currentQuestion < questions.length - 1) {
+    if (gameState.currentQuestion < (game?.questions.length || 0) - 1) {
       setGameState(prev => ({
         ...prev,
         currentQuestion: prev.currentQuestion + 1,
@@ -413,7 +226,9 @@ export default function NewsTriviaPage(): JSX.Element {
       }));
 
       // Award XP
-      completeQuiz('news-trivia', gameState.score, questions.length);
+      if (game) {
+        completeQuiz('news-trivia', gameState.score, game.questions.length);
+      }
     }
   };
 
@@ -424,14 +239,15 @@ export default function NewsTriviaPage(): JSX.Element {
   };
 
   const getScoreMessage = (): string => {
-    const percentage = (gameState.score / questions.length) * 100;
+    if (!game) return '';
+    const percentage = (gameState.score / game.questions.length) * 100;
     if (percentage >= 80) return t('messages.excellent');
     if (percentage >= 60) return t('messages.good');
     if (percentage >= 40) return t('messages.okay');
     return t('messages.needsWork');
   };
 
-  if (isLoading || newsLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] flex items-center justify-center p-4">
         <div className="text-center">
@@ -441,21 +257,48 @@ export default function NewsTriviaPage(): JSX.Element {
             </svg>
           </div>
           <div className="text-white text-xl mb-2">{t('loading')}</div>
-          <div className="text-white/60 text-sm">Haberler yükleniyor...</div>
-          {newsError && (
-            <div className="text-red-400 text-sm mt-2">
-              API hatası: {newsError.message}
-            </div>
-          )}
+          <div className="text-white/60 text-sm">Oyun başlatılıyor...</div>
         </div>
       </div>
     );
   }
 
-  if (questions.length === 0) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] flex items-center justify-center">
-        <div className="text-white text-xl">{t('noNews')}</div>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 bg-red-500 rounded-xl flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {error.includes('mevcut değil') ? 'Soru Bulunamadı' : 'Hata'}
+            </h2>
+            <p className="text-white/80 mb-6">{error}</p>
+            {error.includes('mevcut değil') && (
+              <p className="text-yellow-300 text-sm mb-6">
+                Haber trivia soruları günlük olarak otomatik oluşturulur. 
+                Lütfen daha sonra tekrar deneyin.
+              </p>
+            )}
+            <div className="space-y-3">
+              <button
+                onClick={startGameHandler}
+                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
+              >
+                Tekrar Dene
+              </button>
+              <button
+                onClick={handleBack}
+                className="w-full bg-white/10 text-white font-semibold py-3 px-6 rounded-xl hover:bg-white/20 transition-all duration-200"
+              >
+                Geri Dön
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -466,15 +309,15 @@ export default function NewsTriviaPage(): JSX.Element {
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] flex items-center justify-center p-4">
         <div className="max-w-md w-full">
           {/* Back button */}
-            <button
-              onClick={handleBack}
-              className="mb-6 text-white/70 hover:text-white transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              {t('back')}
-            </button>
+          <button
+            onClick={handleBack}
+            className="mb-6 text-white/70 hover:text-white transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {t('back')}
+          </button>
 
           {/* Game card */}
           <div className="bg-gradient-to-br from-amber-900/20 to-amber-800/10 border border-amber-500/30 rounded-2xl p-8 text-center">
@@ -489,7 +332,7 @@ export default function NewsTriviaPage(): JSX.Element {
 
             {/* Title */}
             <h1 className="text-3xl font-bold text-white mb-2">Haber Trivia</h1>
-            <p className="text-white/80 mb-8">Güncel gelişmeler hakkında kısa sorular.</p>
+            <p className="text-white/80 mb-8">Güncel haberlerden AI ile üretilen sorular.</p>
 
             {/* Game info */}
             <div className="flex justify-between items-center mb-8">
@@ -517,10 +360,11 @@ export default function NewsTriviaPage(): JSX.Element {
 
             {/* Start button */}
             <button
-              onClick={startGame}
-              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-4 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 transform hover:scale-105"
+              onClick={startGameHandler}
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-4 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t('start')}
+              {isLoading ? 'Yükleniyor...' : t('start')}
             </button>
           </div>
         </div>
@@ -547,12 +391,12 @@ export default function NewsTriviaPage(): JSX.Element {
             <div className="space-y-4 mb-8">
               <div className="flex justify-between items-center">
                 <span className="text-white/80">{t('score')}</span>
-                <span className="text-white font-semibold">{gameState.score}/{questions.length}</span>
+                <span className="text-white font-semibold">{gameState.score}/{game?.questions.length || 0}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-white/80">{t('accuracy')}</span>
                 <span className="text-white font-semibold">
-                  {Math.round((gameState.score / questions.length) * 100)}%
+                  {game ? Math.round((gameState.score / game.questions.length) * 100) : 0}%
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -563,7 +407,7 @@ export default function NewsTriviaPage(): JSX.Element {
 
             <div className="space-y-3">
               <button
-                onClick={startGame}
+                onClick={startGameHandler}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
               >
                 {t('playAgain')}
@@ -582,8 +426,16 @@ export default function NewsTriviaPage(): JSX.Element {
   }
 
   // Game in progress
-  const currentQ = questions[gameState.currentQuestion];
-  const progress = ((gameState.currentQuestion + 1) / questions.length) * 100;
+  const currentQ = game?.questions[gameState.currentQuestion];
+  const progress = game ? ((gameState.currentQuestion + 1) / game.questions.length) * 100 : 0;
+
+  if (!currentQ) {
+    return (
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] flex items-center justify-center">
+        <div className="text-white text-xl">Soru yükleniyor...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] p-4">
@@ -600,7 +452,7 @@ export default function NewsTriviaPage(): JSX.Element {
             {t('back')}
           </button>
           <div className="text-white font-semibold">
-            {gameState.currentQuestion + 1}/{questions.length}
+            {gameState.currentQuestion + 1}/{game?.questions.length || 0}
           </div>
           <div className="text-white font-semibold">
             {formatTime(gameState.timeLeft)}
@@ -622,19 +474,19 @@ export default function NewsTriviaPage(): JSX.Element {
           </h2>
 
           <div className="space-y-3">
-            {currentQ.options.map((option, index) => {
+            {currentQ.options?.map((option, index) => {
               let buttonClass = "w-full text-left p-4 rounded-xl border transition-all duration-200 ";
               
               if (gameState.showResult) {
-                if (index === currentQ.correctAnswer) {
+                if (option === currentQ.correctAnswer) {
                   buttonClass += "bg-green-500/20 border-green-500 text-green-300";
-                } else if (index === gameState.selectedAnswer && index !== currentQ.correctAnswer) {
+                } else if (option === gameState.selectedAnswer && option !== currentQ.correctAnswer) {
                   buttonClass += "bg-red-500/20 border-red-500 text-red-300";
                 } else {
                   buttonClass += "bg-white/5 border-white/20 text-white/60";
                 }
               } else {
-                buttonClass += gameState.selectedAnswer === index
+                buttonClass += gameState.selectedAnswer === option
                   ? "bg-yellow-500/20 border-yellow-500 text-yellow-300"
                   : "bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/30";
               }
@@ -642,7 +494,7 @@ export default function NewsTriviaPage(): JSX.Element {
               return (
                 <button
                   key={index}
-                  onClick={() => selectAnswer(index)}
+                  onClick={() => selectAnswer(option)}
                   disabled={gameState.showResult}
                   className={buttonClass}
                 >
@@ -658,7 +510,7 @@ export default function NewsTriviaPage(): JSX.Element {
           </div>
 
           {/* Explanation */}
-          {gameState.showResult && (
+          {gameState.showResult && currentQ.explanation && (
             <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
               <p className="text-blue-300 text-sm">
                 <strong>{t('explanation')}</strong> {currentQ.explanation}
@@ -674,7 +526,7 @@ export default function NewsTriviaPage(): JSX.Element {
               onClick={nextQuestion}
               className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-8 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
             >
-              {gameState.currentQuestion < questions.length - 1 ? t('next') : t('finish')}
+              {gameState.currentQuestion < (game?.questions.length || 0) - 1 ? t('next') : t('finish')}
             </button>
           </div>
         )}

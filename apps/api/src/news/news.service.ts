@@ -348,18 +348,17 @@ export class NewsService {
       magazin: 'Magazin',
     };
 
-    const categoryId = row.category || 'spor';
+    const category = row.category || 'spor';
     const categoryLabel =
-      categoryLabels[categoryId] ||
-      categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
+      categoryLabels[category] ||
+      category.charAt(0).toUpperCase() + category.slice(1);
 
     return {
       id: row.id,
       title: row.title || 'Başlıksız',
       content: row.content || '',
       summary: this.resolveSummary(row),
-      categoryId,
-      category: categoryLabel,
+      category: category, // DB'deki category kolonu
       city: row.city || null,
       isPopular: !!row.is_popular,
       createdAt: row.created_at || new Date().toISOString(),
