@@ -52,13 +52,33 @@ export function DashboardNewsGrid({
   subtitle,
   showAll = false
 }: DashboardNewsGridProps): JSX.Element {
+  // Add time-limited property to some news items (randomly select 2-3 items)
+  const itemsWithTimeLimit = items.map((item, index) => {
+    // Randomly select 2-3 items to be time-limited
+    const shouldBeTimeLimited = Math.random() < 0.1 && index < 10; // 10% chance for first 10 items
+    
+    // Store time-limited news IDs in localStorage for persistence
+    if (shouldBeTimeLimited && typeof window !== 'undefined') {
+      const timeLimitedNews = JSON.parse(localStorage.getItem('timeLimitedNews') || '[]');
+      if (!timeLimitedNews.includes(item.id)) {
+        timeLimitedNews.push(item.id);
+        localStorage.setItem('timeLimitedNews', JSON.stringify(timeLimitedNews));
+      }
+    }
+    
+    return {
+      ...item,
+      isTimeLimited: shouldBeTimeLimited
+    };
+  });
+
   // Separate featured items (high impact or specific categories)
-  const featuredItems = items.filter(item => 
+  const featuredItems = itemsWithTimeLimit.filter(item => 
     item.impact === 'Yüksek' || 
     ['Finans', 'Savunma', 'Teknoloji'].includes(item.category)
   ).slice(0, 5); // Take top 5 for carousel
   
-  const regularItems = items.filter(item => !featuredItems.includes(item));
+  const regularItems = itemsWithTimeLimit.filter(item => !featuredItems.includes(item));
   const sponsoredItems = regularItems.filter(item => 
     item.tags.some(tag => tag.toLowerCase().includes('sponsor') || tag.toLowerCase().includes('reklam'))
   );

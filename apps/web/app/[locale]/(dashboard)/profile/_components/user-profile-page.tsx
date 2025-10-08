@@ -83,6 +83,8 @@ export function UserProfilePage() {
 
   const nextRankThresholds = [500, 2000, 5000, 10000, 15000];
   const currentRankIndex = Object.keys(RANK_INFO).indexOf(userProfile.currentRank);
+  const currentThreshold = currentRankIndex === 0 ? 0 : 
+    [0, 500, 2000, 5000, 10000][currentRankIndex];
   const nextThreshold = nextRankThresholds[currentRankIndex];
   const xpToNextRank = nextThreshold ? nextThreshold - userProfile.xp : 0;
 
@@ -192,6 +194,22 @@ export function UserProfilePage() {
               )}
             </div>
           </div>
+          
+          {/* XP Progress Bar */}
+          {nextThreshold && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-white/60">Rütbe İlerlemesi</span>
+                <span className="text-white font-medium">{userProfile.xp.toLocaleString()} / {nextThreshold.toLocaleString()} XP</span>
+              </div>
+              <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                  style={{ width: `${((userProfile.xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
