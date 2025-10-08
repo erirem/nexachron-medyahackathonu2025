@@ -19,7 +19,7 @@ export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
 
   // Map UI filter to backend parameters
   const resolveParams = useCallback(() => {
-    let params = { 
+    const params = { 
       page: 1 as number, 
       pageSize: 10, 
       categoryId: undefined as string | undefined, 

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Headers,
+  BadRequestException,
   InternalServerErrorException,
   NotFoundException,
   Param,
@@ -15,10 +16,12 @@ import type {
 } from '@nexachron/shared-types';
 
 import { resolveLocale, translate } from '../i18n/i18n';
+import { Logger } from '@nestjs/common';
 import { NewsService } from './news.service';
 
 @Controller('news')
 export class NewsController {
+  private readonly logger = new Logger(NewsController.name);
   constructor(private readonly newsService: NewsService) {}
 
   private parsePositiveNumber(value: string | undefined, fallback?: number) {
@@ -302,6 +305,12 @@ export class NewsController {
     @Headers('accept-language') acceptLanguage?: string,
   ) {
     const locale = resolveLocale(acceptLanguage);
+
+    // UUID doğrulaması: Supabase tarafında tip uyuşmazlığı 500 yerine 400 dönsün
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      throw new BadRequestException(translate(locale, 'errors.invalidId'));
+    }
     const { data, error } = await this.newsService.getNewsById(id);
 
     if (error) {

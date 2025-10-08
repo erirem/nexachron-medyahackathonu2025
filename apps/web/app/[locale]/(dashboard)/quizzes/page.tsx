@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { useMemo, useState, type JSX } from 'react';
@@ -166,7 +167,6 @@ const mockQuizzes: Quiz[] = [
 const baseCategories: readonly Omit<QuizCategory, 'name' | 'description'>[] = [
   {
     id: 'news',
-    description: '',
     icon: '📰',
     color: 'blue',
     quizCount: 12,
@@ -174,7 +174,6 @@ const baseCategories: readonly Omit<QuizCategory, 'name' | 'description'>[] = [
   },
   {
     id: 'general',
-    description: '',
     icon: '🧠',
     color: 'purple',
     quizCount: 25,
@@ -182,7 +181,6 @@ const baseCategories: readonly Omit<QuizCategory, 'name' | 'description'>[] = [
   },
   {
     id: 'sports',
-    description: '',
     icon: '⚽',
     color: 'green',
     quizCount: 18,
@@ -190,7 +188,6 @@ const baseCategories: readonly Omit<QuizCategory, 'name' | 'description'>[] = [
   },
   {
     id: 'technology',
-    description: '',
     icon: '💻',
     color: 'cyan',
     quizCount: 15,
@@ -198,7 +195,6 @@ const baseCategories: readonly Omit<QuizCategory, 'name' | 'description'>[] = [
   },
   {
     id: 'economy',
-    description: '',
     icon: '💰',
     color: 'yellow',
     quizCount: 10,
@@ -206,7 +202,6 @@ const baseCategories: readonly Omit<QuizCategory, 'name' | 'description'>[] = [
   },
   {
     id: 'science',
-    description: '',
     icon: '🔬',
     color: 'red',
     quizCount: 20,

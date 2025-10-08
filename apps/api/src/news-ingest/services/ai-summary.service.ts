@@ -185,7 +185,9 @@ export class AiSummaryService {
 
 İçerik: ${truncatedContent}
 
-Bu haberi net ve anlaşılır şekilde özetle. 3-4 cümle kullan. Önemli detayları kaçırma. Sadece özet yaz, başka açıklama ekleme.`;
+Bu haberi net ve anlaşılır şekilde özetle. 3-4 cümle kullan. Her cümle maksimum 15-20 kelime olsun. Önemli detayları kaçırma. 
+ÖNEMLİ: Başlığı tekrar etme, sadece içeriği özetle. Başlık zaten verildi, özetin başında tekrar yazma.
+Sadece özet yaz, başka açıklama ekleme.`;
   }
 
   /**

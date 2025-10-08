@@ -130,9 +130,10 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
   if (item.media_summary) {
     try {
       // Check if it's already an object or a string that needs parsing
-      mediaSummary = typeof item.media_summary === 'string' 
-        ? JSON.parse(item.media_summary) 
-        : item.media_summary;
+      const mediaSummaryRaw = (item as any).media_summary;
+      mediaSummary = typeof mediaSummaryRaw === 'string' 
+        ? JSON.parse(mediaSummaryRaw) 
+        : mediaSummaryRaw;
     } catch (e) {
       console.error('Error parsing media_summary:', e);
       mediaSummary = null;
@@ -207,7 +208,7 @@ function transformNewsDataToDashboardItem(item: any): DashboardNewsItem {
 
   return {
     id: item.id,
-    category: item.categoryId || item.category || 'Diğer',
+    category: item.categoryId || 'Diğer',
     categoryId: item.categoryId || null,
     title: item.title || 'Başlık yok',
     summary: item.summary || item.content?.substring(0, 100) + '...' || '',

@@ -42,7 +42,7 @@ const getCategoryIcon = (categoryId: string): JSX.Element => {
     'turizm': <SportsIcon />,
     'tarim': <HealthIcon />,
   };
-  
+
   return iconMap[categoryId.toLowerCase()] || <AllIcon />;
 };
 
@@ -59,6 +59,7 @@ const sideRailItems: readonly SideRailItem[] = [
   { id: "games", label: "Oyunlar", icon: <GamepadIcon /> },
   { id: "profile", label: "Profilim", icon: <UserIcon /> },
   { id: "leaderboard", label: "Liderlik", icon: <TrophyIcon /> },
+  { id: "reels", label: "Explore", icon: <PlayIcon /> },
   { id: "audio", label: "Sesler", icon: <HeadphoneIcon /> },
   { id: "reports", label: "Raporlar", icon: <DocumentIcon /> },
   { id: "briefs", label: "Günlük", icon: <LightningIcon /> },
@@ -134,7 +135,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           Promise.resolve(loadMore()).finally(() => {
             setIsLoadingMore(false);
             isNextPageLoadingRef.current = false;
-          });
+          }
         }
       },
       { threshold: 0.1, rootMargin: '100px' } // Trigger when 100px before the element
@@ -187,7 +188,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
       }
       return mappedNews;
     }
-    
+
     return mappedNews.filter((newsItem) => {
       return newsItem.categoryId && selectedCategoryIds.includes(newsItem.categoryId);
     });
@@ -196,7 +197,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
   const categoryInfo = useMemo(() => {
     if (selectedCategoryIds.length > 0) {
       if (selectedCategoryIds.length === 1) {
-        const selected = categories?.find((category) => category.id === selectedCategoryIds[0]);
+        const selected = categories?.find((category: any) => category.id === selectedCategoryIds[0]);
         const label = selected?.label ?? deriveCategoryLabel(selectedCategoryIds[0]);
         return {
           title: label,
@@ -280,6 +281,19 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
 
   const hasNews = filteredNews.length > 0;
 
+  // Get filtered news based on current state
+  const getFilteredNews = useCallback(() => {
+    if (selectedCategoryIds.length > 0) {
+      return filteredNews;
+    }
+    return applyLocalFilters(mappedNews, activeCategory);
+  }, [filteredNews, selectedCategoryIds, mappedNews, activeCategory]);
+
+  // Get category info based on current state
+  const getCategoryInfo = useCallback(() => {
+    return categoryInfo;
+  }, [categoryInfo]);
+
   // Scroll to top functionality
   const scrollToTop = useCallback(() => {
     window.scrollTo({
@@ -300,7 +314,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     handleScroll();
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -339,24 +353,24 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                   <SearchBox />
                   <div className="flex flex-wrap items-center gap-2">
                     {/* "Tümü" butonu */}
-                    <FilterChip 
-                      label="Tümü" 
+                    <FilterChip
+                      label="Tümü"
                       icon={<AllIcon />}
-                      active={selectedCategoryIds.length === 0 && activeCategory === 'overview'} 
+                      active={selectedCategoryIds.length === 0 && activeCategory === 'overview'}
                       onClick={() => {
                         setSelectedCategoryIds([]);
                         handleCategoryChange('overview');
                       }}
                     />
-                    
+
                     {/* API'den gelen kategoriler */}
-                    {categories?.slice(0, 8).map((category) => (
-                      <FilterChip 
-                        key={category.id} 
-                        label={category.label} 
+                    {categories?.slice(0, 8).map((category: any) => (
+                      <FilterChip
+                        key={category.id}
+                        label={category.label}
                         icon={getCategoryIcon(category.id)}
                         count={category.total}
-                        active={selectedCategoryIds.includes(category.id)} 
+                        active={selectedCategoryIds.includes(category.id)}
                         onClick={() => handleCategoryChipSelect(category.id)}
                       />
                     ))}
@@ -460,7 +474,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
   );
 }
 
-type SidebarProps = {
+export type SidebarProps = {
   readonly width: number;
   readonly onWidthChange: (width: number) => void;
   readonly minWidth: number;
@@ -471,7 +485,7 @@ type SidebarProps = {
   readonly topics: readonly DashboardTopic[];
 };
 
-function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, activeCategory, onCategoryChange, topics }: SidebarProps): JSX.Element {
+export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, activeCategory, onCategoryChange, topics }: SidebarProps): JSX.Element {
   const sidebarRef = useRef<HTMLElement>(null);
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
@@ -488,7 +502,7 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDraggingRef.current) return;
-    
+
     const deltaX = e.clientX - startXRef.current;
     const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + deltaX));
     onWidthChange(newWidth);
@@ -503,7 +517,7 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -567,13 +581,11 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
                   key={item.id}
                   type="button"
                   onClick={() => onCategoryChange(item.id)}
-                  className={`group flex h-12 items-center rounded-2xl px-3 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 ${
-                    isCollapsed ? 'justify-center gap-0' : 'justify-start gap-3'
-                  } ${
-                    isActive
+                  className={`group flex h-12 items-center rounded-2xl px-3 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 ${isCollapsed ? 'justify-center gap-0' : 'justify-start gap-3'
+                    } ${isActive
                       ? 'bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-[0_12px_32px_rgba(15,106,205,0.35)]'
                       : 'bg-white/5 text-white/70 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
-                  }`}
+                    }`}
                   aria-label={item.label}
                   title={isCollapsed ? item.label : undefined}
                   style={{ width: isCollapsed ? '60px' : '100%' }}
@@ -582,9 +594,8 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
                     {item.icon}
                   </span>
                   <span
-                    className={`overflow-hidden text-sm font-medium transition-all duration-200 ${
-                      isCollapsed ? 'max-w-0 opacity-0 -translate-x-2' : 'max-w-[160px] opacity-100 translate-x-0'
-                    }`}
+                    className={`overflow-hidden text-sm font-medium transition-all duration-200 ${isCollapsed ? 'max-w-0 opacity-0 -translate-x-2' : 'max-w-[160px] opacity-100 translate-x-0'
+                      }`}
                     aria-hidden={isCollapsed}
                   >
                     {item.label}
@@ -635,22 +646,19 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
               <button
                 type="button"
                 onClick={toggleSidebar}
-                className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${
-                  isCollapsed ? 'shadow-[0_12px_28px_rgba(11,34,63,0.4)]' : 'shadow-[0_12px_28px_rgba(11,34,63,0.3)]'
-                }`}
+                className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${isCollapsed ? 'shadow-[0_12px_28px_rgba(11,34,63,0.4)]' : 'shadow-[0_12px_28px_rgba(11,34,63,0.3)]'
+                  }`}
                 aria-label={isCollapsed ? 'Kütüphaneyi genişlet' : 'Kütüphaneyi daralt'}
               >
                 <span
-                  className={`absolute transition-all duration-200 ${
-                    isCollapsed ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-y-2'
-                  }`}
+                  className={`absolute transition-all duration-200 ${isCollapsed ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-y-2'
+                    }`}
                 >
                   <ExpandIcon />
                 </span>
                 <span
-                  className={`absolute transition-all duration-200 ${
-                    isCollapsed ? 'opacity-0 translate-y-2' : 'opacity-100 translate-x-0'
-                  }`}
+                  className={`absolute transition-all duration-200 ${isCollapsed ? 'opacity-0 translate-y-2' : 'opacity-100 translate-x-0'
+                    }`}
                 >
                   <CloseIcon />
                 </span>
@@ -660,7 +668,7 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
         </div>
 
         {/* Resize Handle */}
-        <div 
+        <div
           className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-blue-600 hover:bg-opacity-20 transition-colors duration-150 group"
           onMouseDown={handleMouseDown}
         >
@@ -783,11 +791,10 @@ function SearchBox(): JSX.Element {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <div className={`relative flex min-w-[280px] flex-1 items-center rounded-full border transition-all duration-300 ${
-      isFocused 
-        ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]' 
+    <div className={`relative flex min-w-[280px] flex-1 items-center rounded-full border transition-all duration-300 ${isFocused
+        ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]'
         : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
-    }`}>
+      }`}>
       <div className="pl-5 pr-3">
         <SearchIcon />
       </div>
@@ -806,8 +813,8 @@ function SearchBox(): JSX.Element {
           className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       )}
@@ -931,11 +938,10 @@ function CategoryChip({ category, isActive, onSelect }: CategoryChipProps): JSX.
     <button
       type="button"
       onClick={() => onSelect(category.id)}
-      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
-        isActive
+      className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${isActive
           ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
           : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
-      }`}
+        }`}
     >
       <span>{category.label}</span>
       <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-semibold text-white/80">
@@ -1083,8 +1089,8 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   if (item.media_summary) {
     try {
       // Check if it's already an object or a string that needs parsing
-      mediaSummary = typeof item.media_summary === 'string' 
-        ? JSON.parse(item.media_summary) 
+      mediaSummary = typeof item.media_summary === 'string'
+        ? JSON.parse(item.media_summary)
         : item.media_summary;
     } catch (e) {
       console.error('Error parsing media_summary:', e);
@@ -1097,13 +1103,13 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   let primaryImageUrl = '';
 
   if (mediaSummary && mediaSummary.gallery_images && Array.isArray(mediaSummary.gallery_images)) {
-    extractedImages = mediaSummary.gallery_images.map((img: any) => ({
+    extractedImages = mediaSummary.gallery_images.map((img: { url: string; caption?: string | null }) => ({
       url: img.url,
       alt: item.title,
       caption: img.caption || undefined,
       credit: undefined,
     }));
-    
+
     // Set featured image as primary if available
     if (mediaSummary.featured_image) {
       primaryImageUrl = mediaSummary.featured_image;
@@ -1357,11 +1363,19 @@ function LightningIcon(): JSX.Element {
   );
 }
 
+function PlayIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path d="M6 4l10 6-10 6V4z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function CloseIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <line x1="18" y1="6" x2="6" y2="18"/>
-      <line x1="6" y1="6" x2="18" y2="18"/>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
 }
@@ -1396,10 +1410,10 @@ function ChevronUpIcon(): JSX.Element {
 function AllIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="7" height="7"/>
-      <rect x="14" y="3" width="7" height="7"/>
-      <rect x="14" y="14" width="7" height="7"/>
-      <rect x="3" y="14" width="7" height="7"/>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
     </svg>
   );
 }
@@ -1407,10 +1421,10 @@ function AllIcon(): JSX.Element {
 function AgendaIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M8 2v4"/>
-      <path d="M16 2v4"/>
-      <rect x="3" y="4" width="18" height="18" rx="2"/>
-      <path d="M3 10h18"/>
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M3 10h18" />
     </svg>
   );
 }
@@ -1418,8 +1432,8 @@ function AgendaIcon(): JSX.Element {
 function FinanceIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="12" y1="1" x2="12" y2="23"/>
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   );
 }
@@ -1427,8 +1441,8 @@ function FinanceIcon(): JSX.Element {
 function DefenseIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      <path d="M9 12l2 2 4-4"/>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M9 12l2 2 4-4" />
     </svg>
   );
 }
@@ -1436,7 +1450,7 @@ function DefenseIcon(): JSX.Element {
 function EnergyIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
     </svg>
   );
 }
@@ -1444,9 +1458,9 @@ function EnergyIcon(): JSX.Element {
 function TechIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-      <line x1="8" y1="21" x2="16" y2="21"/>
-      <line x1="12" y1="17" x2="12" y2="21"/>
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
     </svg>
   );
 }
@@ -1454,8 +1468,8 @@ function TechIcon(): JSX.Element {
 function SportsIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M8.14 12.14l1.72 1.72 4.28-4.28"/>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8.14 12.14l1.72 1.72 4.28-4.28" />
     </svg>
   );
 }
@@ -1463,7 +1477,7 @@ function SportsIcon(): JSX.Element {
 function HealthIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
     </svg>
   );
 }
@@ -1471,7 +1485,7 @@ function HealthIcon(): JSX.Element {
 function EconomyIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   );
 }

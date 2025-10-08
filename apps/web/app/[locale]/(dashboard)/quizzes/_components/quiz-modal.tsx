@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { useTranslations } from 'next-intl';
@@ -265,20 +266,12 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
             {/* Results Stats */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-white/5 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-white">
-                  {progress.answers.reduce((count, answer, index) => 
-                    count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0), 0
-                  )} / {quiz.questionCount}
-                </div>
+                <div className="text-2xl font-bold text-white">{getCorrectAnswerCount()} / {quiz.questionCount}</div>
                 <div className="text-sm text-white/70">{t('results.correctAnswers')}</div>
               </div>
               
               <div className="bg-white/5 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-400">
-                  +{Math.floor(quiz.xpReward * (progress.answers.reduce((count, answer, index) => 
-                    count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0), 0
-                  ) / quiz.questionCount))}
-                </div>
+                <div className="text-2xl font-bold text-yellow-400">+{Math.floor(quiz.xpReward * (getCorrectAnswerCount() / quiz.questionCount))}</div>
                 <div className="text-sm text-white/70">{t('results.xpEarned')}</div>
               </div>
             </div>

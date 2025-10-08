@@ -60,7 +60,23 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
   });
 
   if (!response.ok) {
-    const message = `API request failed with status ${response.status}`;
+    let details = '';
+    try {
+      const text = await response.text();
+      if (text) {
+        try {
+          const json = JSON.parse(text);
+          // Try common error shapes
+          details = json?.error ?? json?.message ?? text;
+        } catch {
+          details = text;
+        }
+      }
+    } catch {
+      // ignore body read errors
+    }
+
+    const message = `API request failed with status ${response.status} ${response.statusText} at ${url}${details ? `: ${details}` : ''}`;
     throw new Error(message);
   }
 
@@ -432,7 +448,7 @@ export async function fetchNewsIngestTestCategory(
     category: string;
     rssUrl: string;
     itemCount: number;
-    sample: any[];
+    sample: unknown[];
   }>>(
     `/api/news-ingest/test/${category}`,
     { signal: config.signal },
@@ -448,7 +464,7 @@ export async function processSingleNewsUrl(
   const envelope = await apiFetch<ApiResponseEnvelope<{
     message: string;
     success: boolean;
-    result?: any;
+    result?: unknown;
     error?: string;
   }>>(
     '/api/news-ingest/single',
@@ -492,7 +508,7 @@ export async function triggerCategoryNewsIngest(
     message: string;
     category: string;
     processed: number;
-    items: any[];
+    items: unknown[];
   }>>(
     `/api/news-ingest/category/${category}`,
     {
