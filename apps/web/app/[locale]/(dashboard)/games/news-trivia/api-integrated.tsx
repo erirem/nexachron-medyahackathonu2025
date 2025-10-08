@@ -133,14 +133,14 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
     }
   }, [gameState.isGameActive, gameState.isGameComplete]);
 
-  const startGame = async () => {
+  const startGameHandler = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
       // First, generate news trivia questions
       console.log('Generating news trivia questions...');
-      await generateNewsTriviaQuestions();
+      generateNewsTriviaQuestions();
       
       // Then start the game
       console.log('Starting news trivia game...');
@@ -274,7 +274,7 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
             <p className="text-white/80 mb-6">{error}</p>
             <div className="space-y-3">
               <button
-                onClick={startGame}
+                onClick={startGameHandler}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
               >
                 Tekrar Dene
@@ -349,7 +349,7 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
 
             {/* Start button */}
             <button
-              onClick={startGame}
+              onClick={startGameHandler}
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-4 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -396,7 +396,7 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
 
             <div className="space-y-3">
               <button
-                onClick={startGame}
+                onClick={startGameHandler}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
               >
                 {t('playAgain')}

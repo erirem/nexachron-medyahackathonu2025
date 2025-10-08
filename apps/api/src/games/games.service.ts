@@ -520,4 +520,26 @@ export class GamesService {
       };
     }
   }
+
+  /**
+   * Oyuna katılımcı ekle
+   */
+  private async addParticipant(gameId: string, userId: string): Promise<void> {
+    const { error } = await this.supabaseService.supabase
+      .from('game_participants')
+      .insert({
+        id: crypto.randomUUID(),
+        game_id: gameId,
+        player_id: userId,
+        player_name: `Player ${userId.slice(0, 8)}`,
+        joined_at: new Date().toISOString(),
+        is_ready: false,
+        current_score: 0,
+        current_question_index: 0,
+      });
+
+    if (error) {
+      throw new Error(`Failed to add participant: ${error.message}`);
+    }
+  }
 }
