@@ -385,7 +385,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
   const insightItems = buildInsightItems(item, tagline);
 
   return (
-    <Link href={`/${locale}/haber/${item.id}`} className="block h-full">
+    <Link href={`/${locale}/haber/${item.id}?from=dashboard`} className="block h-full">
       <article className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border ${theme.border} ${theme.surface} text-white shadow-[0_24px_56px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-opacity-50 hover:shadow-[0_36px_80px_rgba(0,0,0,0.65)] cursor-pointer`}>
       <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent mix-blend-overlay" aria-hidden />
       <div className="absolute inset-0 opacity-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 group-hover:opacity-100" aria-hidden />

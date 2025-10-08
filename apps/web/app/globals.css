@@ -398,3 +398,15 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(125, 207, 255, 0.6);
 }
+
+/* Global clickable cursor for interactive elements */
+a,
+button,
+[role="button"],
+[role="link"],
+label,
+summary,
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}

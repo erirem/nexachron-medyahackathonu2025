@@ -9,6 +9,7 @@ import { ArticleEngagementSections } from './article-engagement-sections';
 import { NewsTimeline } from './news-timeline';
 import { ReaderEngagement } from './reader-engagement';
 import { InlineMedia } from './inline-media';
+import ReadingHistoryBreadcrumbs from './reading-history-breadcrumbs';
 
 interface NewsArticleProps {
   readonly article: DashboardNewsItem;
@@ -84,6 +85,12 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
 
   return (
     <article className="max-w-4xl mx-auto">
+      <ReadingHistoryBreadcrumbs 
+        currentId={article.id}
+        currentTitle={article.title}
+        currentCategory={article.category}
+        currentImageUrl={article.imageUrl}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-white/60 mb-8">
         <Link href={`/${locale}/dashboard`} className="hover:text-white/80 transition-colors">
