@@ -135,7 +135,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           Promise.resolve(loadMore()).finally(() => {
             setIsLoadingMore(false);
             isNextPageLoadingRef.current = false;
-          }
+          });
         }
       },
       { threshold: 0.1, rootMargin: '100px' } // Trigger when 100px before the element
@@ -257,6 +257,12 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
       ) {
         const destination = categoryId === 'quizzes' ? 'quizzes' : categoryId;
         router.push(`/${locale}/${destination}`);
+        return;
+      }
+
+      // Explore (reels) ayrı bir sayfaya gider
+      if (categoryId === 'reels') {
+        router.push(`/${locale}/explore`);
         return;
       }
 
