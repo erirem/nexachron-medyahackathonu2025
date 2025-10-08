@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { UserDataModule } from './user-data/user-data.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserDataModule } from './user-data/user-data.module';
     NewsIngestModule,
     BookmarksModule,
     UserDataModule,
+    RecommendationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

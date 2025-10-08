@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
+import { NewsCard } from "./news-card";
 import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
 import type { DashboardNewsItem, DashboardTopic } from "./types";
 import { useCategories } from "@/hooks/use-categories";
 import { usePopularNews } from "@/hooks/use-popular-news";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useInfiniteNews } from "@/hooks/use-infinite-news";
+import { postRecommendations } from "@/services/api";
 import type {
   CategoriesOverviewResponse,
   NewsCategorySummary,
@@ -86,12 +88,13 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
 export function Dashboard({ initialNews, topics, categoriesOverview, initialPopularNews }: DashboardProps): JSX.Element {
   const router = useRouter();
   const [sidebarWidth, setSidebarWidth] = useState(320);
-  const [activeCategory, setActiveCategory] = useState('overview');
+  const [activeCategory, setActiveCategory] = useState('forYou');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const chipsScrollRef = useRef<HTMLDivElement>(null);
   const MIN_WIDTH = 80;
   const MAX_WIDTH = 450;
   const COLLAPSED_THRESHOLD = 160;
@@ -177,6 +180,26 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     [apiNewsItems],
   );
 
+  // Recommendations state with lazy loading
+  const [recs, setRecs] = useState<any[]>([]);
+  const [recLimit, setRecLimit] = useState(8);
+  const [isLoadingRecs, setIsLoadingRecs] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    setIsLoadingRecs(true);
+    postRecommendations(recLimit)
+      .then((res) => {
+        if (!mounted) return;
+        if (res?.ok && Array.isArray(res.items)) {
+          setRecs(res.items);
+        }
+      })
+      .finally(() => {
+        if (mounted) setIsLoadingRecs(false);
+      });
+    return () => { mounted = false; };
+  }, [recLimit]);
+
   // Bookmarks
   const { bookmarkedIds, isLoading: isBookmarksLoading } = useBookmarks();
 
@@ -186,6 +209,14 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     if (selectedCategoryIds.length === 0) {
       if (activeCategory === 'saved') {
         return mappedNews.filter((n) => bookmarkedIds.has(n.id));
+      }
+      if (activeCategory === 'breaking') {
+        // breaking = güncelden geriye doğru; mappedNews zaten order bilgisi yakın
+        return [...mappedNews].sort((a, b) => {
+          const da = new Date(a.createdAt ?? a.publishedAt ?? Date.now()).getTime();
+          const db = new Date(b.createdAt ?? b.publishedAt ?? Date.now()).getTime();
+          return db - da;
+        });
       }
       // Apply local, semantic filters for tabs like audio/reports/briefs/watch/overview
       return applyLocalFilters(mappedNews, activeCategory);
@@ -311,7 +342,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     });
   }, []);
 
-  // Show/hide scroll to top button based on scroll position
+  // Show/hide scroll to top button based on scroll position & lazy load for 'forYou'
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -328,6 +359,22 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Intersection observer for recommendations lazy load
+  useEffect(() => {
+    if (activeCategory !== 'forYou') return;
+    const el = loadMoreTriggerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !isLoadingRecs) {
+        setRecLimit((prev) => Math.min(prev + 8, 64));
+      }
+    }, { threshold: 0.1, rootMargin: '120px' });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeCategory, isLoadingRecs]);
 
   return (
     <div className="relative flex min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
@@ -358,17 +405,48 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
               <DashboardHeader />
 
               <section className="space-y-6">
-                <div className="flex flex-wrap items-center gap-3">
+                {/* For You as main grid reusing news layout below */}
+                <div className="flex flex-col gap-3">
                   <SearchBox />
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* "Tümü" butonu */}
+                  <div className="relative -mx-2">
+                    {/* left arrow */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = chipsScrollRef.current; if (!el) return; el.scrollBy({ left: -240, behavior: 'smooth' });
+                      }}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/20 text-white shadow backdrop-blur-sm hover:bg-white/20"
+                      aria-label="Sola kaydır"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                    {/* scrollable chips */}
+                    <div ref={chipsScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hidden px-10 py-1 whitespace-nowrap">
+
+                    {/* Sizin için */}
                     <FilterChip
-                      label="Tümü"
+                      label="Sizin için"
                       icon={<AllIcon />}
-                      active={selectedCategoryIds.length === 0 && activeCategory === 'overview'}
+                      active={activeCategory === 'forYou'}
                       onClick={() => {
                         setSelectedCategoryIds([]);
-                        handleCategoryChange('overview');
+                        handleCategoryChange('forYou');
+                        if (recs.length === 0) {
+                          postRecommendations(8).then((res) => {
+                            if (res?.ok && Array.isArray(res.items)) setRecs(res.items);
+                          }).catch(() => {});
+                        }
+                      }}
+                    />
+
+                    {/* Son Dakika */}
+                    <FilterChip
+                      label="Son Dakika"
+                      icon={<LightningIcon />}
+                      active={activeCategory === 'breaking'}
+                      onClick={() => {
+                        setSelectedCategoryIds([]);
+                        handleCategoryChange('breaking');
                       }}
                     />
 
@@ -383,6 +461,18 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                         onClick={() => handleCategoryChipSelect(category.id)}
                       />
                     ))}
+                    </div>
+                    {/* right arrow */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = chipsScrollRef.current; if (!el) return; el.scrollBy({ left: 240, behavior: 'smooth' });
+                      }}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/20 text-white shadow backdrop-blur-sm hover:bg-white/20"
+                      aria-label="Sağa kaydır"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
                   </div>
                   {isNewsFetching && (
                     <span className="text-xs font-semibold text-white/60">Güncelleniyor...</span>
@@ -432,13 +522,74 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                     />
                   ) : apiNewsItems.length > 0 ? (
                     <>
-                      <DashboardNewsGrid
-                        key={apiNewsItems.length} // Key prop to force re-render when new items are added
-                        items={filteredNews}
-                        title={categoryInfo.title}
-                        subtitle={categoryInfo.subtitle}
-                        showAll={true}
-                      />
+                      {activeCategory === 'forYou' ? (
+                        <div className="space-y-6">
+                          {/* Özel band */}
+                          <div className="relative overflow-hidden rounded-2xl border border-[#8bc4ff]/30 bg-gradient-to-r from-[#8bc4ff]/10 via-[#6ab2f2]/15 to-[#8bc4ff]/10 p-6 shadow-[0_20px_60px_rgba(139,196,255,0.15)]">
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#8bc4ff]/5 to-transparent" />
+                            <div className="relative flex items-center gap-4">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] shadow-[0_12px_32px_rgba(15,106,205,0.35)]">
+                                <BrainIcon />
+                              </div>
+                              <div>
+                                <h2 className="text-2xl font-bold text-white">Sizin İçin Önerilen</h2>
+                                <p className="text-sm text-white/80">Etkileşimlerin ve popülerlik sinyallerine göre seçildi</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Kartlar - DashboardNewsGrid ile aynı yapı */}
+                          <DashboardNewsGrid
+                            key={`recs-${recs.length}`}
+                            items={recs.map((n: any) => ({
+                              id: n.id,
+                              category: n.category ?? 'Gündem',
+                              categoryId: n.category ?? 'gundem',
+                              title: n.title,
+                              summary: (n.content ?? '').slice(0, 160),
+                              detail: (n.content ?? '').slice(0, 160),
+                              fullContent: n.content ?? '',
+                              timestamp: new Date(n.created_at ?? Date.now()).toLocaleDateString('tr-TR'),
+                              publishedAt: n.created_at ?? new Date().toISOString(),
+                              storyDate: n.created_at ?? new Date().toISOString(),
+                              readingTime: '2 dk okuma',
+                              dateline: 'Türkiye',
+                              tags: [n.category?.toLowerCase() ?? 'gundem'],
+                              imageUrl: n.image_url || 'https://images.unsplash.com/photo-1521133573890-3b093187b0e7?auto=format&fit=crop&w=960&q=60',
+                              images: [],
+                              sentiment: 'positive' as const,
+                              impact: 'Yüksek' as const,
+                              viewCount: undefined,
+                              likeCount: undefined,
+                              shareCount: undefined,
+                              relatedIds: undefined,
+                              storyId: undefined,
+                              timelineOrder: undefined,
+                              storyTitle: undefined,
+                              author: undefined,
+                              isPopular: true,
+                              city: null,
+                              createdAt: n.created_at,
+                              subtitle: undefined,
+                              isRecommended: true, // Öneri kartı işareti
+                            }))}
+                            title=""
+                            subtitle=""
+                            showAll={true}
+                          />
+                          
+                          {/* Lazy trigger */}
+                          <div ref={loadMoreTriggerRef} className="h-16" />
+                        </div>
+                      ) : (
+                        <DashboardNewsGrid
+                          key={apiNewsItems.length}
+                          items={filteredNews}
+                          title={categoryInfo.title}
+                          subtitle={categoryInfo.subtitle}
+                          showAll={true}
+                        />
+                      )}
                       {(isFetchingNextPage || isLoadingMore) && (
                         <NewsLoadingPlaceholders />
                       )}

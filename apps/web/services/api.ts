@@ -13,7 +13,7 @@ type QueryValue = string | number | boolean | undefined | null;
 
 type QueryRecord = Record<string, QueryValue>;
 
-type ApiFetchOptions = Omit<RequestInit, 'body'> & {
+type ApiFetchOptions = RequestInit & {
   readonly query?: QueryRecord;
   readonly signal?: AbortSignal;
 };
@@ -518,4 +518,34 @@ export async function triggerCategoryNewsIngest(
   );
 
   return ensureSuccess(envelope);
+}
+
+// Recommendations API
+export async function postRecommendations(limit = 20, config: RequestConfig = {}) {
+  const url = buildUrl('/api/v1/recommendations');
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    // inline body because ApiFetchOptions in this file omits 'body'
+    // and we are using native fetch directly here
+    body: JSON.stringify({ type: 'news', limit }) as any,
+    signal: config.signal,
+    cache: 'no-store',
+  } as RequestInit);
+
+  if (!response.ok) {
+    let details = '';
+    try {
+      const text = await response.text();
+      if (text) {
+        try { details = (JSON.parse(text)?.error) ?? text; } catch { details = text; }
+      }
+    } catch {}
+    throw new Error(`Recommendations failed: ${response.status} ${response.statusText}${details ? `: ${details}` : ''}`);
+  }
+
+  const data = await response.json();
+  return data as { ok: boolean; items: any[] };
 }
