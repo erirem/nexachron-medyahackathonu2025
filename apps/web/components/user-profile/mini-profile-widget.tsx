@@ -5,6 +5,7 @@ import { RANK_INFO, LEAGUE_INFO } from '@/lib/types/gamification';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useMemo } from 'react';
+import { useLocale } from 'next-intl';
 
 interface MiniProfileWidgetProps {
   isCollapsed?: boolean;
@@ -12,6 +13,7 @@ interface MiniProfileWidgetProps {
 
 export function MiniProfileWidget({ isCollapsed = false }: MiniProfileWidgetProps) {
   const router = useRouter();
+  const locale = useLocale();
   const { userProfile, getStreakInfo } = useGamification();
   const streakInfo = getStreakInfo();
 
@@ -133,13 +135,13 @@ export function MiniProfileWidget({ isCollapsed = false }: MiniProfileWidgetProp
       {/* Quick Actions */}
       <div className="flex gap-2 pt-2 border-t border-white/10">
         <button 
-          onClick={() => router.push('/profile')}
+          onClick={() => router.push(`/${locale}/profile`)}
           className="flex-1 py-1.5 px-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
         >
           Profil
         </button>
         <button 
-          onClick={() => router.push('/leaderboard')}
+          onClick={() => router.push(`/${locale}/leaderboard`)}
           className="flex-1 py-1.5 px-3 bg-white/10 text-white text-xs font-medium rounded-lg hover:bg-white/20 transition-all"
         >
           Liderlik

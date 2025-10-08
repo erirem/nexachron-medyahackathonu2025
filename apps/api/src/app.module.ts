@@ -6,7 +6,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { NewsModule } from './news/news.module';
 import { UsersModule } from './users/users.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
-import { ReelsModule } from './reels/reels.module';
+import { BookmarksModule } from './bookmarks/bookmarks.module';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { ReelsModule } from './reels/reels.module';
     NewsModule,
     UsersModule,
     NewsIngestModule,
-    ReelsModule,
+    BookmarksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

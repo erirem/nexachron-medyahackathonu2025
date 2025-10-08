@@ -20,7 +20,6 @@ export interface Database {
           is_popular: boolean;
           created_at: string;
           updated_at: string | null;
-          published_at: string | null;
           summary: string | null;
           media_summary: string | null;
         };
@@ -34,7 +33,6 @@ export interface Database {
           is_popular?: boolean;
           created_at?: string;
           updated_at?: string | null;
-          published_at?: string | null;
           summary?: string | null;
           media_summary?: string | null;
         };
@@ -47,7 +45,6 @@ export interface Database {
           is_popular?: boolean;
           created_at?: string;
           updated_at?: string | null;
-          published_at?: string | null;
           summary?: string | null;
           media_summary?: string | null;
         };
@@ -181,6 +178,7 @@ export interface NewsWithMediaDto {
   content: string;
   summary: string;
   categoryId: string | null;
+  category?: string | null; // Category label/name
   city: string | null;
   isPopular: boolean;
   createdAt: string;

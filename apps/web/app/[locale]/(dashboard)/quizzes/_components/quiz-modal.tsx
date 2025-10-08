@@ -26,24 +26,18 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
   const [showResults, setShowResults] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
-  const getCorrectAnswerCount = useCallback(() => {
-    let correctCount = 0;
-    for (let i = 0; i < progress.answers.length; i++) {
-      const given = progress.answers[i];
-      if (given === null) continue;
-      const expected = quiz.questions[i]?.correctAnswer;
-      if (typeof expected === 'number' && given === expected) {
-        correctCount += 1;
-      }
-    }
-    return correctCount;
-  }, [progress.answers, quiz.questions]);
-
+  // Define before any render-time references (e.g., effect deps) to avoid TDZ
   const handleSubmit = useCallback(() => {
     setIsCompleted(true);
     setShowResults(true);
-    onComplete(quiz, getCorrectAnswerCount());
-  }, [getCorrectAnswerCount, onComplete, quiz]);
+    
+    // Calculate score
+    const correctAnswers = progress.answers.reduce((count, answer, index) => {
+      return count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0);
+    }, 0);
+    
+    onComplete(quiz, correctAnswers);
+  }, [onComplete, progress.answers, quiz]);
 
   // Timer effect
   useEffect(() => {
@@ -119,8 +113,6 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
       setSelectedAnswer(progress.answers[progress.currentQuestion - 1]);
     }
   };
-
-  
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

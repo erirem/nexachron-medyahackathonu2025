@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { PostgrestResponse } from '@supabase/supabase-js';
+import type { PostgrestError, PostgrestResponse } from '@supabase/supabase-js';
 import type {
   CategoriesOverviewResponse,
   FindNewsOptions,
@@ -198,27 +198,29 @@ export class NewsService {
     return query;
   }
 
-  async getNewsById(id: string) {
-    return this.supabaseService.supabase
-      .from('news')
-      .select(
-        `
-        *,
-        comments(
-          id,
-          body,
-          likes,
-          created_at,
-          user_id
-        ),
-        reactions(
-          emoji,
-          user_id
-        )
-      `,
-      )
-      .eq('id', id)
-      .maybeSingle();
+  async getNewsById(id: string): Promise<{
+    data: NewsWithMediaDto | null;
+    error: PostgrestError | null;
+  }> {
+    try {
+      const response = await this.createBaseQuery(false)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (response.error) {
+        return { data: null, error: response.error };
+      }
+
+      const row = response.data;
+
+      return {
+        data: row ? this.mapNewsRow(row) : null,
+        error: null,
+      };
+    } catch (error) {
+      this.logger.error('Error in getNewsById:', error);
+      throw error;
+    }
   }
 
   async getPopularNews(limit = 10) {
@@ -262,6 +264,7 @@ export class NewsService {
       content,
       summary,
       category,
+      mode,
       city,
       is_popular,
       created_at,
@@ -316,22 +319,52 @@ export class NewsService {
       typeof row.media_summary === 'string'
         ? row.media_summary
         : JSON.stringify(row.media_summary);
-    
+
     const mediaSummary = this.parseMediaSummary(mediaSummaryJson);
     const media = this.extractMediaFromSummary(mediaSummary);
     const primaryMedia = media.length > 0 ? media[0] : null;
+
+    // Category mapping
+    const categoryLabels: Record<string, string> = {
+      gundem: 'Gündem',
+      spor: 'Spor',
+      ekonomi: 'Ekonomi',
+      teknoloji: 'Teknoloji',
+      dunya: 'Dünya',
+      politika: 'Politika',
+      finans: 'Finans',
+      savunma: 'Savunma',
+      enerji: 'Enerji',
+      saglik: 'Sağlık',
+      diplomasi: 'Diplomasi',
+      cevre: 'Çevre',
+      turizm: 'Turizm',
+      tarim: 'Tarım',
+      kultur: 'Kültür',
+      sanat: 'Sanat',
+      egitim: 'Eğitim',
+      bilim: 'Bilim',
+      yasam: 'Yaşam',
+      magazin: 'Magazin',
+    };
+
+    const categoryId = row.category || 'spor';
+    const categoryLabel =
+      categoryLabels[categoryId] ||
+      categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
 
     return {
       id: row.id,
       title: row.title || 'Başlıksız',
       content: row.content || '',
       summary: this.resolveSummary(row),
-      categoryId: row.category || 'spor',
+      categoryId,
+      category: categoryLabel,
       city: row.city || null,
       isPopular: !!row.is_popular,
       createdAt: row.created_at || new Date().toISOString(),
       updatedAt: row.updated_at ?? null,
-      publishedAt: null, // published_at kolonu veritabanında yok
+      publishedAt: null, // published_at kolonu veritabanında mevcut değil
       media,
       primaryMedia,
       media_summary: row.media_summary || null,

@@ -78,11 +78,13 @@ export class ContentProcessorService {
           this.httpService.get(url, {
             timeout,
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+              Accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
               'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8',
               'Accept-Encoding': 'gzip, deflate, br',
-              'Connection': 'keep-alive',
+              Connection: 'keep-alive',
               'Upgrade-Insecure-Requests': '1',
             },
           }),
@@ -92,21 +94,28 @@ export class ContentProcessorService {
         break;
       } catch (error) {
         if (attempt === maxRetries) {
-          this.logger.warn(`Failed to extract content from ${url} after ${maxRetries} attempts:`, error.message);
+          this.logger.warn(
+            `Failed to extract content from ${url} after ${maxRetries} attempts:`,
+            error.message,
+          );
           return '';
         }
 
         // Wait before retrying (exponential backoff)
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-        this.logger.debug(`Retrying content extraction for ${url}, attempt ${attempt}/${maxRetries}, waiting ${delay}ms`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        this.logger.debug(
+          `Retrying content extraction for ${url}, attempt ${attempt}/${maxRetries}, waiting ${delay}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
     const $ = cheerio.load(response.data);
 
     // Remove unwanted elements first - more comprehensive cleanup
-    $('script, style, nav, header, footer, .advertisement, .ads, .social-share, .related-news, .comments, .sidebar, .menu, .navigation, .breadcrumb, .tags, .author-info, .date-info, .share-buttons, .newsletter, .subscription, .cookie-notice, .popup, .modal, .overlay').remove();
+    $(
+      'script, style, nav, header, footer, .advertisement, .ads, .social-share, .related-news, .comments, .sidebar, .menu, .navigation, .breadcrumb, .tags, .author-info, .date-info, .share-buttons, .newsletter, .subscription, .cookie-notice, .popup, .modal, .overlay',
+    ).remove();
 
     // Enhanced AA-specific selectors for better content extraction
     const contentSelectors = [
@@ -136,23 +145,25 @@ export class ContentProcessorService {
           .map((_, el) => {
             const $el = $(el);
             // Skip elements that are likely navigation or metadata
-            if ($el.hasClass('breadcrumb') ||
-                $el.hasClass('tags') ||
-                $el.hasClass('author') ||
-                $el.hasClass('date') ||
-                $el.hasClass('share') ||
-                $el.text().includes('📲') ||
-                $el.text().includes('🔹') ||
-                $el.text().includes('WhatsApp') ||
-                $el.text().includes('Anadolu Ajansı') ||
-                $el.text().includes('abonelik') ||
-                $el.text().includes('iletişime geçiniz')) {
+            if (
+              $el.hasClass('breadcrumb') ||
+              $el.hasClass('tags') ||
+              $el.hasClass('author') ||
+              $el.hasClass('date') ||
+              $el.hasClass('share') ||
+              $el.text().includes('📲') ||
+              $el.text().includes('🔹') ||
+              $el.text().includes('WhatsApp') ||
+              $el.text().includes('Anadolu Ajansı') ||
+              $el.text().includes('abonelik') ||
+              $el.text().includes('iletişime geçiniz')
+            ) {
               return '';
             }
             return $el.text().trim();
           })
           .get()
-          .filter(text => text.length > 20) // Filter out very short text
+          .filter((text) => text.length > 20) // Filter out very short text
           .join('\n')
           .trim();
 
@@ -173,33 +184,35 @@ export class ContentProcessorService {
           const text = $el.text().trim();
 
           // Skip paragraphs with unwanted content
-          if (text.length < 50 ||
-              text.includes('©') ||
-              text.includes('Cookie') ||
-              text.includes('Reklam') ||
-              text.includes('E-posta') ||
-              text.includes('📲') ||
-              text.includes('🔹') ||
-              text.includes('WhatsApp') ||
-              text.includes('Anadolu Ajansı') ||
-              text.includes('abonelik') ||
-              text.includes('iletişime geçiniz') ||
-              text.includes('Bu haberi paylaşın') ||
-              text.includes('İlgili konular') ||
-              text.includes('Güncelleme') ||
-              text.includes('|') ||
-              $el.hasClass('breadcrumb') ||
-              $el.hasClass('tags') ||
-              $el.hasClass('author') ||
-              $el.hasClass('date') ||
-              $el.hasClass('share')) {
+          if (
+            text.length < 50 ||
+            text.includes('©') ||
+            text.includes('Cookie') ||
+            text.includes('Reklam') ||
+            text.includes('E-posta') ||
+            text.includes('📲') ||
+            text.includes('🔹') ||
+            text.includes('WhatsApp') ||
+            text.includes('Anadolu Ajansı') ||
+            text.includes('abonelik') ||
+            text.includes('iletişime geçiniz') ||
+            text.includes('Bu haberi paylaşın') ||
+            text.includes('İlgili konular') ||
+            text.includes('Güncelleme') ||
+            text.includes('|') ||
+            $el.hasClass('breadcrumb') ||
+            $el.hasClass('tags') ||
+            $el.hasClass('author') ||
+            $el.hasClass('date') ||
+            $el.hasClass('share')
+          ) {
             return null;
           }
 
           return text;
         })
         .get()
-        .filter(text => text !== null);
+        .filter((text) => text !== null);
 
       if (paragraphs.length > 0) {
         content = paragraphs.join('\n\n');
@@ -208,7 +221,12 @@ export class ContentProcessorService {
 
     // Additional fallback: Try main content areas
     if (!content || content.length < 200) {
-      const mainSelectors = ['main', '[role="main"]', '.main-content', '#main-content'];
+      const mainSelectors = [
+        'main',
+        '[role="main"]',
+        '.main-content',
+        '#main-content',
+      ];
       for (const selector of mainSelectors) {
         const mainContent = $(selector).text().trim();
         if (mainContent.length > content.length) {
@@ -261,11 +279,13 @@ export class ContentProcessorService {
           this.httpService.get(url, {
             timeout,
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+              Accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
               'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8',
               'Accept-Encoding': 'gzip, deflate, br',
-              'Connection': 'keep-alive',
+              Connection: 'keep-alive',
               'Upgrade-Insecure-Requests': '1',
             },
           }),
@@ -273,7 +293,10 @@ export class ContentProcessorService {
         break;
       } catch (error) {
         if (attempt === maxRetries) {
-          this.logger.debug(`Failed to extract media from ${url} after ${maxRetries} attempts:`, error.message);
+          this.logger.debug(
+            `Failed to extract media from ${url} after ${maxRetries} attempts:`,
+            error.message,
+          );
           return {
             images: [],
             videos: [],
@@ -284,8 +307,10 @@ export class ContentProcessorService {
 
         // Wait before retrying (exponential backoff)
         const delay = Math.min(500 * Math.pow(2, attempt - 1), 2000);
-        this.logger.debug(`Retrying media extraction for ${url}, attempt ${attempt}/${maxRetries}, waiting ${delay}ms`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        this.logger.debug(
+          `Retrying media extraction for ${url}, attempt ${attempt}/${maxRetries}, waiting ${delay}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
@@ -311,20 +336,72 @@ export class ContentProcessorService {
 
     // Extract all images with comprehensive scoring
     const imageSelectors = [
-      { selector: 'meta[property="og:image"]', source: 'og:image', baseScore: 100 },
-      { selector: 'meta[name="twitter:image"]', source: 'twitter:image', baseScore: 95 },
-      { selector: 'meta[name="twitter:image:src"]', source: 'twitter:image:src', baseScore: 95 },
-      { selector: 'img.detay-buyukFoto', source: 'aa-main-photo', baseScore: 90 }, // AA main photo
-      { selector: '.article-image img, .news-image img', source: 'article', baseScore: 80 },
-      { selector: '.detay-foto img, .detay-resim img', source: 'aa-gallery', baseScore: 85 },
+      {
+        selector: 'meta[property="og:image"]',
+        source: 'og:image',
+        baseScore: 100,
+      },
+      {
+        selector: 'meta[name="twitter:image"]',
+        source: 'twitter:image',
+        baseScore: 95,
+      },
+      {
+        selector: 'meta[name="twitter:image:src"]',
+        source: 'twitter:image:src',
+        baseScore: 95,
+      },
+      {
+        selector: 'img.detay-buyukFoto',
+        source: 'aa-main-photo',
+        baseScore: 90,
+      }, // AA main photo
+      {
+        selector: '.article-image img, .news-image img',
+        source: 'article',
+        baseScore: 80,
+      },
+      {
+        selector: '.detay-foto img, .detay-resim img',
+        source: 'aa-gallery',
+        baseScore: 85,
+      },
       { selector: 'figure img, .figure img', source: 'figure', baseScore: 75 },
-      { selector: '.gallery img, .photo-gallery img', source: 'gallery', baseScore: 70 },
-      { selector: '[data-role="article-image"] img', source: 'data-image', baseScore: 75 },
-      { selector: '.content-image img, .story-image img', source: 'content', baseScore: 65 },
-      { selector: 'img[alt*="haber"], img[alt*="news"]', source: 'news-tagged', baseScore: 60 },
-      { selector: '.main-content img, article img', source: 'main-content', baseScore: 50 },
-      { selector: 'img[src*="uploads"], img[src*="images"]', source: 'uploaded', baseScore: 45 },
-      { selector: 'img[src^="/uploads/"]', source: 'aa-relative-uploads', baseScore: 80 }, // AA relative upload paths
+      {
+        selector: '.gallery img, .photo-gallery img',
+        source: 'gallery',
+        baseScore: 70,
+      },
+      {
+        selector: '[data-role="article-image"] img',
+        source: 'data-image',
+        baseScore: 75,
+      },
+      {
+        selector: '.content-image img, .story-image img',
+        source: 'content',
+        baseScore: 65,
+      },
+      {
+        selector: 'img[alt*="haber"], img[alt*="news"]',
+        source: 'news-tagged',
+        baseScore: 60,
+      },
+      {
+        selector: '.main-content img, article img',
+        source: 'main-content',
+        baseScore: 50,
+      },
+      {
+        selector: 'img[src*="uploads"], img[src*="images"]',
+        source: 'uploaded',
+        baseScore: 45,
+      },
+      {
+        selector: 'img[src^="/uploads/"]',
+        source: 'aa-relative-uploads',
+        baseScore: 80,
+      }, // AA relative upload paths
       { selector: 'img', source: 'all-images', baseScore: 30 }, // Catch all images to debug
     ];
 
@@ -339,14 +416,26 @@ export class ContentProcessorService {
           imgSrc = $(el).attr('content') || '';
           // Meta tag found - keeping for processing
         } else {
-          imgSrc = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-lazy') || '';
+          imgSrc =
+            $(el).attr('src') ||
+            $(el).attr('data-src') ||
+            $(el).attr('data-lazy') ||
+            '';
           alt = $(el).attr('alt') || '';
 
           // Processing images silently
 
           // Try to find caption from parent elements
-          const figcaption = $(el).closest('figure').find('figcaption').text().trim();
-          const parentCaption = $(el).parent().find('.caption, .photo-caption').text().trim();
+          const figcaption = $(el)
+            .closest('figure')
+            .find('figcaption')
+            .text()
+            .trim();
+          const parentCaption = $(el)
+            .parent()
+            .find('.caption, .photo-caption')
+            .text()
+            .trim();
           caption = figcaption || parentCaption || '';
         }
 
@@ -367,7 +456,7 @@ export class ContentProcessorService {
           }
 
           // Skip duplicates
-          if (images.some(img => img.url === imgSrc)) {
+          if (images.some((img) => img.url === imgSrc)) {
             return;
           }
 
@@ -375,12 +464,16 @@ export class ContentProcessorService {
           let qualityScore = baseScore;
 
           // Resolution indicators
-          if (imgSrc.includes('1920') || imgSrc.includes('1200')) qualityScore += 25;
-          else if (imgSrc.includes('800') || imgSrc.includes('600')) qualityScore += 15;
-          else if (imgSrc.includes('400') || imgSrc.includes('300')) qualityScore += 5;
+          if (imgSrc.includes('1920') || imgSrc.includes('1200'))
+            qualityScore += 25;
+          else if (imgSrc.includes('800') || imgSrc.includes('600'))
+            qualityScore += 15;
+          else if (imgSrc.includes('400') || imgSrc.includes('300'))
+            qualityScore += 5;
 
           // File type preferences
-          if (imgSrc.includes('.jpg') || imgSrc.includes('.jpeg')) qualityScore += 10;
+          if (imgSrc.includes('.jpg') || imgSrc.includes('.jpeg'))
+            qualityScore += 10;
           else if (imgSrc.includes('.webp')) qualityScore += 15;
           else if (imgSrc.includes('.png')) qualityScore += 8;
 
@@ -388,9 +481,19 @@ export class ContentProcessorService {
           if (alt) {
             const altLower = alt.toLowerCase();
             // Bonus for news-related alt text
-            if (altLower.includes('haber') || altLower.includes('news') || altLower.includes('foto')) qualityScore += 15;
+            if (
+              altLower.includes('haber') ||
+              altLower.includes('news') ||
+              altLower.includes('foto')
+            )
+              qualityScore += 15;
             // Penalty for generic alt text
-            if (altLower.includes('resim') || altLower.includes('image') || altLower.includes('photo')) qualityScore -= 5;
+            if (
+              altLower.includes('resim') ||
+              altLower.includes('image') ||
+              altLower.includes('photo')
+            )
+              qualityScore -= 5;
             // Bonus for meaningful descriptions
             if (alt.length > 20) qualityScore += 10;
           }
@@ -399,30 +502,43 @@ export class ContentProcessorService {
             const captionLower = caption.toLowerCase();
             // Bonus for meaningful captions
             if (caption.length > 30) qualityScore += 15;
-            if (captionLower.includes('aa') || captionLower.includes('anadolu')) qualityScore += 10;
+            if (captionLower.includes('aa') || captionLower.includes('anadolu'))
+              qualityScore += 10;
           }
 
           // URL quality indicators - be more selective
           const urlLower = imgSrc.toLowerCase();
 
           // Skip default AA logo and placeholder images completely
-          if (urlLower.includes('bip.png') ||
-              urlLower.includes('favicon') ||
-              urlLower.includes('logo.png') ||
-              urlLower.includes('placeholder') ||
-              urlLower.includes('default-image')) {
+          if (
+            urlLower.includes('bip.png') ||
+            urlLower.includes('favicon') ||
+            urlLower.includes('logo.png') ||
+            urlLower.includes('placeholder') ||
+            urlLower.includes('default-image')
+          ) {
             return; // Skip placeholder/logo images
           }
 
           // Strong penalties for likely assets
-          if (urlLower.includes('/assets/') || urlLower.includes('/static/')) qualityScore -= 30;
-          if (urlLower.includes('/common/') || urlLower.includes('/shared/')) qualityScore -= 25;
-          if (urlLower.includes('/ui/') || urlLower.includes('/theme/')) qualityScore -= 35;
+          if (urlLower.includes('/assets/') || urlLower.includes('/static/'))
+            qualityScore -= 30;
+          if (urlLower.includes('/common/') || urlLower.includes('/shared/'))
+            qualityScore -= 25;
+          if (urlLower.includes('/ui/') || urlLower.includes('/theme/'))
+            qualityScore -= 35;
 
           // Bonus for news-specific paths
-          if (urlLower.includes('/upload') || urlLower.includes('/media') || urlLower.includes('/image')) qualityScore += 10;
-          if (urlLower.includes('/news') || urlLower.includes('/haber')) qualityScore += 15;
-          if (urlLower.includes('/gallery') || urlLower.includes('/galeri')) qualityScore += 12;
+          if (
+            urlLower.includes('/upload') ||
+            urlLower.includes('/media') ||
+            urlLower.includes('/image')
+          )
+            qualityScore += 10;
+          if (urlLower.includes('/news') || urlLower.includes('/haber'))
+            qualityScore += 15;
+          if (urlLower.includes('/gallery') || urlLower.includes('/galeri'))
+            qualityScore += 12;
 
           // Skip images with very low quality scores
           if (qualityScore < 40) {
@@ -453,14 +569,38 @@ export class ContentProcessorService {
 
     // Extract all videos with metadata
     const videoSelectors = [
-      { selector: 'meta[property="og:video"]', source: 'og:video', baseScore: 100 },
-      { selector: 'meta[property="og:video:url"]', source: 'og:video-url', baseScore: 95 },
+      {
+        selector: 'meta[property="og:video"]',
+        source: 'og:video',
+        baseScore: 100,
+      },
+      {
+        selector: 'meta[property="og:video:url"]',
+        source: 'og:video-url',
+        baseScore: 95,
+      },
       { selector: 'iframe[src*="youtube"]', source: 'youtube', baseScore: 90 },
       { selector: 'iframe[src*="vimeo"]', source: 'vimeo', baseScore: 85 },
-      { selector: 'iframe[src*="dailymotion"]', source: 'dailymotion', baseScore: 80 },
-      { selector: 'video source, video', source: 'native-video', baseScore: 75 },
-      { selector: '.video-container iframe, .video-wrapper iframe', source: 'embedded', baseScore: 70 },
-      { selector: 'iframe[src*="tiktok"], iframe[src*="instagram"]', source: 'social', baseScore: 65 },
+      {
+        selector: 'iframe[src*="dailymotion"]',
+        source: 'dailymotion',
+        baseScore: 80,
+      },
+      {
+        selector: 'video source, video',
+        source: 'native-video',
+        baseScore: 75,
+      },
+      {
+        selector: '.video-container iframe, .video-wrapper iframe',
+        source: 'embedded',
+        baseScore: 70,
+      },
+      {
+        selector: 'iframe[src*="tiktok"], iframe[src*="instagram"]',
+        source: 'social',
+        baseScore: 65,
+      },
     ];
 
     for (const { selector, source, baseScore } of videoSelectors) {
@@ -472,10 +612,18 @@ export class ContentProcessorService {
           videoUrl = $(el).attr('content') || '';
         } else if ($(el).is('iframe')) {
           videoUrl = $(el).attr('src') || '';
-          title = $(el).attr('title') || $(el).closest('.video-container, .video-wrapper').find('.video-title').text().trim();
+          title =
+            $(el).attr('title') ||
+            $(el)
+              .closest('.video-container, .video-wrapper')
+              .find('.video-title')
+              .text()
+              .trim();
         } else if ($(el).is('video') || $(el).is('source')) {
           videoUrl = $(el).attr('src') || '';
-          title = $(el).attr('title') || $(el).closest('figure').find('figcaption').text().trim();
+          title =
+            $(el).attr('title') ||
+            $(el).closest('figure').find('figcaption').text().trim();
         }
 
         if (videoUrl) {
@@ -486,7 +634,7 @@ export class ContentProcessorService {
           }
 
           // Skip duplicates
-          if (videos.some(vid => vid.url === videoUrl)) {
+          if (videos.some((vid) => vid.url === videoUrl)) {
             return;
           }
 
@@ -538,7 +686,9 @@ export class ContentProcessorService {
     if (images.length > 0) {
       this.logger.log(`   🔍 Image details:`);
       images.forEach((img, idx) => {
-        this.logger.log(`     ${idx + 1}. ${img.url} (score: ${img.quality_score}, source: ${img.source})`);
+        this.logger.log(
+          `     ${idx + 1}. ${img.url} (score: ${img.quality_score}, source: ${img.source})`,
+        );
       });
     }
 
@@ -562,18 +712,22 @@ export class ContentProcessorService {
       // Debug logs removed for cleaner output
 
       // Special case for AA userFiles with encoded paths (case insensitive)
-      const isAAUserFile = fullUrl.includes('cdnuploads.aa.com.tr') &&
-                           (fullUrl.includes('/uploads/userfiles/') || fullUrl.includes('/uploads/userFiles/'));
+      const isAAUserFile =
+        fullUrl.includes('cdnuploads.aa.com.tr') &&
+        (fullUrl.includes('/uploads/userfiles/') ||
+          fullUrl.includes('/uploads/userFiles/'));
 
       // Check if it's a valid image extension (including encoded paths for userFiles)
-      const hasValidExtension = (
+      const hasValidExtension =
         pathname.includes('.jpg') ||
         pathname.includes('.jpeg') ||
         pathname.includes('.png') ||
         pathname.includes('.webp') ||
         pathname.includes('.gif') ||
-        (isAAUserFile && (fullUrl.includes('.jpg') || fullUrl.includes('.jpeg') || fullUrl.includes('.png')))
-      );
+        (isAAUserFile &&
+          (fullUrl.includes('.jpg') ||
+            fullUrl.includes('.jpeg') ||
+            fullUrl.includes('.png')));
 
       if (!hasValidExtension) {
         return false;
@@ -581,25 +735,58 @@ export class ContentProcessorService {
 
       // Filter out common site assets and social media icons
       const assetKeywords = [
-        'logo', 'icon', 'favicon', 'avatar', 'profile',
-        'facebook', 'twitter', 'instagram', 'youtube', 'linkedin',
-        'whatsapp', 'telegram', 'share', 'social',
-        'banner', 'header', 'footer', 'menu', 'nav',
-        'reklam', 'reklamlar', 'advertisement', 'ads',
-        'cookie', 'gdpr', 'privacy',
-        'thumbnail', 'placeholder', // Removed 'thumb' - it filters out AA thumbs_b_c images
-        'sprite', 'background', 'bg',
-        'widgets', 'sidebar', 'comment',
-        'arrow', 'bullet', 'dot', 'pixel',
-        'tracking', 'analytics', 'counter'
+        'logo',
+        'icon',
+        'favicon',
+        'avatar',
+        'profile',
+        'facebook',
+        'twitter',
+        'instagram',
+        'youtube',
+        'linkedin',
+        'whatsapp',
+        'telegram',
+        'share',
+        'social',
+        'banner',
+        'header',
+        'footer',
+        'menu',
+        'nav',
+        'reklam',
+        'reklamlar',
+        'advertisement',
+        'ads',
+        'cookie',
+        'gdpr',
+        'privacy',
+        'thumbnail',
+        'placeholder', // Removed 'thumb' - it filters out AA thumbs_b_c images
+        'sprite',
+        'background',
+        'bg',
+        'widgets',
+        'sidebar',
+        'comment',
+        'arrow',
+        'bullet',
+        'dot',
+        'pixel',
+        'tracking',
+        'analytics',
+        'counter',
       ];
 
       // Check if URL contains any asset keywords - but exclude AA-specific patterns
-      const isAAThumb = fullUrl.includes('cdnuploads.aa.com.tr') && fullUrl.includes('thumbs_b_c');
-      const containsAssetKeyword = !(isAAThumb || isAAUserFile) && assetKeywords.some(keyword =>
-        fullUrl.includes(keyword) ||
-        pathname.includes(keyword)
-      );
+      const isAAThumb =
+        fullUrl.includes('cdnuploads.aa.com.tr') &&
+        fullUrl.includes('thumbs_b_c');
+      const containsAssetKeyword =
+        !(isAAThumb || isAAUserFile) &&
+        assetKeywords.some(
+          (keyword) => fullUrl.includes(keyword) || pathname.includes(keyword),
+        );
 
       if (containsAssetKeyword) {
         return false;
@@ -617,8 +804,16 @@ export class ContentProcessorService {
       }
 
       // Filter out common icon sizes in filename
-      const iconSizes = ['16x16', '32x32', '48x48', '64x64', '96x96', '128x128', '150x150'];
-      if (iconSizes.some(size => fullUrl.includes(size))) {
+      const iconSizes = [
+        '16x16',
+        '32x32',
+        '48x48',
+        '64x64',
+        '96x96',
+        '128x128',
+        '150x150',
+      ];
+      if (iconSizes.some((size) => fullUrl.includes(size))) {
         return false;
       }
 
@@ -636,27 +831,29 @@ export class ContentProcessorService {
       return '';
     }
 
-    return content
-      // Remove multiple whitespace and normalize
-      .replace(/\s+/g, ' ')
-      // Remove unwanted patterns
-      .replace(/📲.*?(?=\n|$)/g, '')
-      .replace(/🔹.*?(?=\n|$)/g, '')
-      .replace(/WhatsApp.*?(?=\n|$)/g, '')
-      .replace(/Anadolu Ajansı.*?(?=\n|$)/g, '')
-      .replace(/abonelik.*?(?=\n|$)/g, '')
-      .replace(/iletişime geçiniz.*?(?=\n|$)/g, '')
-      .replace(/Bu haberi paylaşın.*?(?=\n|$)/g, '')
-      .replace(/İlgili konular.*?(?=\n|$)/g, '')
-      .replace(/Güncelleme.*?(?=\n|$)/g, '')
-      .replace(/Emre Aşıkçı.*?(?=\n|$)/g, '')
-      .replace(/\d{2}\.\d{2}\.\d{4}.*?(?=\n|$)/g, '')
-      .replace(/\|.*?(?=\n|$)/g, '')
-      // Remove empty lines and normalize
-      .replace(/\n\s*\n/g, '\n\n')
-      .replace(/^\s+|\s+$/g, '')
-      // Final validation
-      .trim();
+    return (
+      content
+        // Remove multiple whitespace and normalize
+        .replace(/\s+/g, ' ')
+        // Remove unwanted patterns
+        .replace(/📲.*?(?=\n|$)/g, '')
+        .replace(/🔹.*?(?=\n|$)/g, '')
+        .replace(/WhatsApp.*?(?=\n|$)/g, '')
+        .replace(/Anadolu Ajansı.*?(?=\n|$)/g, '')
+        .replace(/abonelik.*?(?=\n|$)/g, '')
+        .replace(/iletişime geçiniz.*?(?=\n|$)/g, '')
+        .replace(/Bu haberi paylaşın.*?(?=\n|$)/g, '')
+        .replace(/İlgili konular.*?(?=\n|$)/g, '')
+        .replace(/Güncelleme.*?(?=\n|$)/g, '')
+        .replace(/Emre Aşıkçı.*?(?=\n|$)/g, '')
+        .replace(/\d{2}\.\d{2}\.\d{4}.*?(?=\n|$)/g, '')
+        .replace(/\|.*?(?=\n|$)/g, '')
+        // Remove empty lines and normalize
+        .replace(/\n\s*\n/g, '\n\n')
+        .replace(/^\s+|\s+$/g, '')
+        // Final validation
+        .trim()
+    );
   }
 
   /**
@@ -667,7 +864,7 @@ export class ContentProcessorService {
 
     // Split content into lines for better filtering
     const lines = content.split('\n');
-    const filteredLines = lines.filter(line => {
+    const filteredLines = lines.filter((line) => {
       const trimmedLine = line.trim();
 
       // Skip empty lines
@@ -705,7 +902,7 @@ export class ContentProcessorService {
         /Anlık gelişmeler için AA Canlı.*$/,
       ];
 
-      return !unwantedPatterns.some(pattern => pattern.test(trimmedLine));
+      return !unwantedPatterns.some((pattern) => pattern.test(trimmedLine));
     });
 
     return filteredLines.join('\n').trim();
@@ -805,51 +1002,56 @@ export class ContentProcessorService {
     };
 
     const sortedCategories = Array.from(items.entries()).sort(
-      ([a], [b]) => categoryPriority[a] - categoryPriority[b]
+      ([a], [b]) => categoryPriority[a] - categoryPriority[b],
     );
 
     for (let i = 0; i < sortedCategories.length; i += maxConcurrentCategories) {
-      const categoryBatch = sortedCategories.slice(i, i + maxConcurrentCategories);
+      const categoryBatch = sortedCategories.slice(
+        i,
+        i + maxConcurrentCategories,
+      );
 
       this.logger.log(
         `Processing category batch ${Math.floor(i / maxConcurrentCategories) + 1}/${Math.ceil(sortedCategories.length / maxConcurrentCategories)}`,
       );
 
-      const categoryPromises = categoryBatch.map(async ([category, rawItems]) => {
-        this.logger.log(
-          `Processing ${rawItems.length} items from category: ${category}`,
-        );
-
-        const categoryProcessedItems: ProcessedNewsItem[] = [];
-
-        // Kategorideki öğeleri parçalara bölerek işle
-        for (let j = 0; j < rawItems.length; j += maxConcurrentItems) {
-          const itemBatch = rawItems.slice(j, j + maxConcurrentItems);
-
-          const itemPromises = itemBatch.map((item) =>
-            this.processNewsItem(item, category),
+      const categoryPromises = categoryBatch.map(
+        async ([category, rawItems]) => {
+          this.logger.log(
+            `Processing ${rawItems.length} items from category: ${category}`,
           );
 
-          const itemResults = await Promise.allSettled(itemPromises);
+          const categoryProcessedItems: ProcessedNewsItem[] = [];
 
-          itemResults.forEach((result, index) => {
-            if (result.status === 'fulfilled' && result.value) {
-              categoryProcessedItems.push(result.value);
-            } else {
-              this.logger.warn(
-                `Failed to process item ${j + index} from category ${category}`,
-              );
+          // Kategorideki öğeleri parçalara bölerek işle
+          for (let j = 0; j < rawItems.length; j += maxConcurrentItems) {
+            const itemBatch = rawItems.slice(j, j + maxConcurrentItems);
+
+            const itemPromises = itemBatch.map((item) =>
+              this.processNewsItem(item, category),
+            );
+
+            const itemResults = await Promise.allSettled(itemPromises);
+
+            itemResults.forEach((result, index) => {
+              if (result.status === 'fulfilled' && result.value) {
+                categoryProcessedItems.push(result.value);
+              } else {
+                this.logger.warn(
+                  `Failed to process item ${j + index} from category ${category}`,
+                );
+              }
+            });
+
+            // Rate limiting - öğe grupları arasında bekle
+            if (j + maxConcurrentItems < rawItems.length) {
+              await new Promise((resolve) => setTimeout(resolve, 200));
             }
-          });
-
-          // Rate limiting - öğe grupları arasında bekle
-          if (j + maxConcurrentItems < rawItems.length) {
-            await new Promise((resolve) => setTimeout(resolve, 200));
           }
-        }
 
-        return categoryProcessedItems;
-      });
+          return categoryProcessedItems;
+        },
+      );
 
       const categoryResults = await Promise.all(categoryPromises);
 

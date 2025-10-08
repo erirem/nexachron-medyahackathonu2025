@@ -150,29 +150,30 @@ export class NewsIngestService {
           continue;
         }
 
-            // Save to your Supabase news table using service role (bypasses RLS)
-            const { data: insertedNews, error } = await this.supabaseService.adminSupabase
-              .from('news')
-              .insert({
-                source: item.source,
-                title: item.title,
-                content: item.content,
-                description: item.description, // Original RSS description
-                summary: item.summary, // AI summary or fallback to description
-                summary_type: item.summary_type, // Track if summary is original or AI-generated
-                image_url: item.image_url,
-                video_url: item.video_url, // Extracted video URL
-                tts_url: null, // Future feature
-                category: item.category, // Store AA category directly
-                mode: item.mode, // Default mode, will be updated based user feedback
-                city: item.city,
-                original_url: item.original_url, // Store original RSS link
-                geo: null, // Future: add GPS coordinates
-                is_popular: false,
-                // created_at and updated_at will be auto-set by your triggers
-              })
-              .select('id')
-              .single();
+        // Save to your Supabase news table using service role (bypasses RLS)
+        const { data: insertedNews, error } =
+          await this.supabaseService.adminSupabase
+            .from('news')
+            .insert({
+              source: item.source,
+              title: item.title,
+              content: item.content,
+              description: item.description, // Original RSS description
+              summary: item.summary, // AI summary or fallback to description
+              summary_type: item.summary_type, // Track if summary is original or AI-generated
+              image_url: item.image_url,
+              video_url: item.video_url, // Extracted video URL
+              tts_url: null, // Future feature
+              category: item.category, // Store AA category directly
+              mode: item.mode, // Default mode, will be updated based user feedback
+              city: item.city,
+              original_url: item.original_url, // Store original RSS link
+              geo: null, // Future: add GPS coordinates
+              is_popular: false,
+              // created_at and updated_at will be auto-set by your triggers
+            })
+            .select('id')
+            .single();
 
         if (error) {
           this.logger.error(`Failed to save news item: ${item.title}`, error);
@@ -182,13 +183,15 @@ export class NewsIngestService {
           if (insertedNews && item.media_gallery) {
             const mediaStored = await this.mediaStorageService.storeNewsMedia(
               insertedNews.id,
-              item.media_gallery
+              item.media_gallery,
             );
-            
+
             if (!mediaStored) {
               this.logger.warn(`Failed to store media for news: ${item.title}`);
             } else {
-              this.logger.debug(`Stored media gallery for: ${item.title} (${item.media_gallery.images.length} images, ${item.media_gallery.videos.length} videos)`);
+              this.logger.debug(
+                `Stored media gallery for: ${item.title} (${item.media_gallery.images.length} images, ${item.media_gallery.videos.length} videos)`,
+              );
             }
           }
           saved++;
@@ -351,8 +354,10 @@ export class NewsIngestService {
         throw new Error('Failed to process the URL');
       }
 
-      this.logger.log(`Successfully processed single URL: ${processedItem.title}`);
-      
+      this.logger.log(
+        `Successfully processed single URL: ${processedItem.title}`,
+      );
+
       return processedItem;
     } catch (error) {
       this.logger.error(`Failed to process single URL: ${url}`, error);

@@ -244,6 +244,68 @@ export async function fetchNewsById(
   return ensureSuccess(envelope);
 }
 
+// Bookmarks API
+export async function fetchBookmarks(config: RequestConfig = {}) {
+  const envelope = await apiFetch<
+    ApiResponseEnvelope<
+      Array<{
+        news_id: string;
+        created_at: string;
+        news?: {
+          id: string;
+          title: string;
+          content: string;
+          summary: string | null;
+          category: string | null;
+          city: string | null;
+          is_popular: boolean;
+          created_at: string;
+          updated_at: string | null;
+          media_summary: string | null;
+        } | null;
+      }>
+    >
+  >('/api/bookmarks', {
+    headers: await buildAuthHeader(),
+    signal: config.signal,
+  });
+  return ensureSuccess(envelope);
+}
+
+export async function addBookmark(newsId: string, config: RequestConfig = {}) {
+  const envelope = await apiFetch<ApiResponseEnvelope<{ newsId: string }>>(
+    `/api/bookmarks/${newsId}`,
+    {
+      method: 'POST',
+      headers: await buildAuthHeader(),
+      signal: config.signal,
+    },
+  );
+  return ensureSuccess(envelope);
+}
+
+export async function removeBookmark(newsId: string, config: RequestConfig = {}) {
+  const envelope = await apiFetch<ApiResponseEnvelope<{ newsId: string }>>(
+    `/api/bookmarks/${newsId}`,
+    {
+      method: 'DELETE',
+      headers: await buildAuthHeader(),
+      signal: config.signal,
+    },
+  );
+  return ensureSuccess(envelope);
+}
+
+async function buildAuthHeader(): Promise<Record<string, string>> {
+  try {
+    const { getAccessToken } = await import('../lib/supabase/client');
+    const token = await getAccessToken(true);
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 export async function addCommentToNews(
   id: string,
   userId: string,
