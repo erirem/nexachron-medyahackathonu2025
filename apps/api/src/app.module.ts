@@ -7,6 +7,7 @@ import { NewsModule } from './news/news.module';
 import { UsersModule } from './users/users.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { ReelsModule } from './reels/reels.module';
+import { GamesModule } from './games/games.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ReelsModule } from './reels/reels.module';
     UsersModule,
     NewsIngestModule,
     ReelsModule,
+    GamesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
