@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { PodcastCard } from './podcast-card';
 import { PodcastPlayer } from './podcast-player';
 import { Sidebar } from '../../(dashboard)/dashboard/_components/dashboard';
+import { useNews } from '../../../../hooks/use-news';
 
 interface Podcast {
   id: string;
@@ -16,83 +17,21 @@ interface Podcast {
   isPlaying?: boolean;
 }
 
-const featuredPodcasts: Podcast[] = [
-  {
-    id: '1',
-    title: 'Güncel Haberler',
-    subtitle: 'Son dakika gelişmeleri ve önemli haberler',
-    imageUrl: 'https://picsum.photos/300/300?random=1',
-    duration: '15 dk',
-    category: 'Gündem',
-  },
-  {
-    id: '2',
-    title: 'Spor Haberleri',
-    subtitle: 'Futbol, basketbol ve diğer spor dalları',
-    imageUrl: 'https://picsum.photos/300/300?random=2',
-    duration: '12 dk',
-    category: 'Spor',
-  },
-  {
-    id: '3',
-    title: 'Teknoloji Dünyası',
-    subtitle: 'Yapay zeka, yazılım ve teknoloji trendleri',
-    imageUrl: 'https://picsum.photos/300/300?random=3',
-    duration: '18 dk',
-    category: 'Teknoloji',
-  },
-  {
-    id: '4',
-    title: 'Ekonomi Bülteni',
-    subtitle: 'Piyasa analizi ve ekonomik gelişmeler',
-    imageUrl: 'https://picsum.photos/300/300?random=4',
-    duration: '20 dk',
-    category: 'Ekonomi',
-  },
-  {
-    id: '5',
-    title: 'Dünya Haberleri',
-    subtitle: 'Uluslararası gelişmeler ve diplomasi',
-    imageUrl: 'https://picsum.photos/300/300?random=5',
-    duration: '14 dk',
-    category: 'Dünya',
-  },
-];
-
-const trendingPodcasts: Podcast[] = [
-  {
-    id: '6',
-    title: 'HOT HITS HABERLER',
-    subtitle: 'Bugünün en çok dinlenen haber podcastleri',
-    imageUrl: 'https://picsum.photos/300/300?random=6',
-    duration: '16 dk',
-    category: 'Trend',
-  },
-  {
-    id: '7',
-    title: 'TÜRKÇE HABERLER',
-    subtitle: 'Türkiye\'den en güncel haberler',
-    imageUrl: 'https://picsum.photos/300/300?random=7',
-    duration: '13 dk',
-    category: 'Yerel',
-  },
-  {
-    id: '8',
-    title: 'BREAKING NEWS',
-    subtitle: 'Son dakika haberleri ve acil durumlar',
-    imageUrl: 'https://picsum.photos/300/300?random=8',
-    duration: '10 dk',
-    category: 'Acil',
-  },
-  {
-    id: '9',
-    title: '100+ DİNLEME',
-    subtitle: 'En çok dinlenen haber podcastleri',
-    imageUrl: 'https://picsum.photos/300/300?random=9',
-    duration: '22 dk',
-    category: 'Popüler',
-  },
-];
+// Helper function to convert news to podcast format
+const convertNewsToPodcast = (newsItem: any): Podcast => {
+  // Generate duration based on content length (rough estimate)
+  const contentLength = newsItem.summary?.length || 0;
+  const estimatedDuration = Math.max(5, Math.min(30, Math.ceil(contentLength / 100))); // 5-30 minutes
+  
+  return {
+    id: newsItem.id,
+    title: newsItem.title,
+    subtitle: newsItem.summary || 'Haber detayları',
+    imageUrl: newsItem.image_url || 'https://picsum.photos/300/300?random=' + newsItem.id,
+    duration: `${estimatedDuration} dk`,
+    category: newsItem.category || 'Gündem',
+  };
+};
 
 const categories = [
   { name: 'Gündem', color: 'from-blue-500 to-blue-600', icon: '📈' },
@@ -107,6 +46,21 @@ export function PodcastPage() {
   const [selectedPodcast, setSelectedPodcast] = useState<Podcast | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const router = useRouter();
+
+  // Fetch news data
+  const { data: newsData, isLoading: isNewsLoading } = useNews({ limit: 30 });
+
+  // Convert news to podcast format
+  const featuredPodcasts = useMemo(() => {
+    if (!newsData) return [];
+    return newsData.slice(0, 5).map(convertNewsToPodcast);
+  }, [newsData]);
+
+  const trendingPodcasts = useMemo(() => {
+    if (!newsData) return [];
+    // Use news items 5-13 for trending (skip first 5 which are featured)
+    return newsData.slice(5, 13).map(convertNewsToPodcast);
+  }, [newsData]);
 
   const handlePodcastSelect = (podcast: Podcast) => {
     setSelectedPodcast(podcast);
@@ -179,24 +133,33 @@ export function PodcastPage() {
                 </button>
               </div>
 
+              {/* Loading State */}
+              {isNewsLoading && (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                </div>
+              )}
+
               {/* Featured Podcasts */}
-              <section>
-                <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">Öne Çıkan Podcastler</h2>
-                  <button className="text-sm text-blue-300 hover:text-blue-200 transition-colors">
-                    Tümünü göster
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {featuredPodcasts.map((podcast) => (
-                    <PodcastCard
-                      key={podcast.id}
-                      podcast={podcast}
-                      onSelect={() => handlePodcastSelect(podcast)}
-                    />
-                  ))}
-                </div>
-              </section>
+              {!isNewsLoading && (
+                <section>
+                  <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white">Öne Çıkan Podcastler</h2>
+                    <button className="text-sm text-blue-300 hover:text-blue-200 transition-colors">
+                      Tümünü göster
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                    {featuredPodcasts.map((podcast) => (
+                      <PodcastCard
+                        key={podcast.id}
+                        podcast={podcast}
+                        onSelect={() => handlePodcastSelect(podcast)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
 
               {/* Trending Podcasts */}
               <section>
@@ -206,15 +169,33 @@ export function PodcastPage() {
                     Tümünü göster
                   </button>
                 </div>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {trendingPodcasts.map((podcast) => (
-                    <PodcastCard
-                      key={podcast.id}
-                      podcast={podcast}
-                      onSelect={() => handlePodcastSelect(podcast)}
-                    />
-                  ))}
+                
+                {/* Debug info - remove in production */}
+                <div className="mb-4 text-xs text-gray-400">
+                  Debug: Loading: {isNewsLoading ? 'Yes' : 'No'}, Count: {trendingPodcasts.length}, Data: {newsData?.length || 0}
                 </div>
+                
+                {isNewsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <span className="ml-2 text-gray-400">Trend podcast'ler yükleniyor...</span>
+                  </div>
+                ) : trendingPodcasts.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                    {trendingPodcasts.map((podcast) => (
+                      <PodcastCard
+                        key={podcast.id}
+                        podcast={podcast}
+                        onSelect={() => handlePodcastSelect(podcast)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <p>Trend podcast bulunamadı</p>
+                    <p className="text-sm mt-2">Popüler haberler yüklenirken bir sorun olabilir</p>
+                  </div>
+                )}
               </section>
 
               {/* Categories */}

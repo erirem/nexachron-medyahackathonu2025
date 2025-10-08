@@ -17,7 +17,7 @@ export class PodcastController {
   private readonly logger = new Logger(PodcastController.name);
   constructor(private readonly podcastService: PodcastService) {}
 
-  private parsePositiveNumber(value: string | undefined, fallback?: number) {
+  private parsePositiveNumber(value: string | undefined, fallback: number): number {
     if (value === undefined || value === '') {
       return fallback;
     }
@@ -53,7 +53,7 @@ export class PodcastController {
       : undefined;
     const limitValue = hasPagination
       ? undefined
-      : this.parsePositiveNumber(limit ?? '', undefined);
+      : (limit ? this.parsePositiveNumber(limit, 10) : undefined);
     const isFeaturedValue = this.parseBoolean(isFeatured);
     const isTrendingValue = this.parseBoolean(isTrending);
 

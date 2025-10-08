@@ -283,9 +283,21 @@ export class PodcastService {
 
   async incrementPlayCount(podcastId: string): Promise<void> {
     try {
+      // First get the current play count
+      const { data: currentData, error: fetchError } = await this.supabaseService.supabase
+        .from('podcasts')
+        .select('play_count')
+        .eq('id', podcastId)
+        .single();
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch current play count: ${fetchError.message}`);
+      }
+
+      // Then update with incremented value
       const { error } = await this.supabaseService.supabase
         .from('podcasts')
-        .update({ play_count: this.supabaseService.supabase.raw('play_count + 1') })
+        .update({ play_count: (currentData?.play_count || 0) + 1 })
         .eq('id', podcastId);
 
       if (error) {
