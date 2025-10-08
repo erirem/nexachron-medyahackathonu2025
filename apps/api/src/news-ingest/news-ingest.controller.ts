@@ -250,7 +250,7 @@ export class NewsIngestController {
   @Get('media-stats')
   async getMediaStats() {
     const stats = await this.mediaStorageService.getMediaStats();
-    
+
     return {
       message: 'Media statistics',
       ...stats,
@@ -267,7 +267,7 @@ export class NewsIngestController {
   async getRecentMediaStatsWithLimit(@Param('limit') limit: string) {
     const numLimit = parseInt(limit) || 10;
     const stats = await this.mediaStorageService.getRecentMediaStats(numLimit);
-    
+
     return {
       message: `Recent media statistics for last ${numLimit} articles`,
       ...stats,
@@ -278,7 +278,7 @@ export class NewsIngestController {
   @Get('recent-media')
   async getRecentMediaStats() {
     const stats = await this.mediaStorageService.getRecentMediaStats(10);
-    
+
     return {
       message: 'Recent media statistics for last 10 articles',
       ...stats,
@@ -312,7 +312,7 @@ export class NewsIngestController {
 
     try {
       const result = await this.newsIngestService.processSingleUrl(url);
-      
+
       return {
         message: 'Successfully processed single URL',
         success: true,
@@ -326,7 +326,7 @@ export class NewsIngestController {
             videos_count: result.media_gallery?.videos?.length || 0,
             featured_image: result.media_gallery?.featured_image,
             featured_video: result.media_gallery?.featured_video,
-            sample_images: result.media_gallery?.images?.slice(0, 3) || [] // Show first 3 images
+            sample_images: result.media_gallery?.images?.slice(0, 3) || [], // Show first 3 images
           },
           city: result.city,
           category: result.category,

@@ -63,9 +63,10 @@ const translations: Record<Locale, Record<string, string>> = {
   },
   fr: {
     'errors.fetchNews': "Impossible de charger le flux d'actualités.",
-    'errors.fetchDashboard': "Impossible de charger le tableau de bord.",
-    'errors.fetchCategories': "Impossible de charger les catégories d'actualités.",
-    'errors.fetchTrending': "Impossible de charger les actualités tendances.",
+    'errors.fetchDashboard': 'Impossible de charger le tableau de bord.',
+    'errors.fetchCategories':
+      "Impossible de charger les catégories d'actualités.",
+    'errors.fetchTrending': 'Impossible de charger les actualités tendances.',
     'errors.searchNews': "Impossible d'exécuter la recherche d'actualités.",
     'errors.fetchPopular': 'Impossible de charger les actualités populaires.',
     'errors.fetchByMode':

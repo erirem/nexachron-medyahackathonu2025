@@ -24,32 +24,22 @@ export function InlineMedia({
   author, 
   onVisible 
 }: InlineMediaProps): JSX.Element {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !isVisible) {
-          setIsVisible(true);
-          onVisible?.();
-        }
-      },
-      { threshold: 0.3 }
-    );
+    setIsVisible(true);
+    onVisible?.();
+  }, [onVisible]);
 
-    const element = document.getElementById(`inline-media-${type}-${Math.random()}`);
-    if (element) {
-      observer.observe(element);
+  if (type === 'image') {
+    if (!src || hasError) {
+      return <></>;
     }
 
-    return () => observer.disconnect();
-  }, [type, onVisible, isVisible]);
-
-  if (type === 'image' && src) {
     return (
       <div 
-        id={`inline-media-image-${src}`}
         className={`my-8 transition-all duration-700 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
@@ -62,6 +52,7 @@ export function InlineMedia({
               fill
               className={`object-cover transition-all duration-500 ${isLoaded ? 'scale-100 blur-0' : 'scale-105 blur-sm'}`}
               onLoad={() => setIsLoaded(true)}
+              onError={() => setHasError(true)}
               sizes="(max-width: 768px) 100vw, 896px"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -97,11 +88,11 @@ export function InlineMedia({
               controls={isVisible}
             >
               <source src={src} type="video/mp4" />
-              Tarayıcınız video oynatmayı desteklemiyor.
-            </video>
-            {!isVisible && (
-              <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center">
+            Tarayıcınız video oynatmayı desteklemiyor.
+          </video>
+          {!isVisible && (
+            <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-slate-300 ml-1">
                     <polygon points="5 3 19 12 5 21 5 3"/>
                   </svg>
@@ -122,7 +113,6 @@ export function InlineMedia({
   if (type === 'quote' && quote) {
     return (
       <div 
-        id={`inline-media-quote-${Math.random()}`}
         className={`my-8 transition-all duration-700 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
@@ -147,7 +137,6 @@ export function InlineMedia({
   if (type === 'chart') {
     return (
       <div 
-        id={`inline-media-chart-${Math.random()}`}
         className={`my-8 transition-all duration-700 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}

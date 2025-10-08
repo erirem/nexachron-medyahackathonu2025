@@ -379,6 +379,9 @@
       },
       "visual": {
         "name": "Визуальные"
+      },
+      "arcade": {
+        "name": "Аркада"
       }
     },
     "gamesList": {
@@ -416,6 +419,16 @@
         "title": "Wordle",
         "description": "Угадайте слово из пяти букв за шесть попыток — каждый день новое.",
         "estimatedTime": "3-8 мин"
+      },
+      "newsGuessr": {
+        "title": "NewsGuessr",
+        "description": "Читайте заголовок и угадайте, в каком городе это произошло.",
+        "estimatedTime": "3-6 мин"
+      },
+      "flappyAABird": {
+        "title": "Flappy AA Bird",
+        "description": "Помогите AA Bird пролететь через препятствия и соберите очки!",
+        "estimatedTime": "2-5 мин"
       }
     },
     "card": {

@@ -86,7 +86,15 @@ describe('NewsController', () => {
       };
       newsService.findAll.mockResolvedValue(result);
 
-      const response = await controller.findNews(undefined, undefined, '5', undefined, undefined, undefined, 'tr');
+      const response = await controller.findNews(
+        undefined,
+        undefined,
+        '5',
+        undefined,
+        undefined,
+        undefined,
+        'tr',
+      );
 
       expect(response.success).toBe(true);
       expect(response.data.items).toHaveLength(1);
@@ -109,7 +117,12 @@ describe('NewsController', () => {
       };
       newsService.getCategories.mockResolvedValue(overview);
 
-      const response = await controller.getCategories(undefined, undefined, undefined, 'tr');
+      const response = await controller.getCategories(
+        undefined,
+        undefined,
+        undefined,
+        'tr',
+      );
 
       expect(response.success).toBe(true);
       expect(response.data).toEqual(overview);
@@ -137,9 +150,17 @@ describe('NewsController', () => {
         categories: detail.categories,
         total: detail.categories.length,
       });
-      newsService.getNewsByCategory.mockResolvedValue({ items: detail.items, total: 1 });
+      newsService.getNewsByCategory.mockResolvedValue({
+        items: detail.items,
+        total: 1,
+      });
 
-      const response = await controller.getCategories('gundem', undefined, undefined, 'tr');
+      const response = await controller.getCategories(
+        'gundem',
+        undefined,
+        undefined,
+        'tr',
+      );
 
       expect(response.success).toBe(true);
       expect(response.data.categoryId).toBe('gundem');
@@ -149,7 +170,10 @@ describe('NewsController', () => {
 
   describe('getTrending', () => {
     it('returns trending news', async () => {
-      newsService.getTrendingNews.mockResolvedValue({ items: [sampleNewsItem], total: 1 });
+      newsService.getTrendingNews.mockResolvedValue({
+        items: [sampleNewsItem],
+        total: 1,
+      });
 
       const response = await controller.getTrending('tr');
 
@@ -168,7 +192,10 @@ describe('NewsController', () => {
     });
 
     it('returns results for query', async () => {
-      newsService.searchNews.mockResolvedValue({ items: [sampleNewsItem], total: 1 });
+      newsService.searchNews.mockResolvedValue({
+        items: [sampleNewsItem],
+        total: 1,
+      });
 
       const response = await controller.search('Test', undefined, 'tr');
 

@@ -54,22 +54,26 @@ export type RawNewsItem = z.infer<typeof RawNewsItemSchema>;
 
 // Media gallery structure
 export const MediaGallerySchema = z.object({
-  images: z.array(z.object({
-    url: z.string().url(),
-    alt: z.string().optional(),
-    caption: z.string().optional(),
-    width: z.number().optional(),
-    height: z.number().optional(),
-    quality_score: z.number(),
-    source: z.string(),
-  })),
-  videos: z.array(z.object({
-    url: z.string().url(),
-    title: z.string().optional(),
-    duration: z.number().optional(),
-    quality_score: z.number(),
-    source: z.string(),
-  })),
+  images: z.array(
+    z.object({
+      url: z.string().url(),
+      alt: z.string().optional(),
+      caption: z.string().optional(),
+      width: z.number().optional(),
+      height: z.number().optional(),
+      quality_score: z.number(),
+      source: z.string(),
+    }),
+  ),
+  videos: z.array(
+    z.object({
+      url: z.string().url(),
+      title: z.string().optional(),
+      duration: z.number().optional(),
+      quality_score: z.number(),
+      source: z.string(),
+    }),
+  ),
   featured_image: z.string().url().optional(),
   featured_video: z.string().url().optional(),
 });

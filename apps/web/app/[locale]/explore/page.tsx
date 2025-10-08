@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, use } from 'react';
 import { useReelFeed } from '../../../components/reels/useReelFeed';
 import ExploreGrid from '../../../components/reels/ExploreGrid';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,12 +7,13 @@ import { Sidebar } from '../(dashboard)/dashboard/_components/dashboard';
 import type { DashboardTopic } from '../(dashboard)/dashboard/_components/types';
 import { usePathname, useRouter } from 'next/navigation';
 
-export default function ExplorePage({ params }: { params: { locale: string } }) {
-    const clientRef = useRef<QueryClient>();
+export default function ExplorePage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = use(params);
+    const clientRef = useRef<QueryClient | null>(null);
     if (!clientRef.current) clientRef.current = new QueryClient();
     return (
         <QueryClientProvider client={clientRef.current}>
-            <ExploreShell locale={params.locale} />
+            <ExploreShell locale={locale} />
         </QueryClientProvider>
     );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from './types';
 
 interface FeaturedNewsCarouselProps {
@@ -16,6 +17,7 @@ export function FeaturedNewsCarousel({
 }: FeaturedNewsCarouselProps): JSX.Element {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const locale = useLocale();
 
   const goToNext = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
@@ -141,7 +143,7 @@ export function FeaturedNewsCarousel({
             {/* Action Buttons */}
             <div className="flex items-center gap-3">
               <Link 
-                href={`/haber/${currentItem.id}`}
+                href={`/${locale}/haber/${currentItem.id}`}
                 className="group flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-sm px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20 border border-white/20"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

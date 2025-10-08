@@ -11,8 +11,14 @@ export class MediaStorageService {
   /**
    * Store all media for a news article
    */
-  async storeNewsMedia(newsId: string, mediaGallery: MediaGallery): Promise<boolean> {
-    if (!mediaGallery || (mediaGallery.images.length === 0 && mediaGallery.videos.length === 0)) {
+  async storeNewsMedia(
+    newsId: string,
+    mediaGallery: MediaGallery,
+  ): Promise<boolean> {
+    if (
+      !mediaGallery ||
+      (mediaGallery.images.length === 0 && mediaGallery.videos.length === 0)
+    ) {
       this.logger.debug(`No media to store for news: ${newsId}`);
       return true;
     }
@@ -35,7 +41,7 @@ export class MediaStorageService {
           is_primary: index === 0, // First image is primary
           display_order: index,
           extraction_method: image.source || 'unknown',
-          source_url: null // Will be set to the original article URL if different
+          source_url: null, // Will be set to the original article URL if different
         });
       });
 
@@ -55,7 +61,7 @@ export class MediaStorageService {
           is_primary: index === 0, // First video is primary
           display_order: index + mediaGallery.images.length, // Videos come after images in display order
           extraction_method: video.source || 'unknown',
-          source_url: null
+          source_url: null,
         });
       });
 
@@ -70,7 +76,9 @@ export class MediaStorageService {
           return false;
         }
 
-        this.logger.debug(`Stored ${mediaRecords.length} media items for news: ${newsId}`);
+        this.logger.debug(
+          `Stored ${mediaRecords.length} media items for news: ${newsId}`,
+        );
       }
 
       return true;
@@ -121,8 +129,8 @@ export class MediaStorageService {
       }
 
       const images = mediaItems
-        .filter(item => item.media_type === 'IMAGE')
-        .map(item => ({
+        .filter((item) => item.media_type === 'IMAGE')
+        .map((item) => ({
           id: item.id,
           url: item.url,
           alt_text: item.alt_text,
@@ -133,8 +141,8 @@ export class MediaStorageService {
         }));
 
       const videos = mediaItems
-        .filter(item => item.media_type === 'VIDEO')
-        .map(item => ({
+        .filter((item) => item.media_type === 'VIDEO')
+        .map((item) => ({
           id: item.id,
           url: item.url,
           title: item.alt_text, // We store video title in alt_text
@@ -196,20 +204,28 @@ export class MediaStorageService {
       }
 
       const totalMedia = mediaItems.length;
-      const totalImages = mediaItems.filter(item => item.media_type === 'IMAGE').length;
-      const totalVideos = mediaItems.filter(item => item.media_type === 'VIDEO').length;
-      const uniqueNewsIds = new Set(mediaItems.map(item => item.news_id)).size;
-      
+      const totalImages = mediaItems.filter(
+        (item) => item.media_type === 'IMAGE',
+      ).length;
+      const totalVideos = mediaItems.filter(
+        (item) => item.media_type === 'VIDEO',
+      ).length;
+      const uniqueNewsIds = new Set(mediaItems.map((item) => item.news_id))
+        .size;
+
       // Count articles with multiple images (galleries)
-      const mediaByNews = mediaItems.reduce((acc, item) => {
-        if (!acc[item.news_id]) acc[item.news_id] = { images: 0, videos: 0 };
-        if (item.media_type === 'IMAGE') acc[item.news_id].images++;
-        if (item.media_type === 'VIDEO') acc[item.news_id].videos++;
-        return acc;
-      }, {} as Record<string, { images: number; videos: number }>);
-      
+      const mediaByNews = mediaItems.reduce(
+        (acc, item) => {
+          if (!acc[item.news_id]) acc[item.news_id] = { images: 0, videos: 0 };
+          if (item.media_type === 'IMAGE') acc[item.news_id].images++;
+          if (item.media_type === 'VIDEO') acc[item.news_id].videos++;
+          return acc;
+        },
+        {} as Record<string, { images: number; videos: number }>,
+      );
+
       const galleriesCount = Object.values(mediaByNews).filter(
-        counts => counts.images > 1 || counts.videos > 1
+        (counts) => counts.images > 1 || counts.videos > 1,
       ).length;
 
       return {
@@ -252,11 +268,12 @@ export class MediaStorageService {
   }> {
     try {
       // Get recent news with their media counts
-      const { data: recentNews, error: newsError } = await this.supabaseService.supabase
-        .from('news')
-        .select('id, title, category, created_at')
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      const { data: recentNews, error: newsError } =
+        await this.supabaseService.supabase
+          .from('news')
+          .select('id, title, category, created_at')
+          .order('created_at', { ascending: false })
+          .limit(limit);
 
       if (newsError || !recentNews) {
         this.logger.error('Error getting recent news:', newsError);
@@ -286,18 +303,24 @@ export class MediaStorageService {
 
       // Get media counts for each recent article
       for (const article of recentNews) {
-        const { data: mediaItems, error: mediaError } = await this.supabaseService.supabase
-          .from('news_media')
-          .select('media_type')
-          .eq('news_id', article.id);
+        const { data: mediaItems, error: mediaError } =
+          await this.supabaseService.supabase
+            .from('news_media')
+            .select('media_type')
+            .eq('news_id', article.id);
 
         if (mediaError) {
-          this.logger.warn(`Error getting media for article ${article.id}:`, mediaError);
+          this.logger.warn(
+            `Error getting media for article ${article.id}:`,
+            mediaError,
+          );
           continue;
         }
 
-        const imageCount = mediaItems?.filter(item => item.media_type === 'IMAGE').length || 0;
-        const videoCount = mediaItems?.filter(item => item.media_type === 'VIDEO').length || 0;
+        const imageCount =
+          mediaItems?.filter((item) => item.media_type === 'IMAGE').length || 0;
+        const videoCount =
+          mediaItems?.filter((item) => item.media_type === 'VIDEO').length || 0;
         const totalMedia = imageCount + videoCount;
 
         totalImages += imageCount;
@@ -308,7 +331,9 @@ export class MediaStorageService {
         }
 
         articleDetails.push({
-          title: article.title.substring(0, 80) + (article.title.length > 80 ? '...' : ''),
+          title:
+            article.title.substring(0, 80) +
+            (article.title.length > 80 ? '...' : ''),
           category: article.category || 'unknown',
           created_at: article.created_at,
           image_count: imageCount,
@@ -318,8 +343,10 @@ export class MediaStorageService {
       }
 
       const articlesAnalyzed = recentNews.length;
-      const avgImages = articlesAnalyzed > 0 ? totalImages / articlesAnalyzed : 0;
-      const avgVideos = articlesAnalyzed > 0 ? totalVideos / articlesAnalyzed : 0;
+      const avgImages =
+        articlesAnalyzed > 0 ? totalImages / articlesAnalyzed : 0;
+      const avgVideos =
+        articlesAnalyzed > 0 ? totalVideos / articlesAnalyzed : 0;
 
       return {
         limit,

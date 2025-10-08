@@ -40,7 +40,7 @@ export class RssParserService {
               timeout: 8000, // Reduced from 10s to 8s
               headers: {
                 'User-Agent': 'Nexachron News Bot 1.0',
-                'Accept': 'application/rss+xml,application/xml,text/xml',
+                Accept: 'application/rss+xml,application/xml,text/xml',
               },
             }),
           );
@@ -58,8 +58,10 @@ export class RssParserService {
 
           // Wait before retrying (exponential backoff)
           const delay = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
-          this.logger.debug(`Retrying RSS fetch for ${category}, attempt ${attempt}/${maxRetries}, waiting ${delay}ms`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          this.logger.debug(
+            `Retrying RSS fetch for ${category}, attempt ${attempt}/${maxRetries}, waiting ${delay}ms`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
 

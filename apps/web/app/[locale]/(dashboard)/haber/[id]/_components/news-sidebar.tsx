@@ -3,6 +3,7 @@
 import { type JSX } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from '../../../dashboard/_components/types';
 
 interface NewsSidebarProps {
@@ -16,6 +17,7 @@ export function NewsSidebar({
   recentNews, 
   currentArticleId 
 }: NewsSidebarProps): JSX.Element {
+  const locale = useLocale();
   const filteredPopular = popularNews.filter(item => item.id !== currentArticleId).slice(0, 5);
   const filteredRecent = recentNews.filter(item => item.id !== currentArticleId).slice(0, 4);
 
@@ -35,21 +37,30 @@ export function NewsSidebar({
           </div>
           
           <div className="space-y-4">
-            {filteredPopular.map((item, index) => (
+            {filteredPopular.map((item) => (
               <Link 
                 key={item.id} 
-                href={`/haber/${item.id}`}
+                href={`/${locale}/haber/${item.id}`}
                 className="group block"
               >
                 <article className="flex gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-transparent hover:border-white/20">
                   <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                      sizes="64px"
-                    />
+                    {item.imageUrl ? (
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center text-slate-300">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <path d="M21 15l-5-5-11 11" />
+                        </svg>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   </div>
                   
@@ -69,7 +80,7 @@ export function NewsSidebar({
           </div>
           
           <Link 
-            href="/dashboard" 
+            href={`/${locale}/dashboard`} 
             className="block mt-4 text-center py-2 px-4 rounded-lg bg-white/10 text-white/70 text-sm font-medium hover:bg-white/20 hover:text-white transition-colors"
           >
             Tüm Popüler Haberleri Gör
@@ -92,7 +103,7 @@ export function NewsSidebar({
             {filteredRecent.map((item) => (
               <Link 
                 key={item.id} 
-                href={`/haber/${item.id}`}
+                href={`/${locale}/haber/${item.id}`}
                 className="group block"
               >
                 <article className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-300 border border-transparent hover:border-white/20">

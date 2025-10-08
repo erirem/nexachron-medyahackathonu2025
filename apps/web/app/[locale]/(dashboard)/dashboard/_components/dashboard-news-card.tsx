@@ -1,9 +1,12 @@
 'use client';
 
-import { type JSX } from 'react';
+import { type JSX, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { addBookmark, removeBookmark } from '@/services/api';
+import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from './types';
+import { SafeImage } from './safe-image';
 
 interface DashboardNewsCardProps {
   readonly item: DashboardNewsItem;
@@ -370,8 +373,11 @@ const sentimentColors = {
 } as const;
 
 export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element {
+  const locale = useLocale();
   const normalized = normalizeCategory(item.category);
   const theme = categoryThemes[normalized] ?? categoryThemes.default;
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const overlayCopy = getOverlayCopy(Number(item.id.replace(/\D/g, '') || 0));
   const briefLabel = getBriefLabel(item);
@@ -379,7 +385,7 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
   const insightItems = buildInsightItems(item, tagline);
 
   return (
-    <Link href={`/haber/${item.id}`} className="block h-full">
+    <Link href={`/${locale}/haber/${item.id}`} className="block h-full">
       <article className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border ${theme.border} ${theme.surface} text-white shadow-[0_24px_56px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-opacity-50 hover:shadow-[0_36px_80px_rgba(0,0,0,0.65)] cursor-pointer`}>
       <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent mix-blend-overlay" aria-hidden />
       <div className="absolute inset-0 opacity-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
@@ -413,12 +419,11 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         </header>
 
         <div className={`relative overflow-hidden rounded-[20px] border border-white/10 ${theme.imageTint} aspect-[16/10] group`}>
-          <Image
+          <SafeImage
             src={item.imageUrl}
             alt={item.title}
-            fill
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
           
@@ -537,11 +542,30 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
         <div className="mt-auto pt-4 border-t border-white/10">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <button onClick={(e) => e.stopPropagation()} className={`group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${theme.accent}/20 border ${theme.border} px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:scale-105`}>
+              <button
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (saving) return;
+                  try {
+                    setSaving(true);
+                    if (!saved) {
+                      await addBookmark(item.id);
+                      setSaved(true);
+                    } else {
+                      await removeBookmark(item.id);
+                      setSaved(false);
+                    }
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                className={`group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${theme.accent}/20 border ${theme.border} px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:scale-105`}
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
                 </svg>
-                Kaydet
+                {saved ? 'Kaydedildi' : 'Kaydet'}
               </button>
               <button onClick={(e) => e.stopPropagation()} className="group/btn flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-400/20 px-3 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all hover:from-green-600/30 hover:to-green-500/30 hover:scale-105">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -2,12 +2,14 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo, type JSX } from "react";
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
 import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
 import type { DashboardNewsItem, DashboardTopic } from "./types";
 import { useCategories } from "@/hooks/use-categories";
 import { usePopularNews } from "@/hooks/use-popular-news";
+import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useInfiniteNews } from "@/hooks/use-infinite-news";
 import type {
   CategoriesOverviewResponse,
@@ -124,16 +126,16 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           isNextPageLoadingRef.current = true;
           setIsLoadingMore(true);
 
-          const promise = loadMore();
-          if (promise && typeof (promise as Promise<unknown>).finally === 'function') {
-            (promise as Promise<unknown>).finally(() => {
-              setIsLoadingMore(false);
-              isNextPageLoadingRef.current = false;
-            });
-          } else {
+          if (typeof loadMore !== 'function') {
             setIsLoadingMore(false);
             isNextPageLoadingRef.current = false;
+            return;
           }
+
+          Promise.resolve(loadMore()).finally(() => {
+            setIsLoadingMore(false);
+            isNextPageLoadingRef.current = false;
+          });
         }
       },
       { threshold: 0.1, rootMargin: '100px' } // Trigger when 100px before the element
@@ -175,16 +177,22 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     [apiNewsItems],
   );
 
+  // Bookmarks
+  const { bookmarkedIds, isLoading: isBookmarksLoading } = useBookmarks();
+
   // Filter news by selected categories
   const filteredNews = useMemo(() => {
     if (selectedCategoryIds.length === 0) {
+      if (activeCategory === 'saved') {
+        return mappedNews.filter((n) => bookmarkedIds.has(n.id));
+      }
       return mappedNews;
     }
 
     return mappedNews.filter((newsItem) => {
       return newsItem.categoryId && selectedCategoryIds.includes(newsItem.categoryId);
     });
-  }, [mappedNews, selectedCategoryIds]);
+  }, [mappedNews, selectedCategoryIds, activeCategory, bookmarkedIds]);
 
   const categoryInfo = useMemo(() => {
     if (selectedCategoryIds.length > 0) {
@@ -237,10 +245,24 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     }
   }, [activeCategory, selectedCategoryIds, categories]);
 
+  const locale = useLocale();
+
   const handleCategoryChange = useCallback(
     (categoryId: string) => {
-      if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'quizzes') {
-        router.push(`/${categoryId}`);
+      if (
+        categoryId === 'profile' ||
+        categoryId === 'leaderboard' ||
+        categoryId === 'quizzes' ||
+        categoryId === 'games'
+      ) {
+        const destination = categoryId === 'quizzes' ? 'quizzes' : categoryId;
+        router.push(`/${locale}/${destination}`);
+        return;
+      }
+
+      // Explore (reels) ayrı bir sayfaya gider
+      if (categoryId === 'reels') {
+        router.push(`/${locale}/explore`);
         return;
       }
 
@@ -249,7 +271,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         setSelectedCategoryIds([]);
       }
     },
-    [router],
+    [router, locale],
   );
 
   const handleCategoryChipSelect = useCallback((categoryId: string) => {
@@ -364,13 +386,77 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                   )}
                 </div>
 
-                <div className="mb-8">
-                  <DashboardNewsGrid
-                    items={getFilteredNews()}
-                    title={getCategoryInfo().title}
-                    subtitle={getCategoryInfo().subtitle}
-                    showAll={true}
-                  />
+
+
+                <div className="mb-8 space-y-4">
+                  {selectedCategoryIds.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {selectedCategoryIds.map((categoryId) => {
+                        const category = categories?.find(c => c.id === categoryId);
+                        const label = category?.label ?? deriveCategoryLabel(categoryId);
+                        return (
+                          <ActiveCategoryBadge
+                            key={categoryId}
+                            label={label}
+                            onClear={() => setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId))}
+                          />
+                        );
+                      })}
+                      {selectedCategoryIds.length > 1 && (
+                        <button
+                          onClick={() => setSelectedCategoryIds([])}
+                          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/80 transition hover:bg-white/20"
+                        >
+                          Tümünü Temizle
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {isNewsError ? (
+                    <ErrorState
+                      message="Haber akışı yüklenirken bir sorun oluştu."
+                      onRetry={() => {
+                        // Reload the page to reset the infinite query
+                        window.location.reload();
+                      }}
+                    />
+                  ) : isNewsLoading && apiNewsItems.length === 0 ? (
+                    <NewsGridSkeleton />
+                  ) : activeCategory === 'saved' && !isBookmarksLoading && filteredNews.length === 0 ? (
+                    <EmptyState
+                      message="Henüz kaydedilmiş haberin yok. Kartlardaki Kaydet butonuna tıklayarak ekleyebilirsin."
+                    />
+                  ) : apiNewsItems.length > 0 ? (
+                    <>
+                      <DashboardNewsGrid
+                        key={apiNewsItems.length} // Key prop to force re-render when new items are added
+                        items={filteredNews}
+                        title={categoryInfo.title}
+                        subtitle={categoryInfo.subtitle}
+                        showAll={true}
+                      />
+                      {(isFetchingNextPage || isLoadingMore) && (
+                        <NewsLoadingPlaceholders />
+                      )}
+                      {/* Load more trigger */}
+                      {hasNextPage && (
+                        <div 
+                          ref={loadMoreTriggerRef} 
+                          className="h-20 flex items-center justify-center"
+                        >
+                          {!(isFetchingNextPage || isLoadingMore) && (
+                            <div className="text-white/40 text-sm">Daha fazla haber için kaydırın</div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <EmptyState
+                      message="Bu kriterlere uygun haber bulunamadı."
+                      onReset={() => setSelectedCategoryIds([])}
+                    />
+                  )}
                 </div>
               </section>
             </div>

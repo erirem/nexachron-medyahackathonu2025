@@ -21,6 +21,11 @@ import { SupabaseModule } from '../supabase/supabase.module';
     AiSummaryService,
     MediaStorageService,
   ],
-  exports: [NewsIngestService, MoodCalculatorService, AiSummaryService, MediaStorageService],
+  exports: [
+    NewsIngestService,
+    MoodCalculatorService,
+    AiSummaryService,
+    MediaStorageService,
+  ],
 })
 export class NewsIngestModule {}

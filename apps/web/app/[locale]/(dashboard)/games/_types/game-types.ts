@@ -3,8 +3,8 @@ export interface Game {
   title: string;
   description: string;
   icon: string;
-  color: 'blue' | 'purple' | 'green' | 'cyan' | 'yellow' | 'red';
-  category: 'educational' | 'memory' | 'word' | 'trivia' | 'timeline' | 'visual';
+  color: 'blue' | 'purple' | 'green' | 'cyan' | 'yellow' | 'red' | 'orange';
+  category: 'educational' | 'memory' | 'word' | 'trivia' | 'timeline' | 'visual' | 'arcade';
   difficulty: 'easy' | 'medium' | 'hard';
   xpReward: number;
   isAvailable: boolean;

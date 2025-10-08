@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, use } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Reel } from '../../../../lib/types/reels';
 import ReactionBar from '../../../../components/reels/ReactionBar';
@@ -7,12 +7,13 @@ import ReelPlayer from '../../../../components/reels/ReelPlayer';
 import { useReelPlayer } from '../../../../components/reels/useReelPlayer';
 import { useRouter } from 'next/navigation';
 
-export default function ReelPage({ params }: { params: { locale: string; id: string } }) {
+export default function ReelPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
+    const { id } = use(params);
     const clientRef = useRef<QueryClient | null>(null);
     if (!clientRef.current) clientRef.current = new QueryClient();
     return (
         <QueryClientProvider client={clientRef.current}>
-            <ReelInner id={params.id} />
+            <ReelInner id={id} />
         </QueryClientProvider>
     );
 }

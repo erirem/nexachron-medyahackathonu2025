@@ -21,7 +21,9 @@ export class SupabaseService implements OnModuleInit {
     );
 
     if (!supabaseUrl) {
-      throw new Error('Missing Supabase configuration: SUPABASE_URL is required.');
+      throw new Error(
+        'Missing Supabase configuration: SUPABASE_URL is required.',
+      );
     }
     if (!anonKey && !serviceKey) {
       throw new Error(
@@ -71,6 +73,24 @@ export class SupabaseService implements OnModuleInit {
       );
     }
     return this.serviceClient;
+  }
+
+  // Kullanıcı JWT'siyle yetkilendirilmiş (RLS'e tabi) client oluştur
+  getUserClient(accessToken: string): SupabaseClient<Database, 'public', any> {
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const anonKey =
+      this.configService.get<string>('SUPABASE_ANON_KEY') ??
+      this.configService.get<string>('SUPABASE_KEY');
+
+    if (!supabaseUrl || !anonKey) {
+      throw new Error('Supabase URL/ANON key eksik.');
+    }
+
+    return createClient<Database>(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      db: { schema: 'public' },
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    });
   }
 
   // Test connection method

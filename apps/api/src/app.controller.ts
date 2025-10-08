@@ -72,7 +72,11 @@ export class AppController {
       // ---- main: admin client ile news tablosu testi ----
       let newsSummary: {
         totalCount: number;
-        sampleItems: Array<{ title: string; mode: string | null; created: string | null }>;
+        sampleItems: Array<{
+          title: string;
+          mode: string | null;
+          created: string | null;
+        }>;
         error: string | null;
       } = { totalCount: 0, sampleItems: [], error: null };
 
@@ -90,7 +94,9 @@ export class AppController {
           totalCount: totalNews || 0,
           sampleItems:
             newsTest?.map((item: any) => ({
-              title: (item.title ?? '').slice(0, 50) + (item.title?.length > 50 ? '...' : ''),
+              title:
+                (item.title ?? '').slice(0, 50) +
+                (item.title?.length > 50 ? '...' : ''),
               mode: item.mode ?? null,
               created: item.created_at ?? null,
             })) || [],
@@ -105,7 +111,12 @@ export class AppController {
       }
 
       const hasNewsError = !!newsSummary.error;
-      const status = allTablesOK && !hasNewsError ? 'success' : (allTablesOK || !hasNewsError ? 'partial' : 'error');
+      const status =
+        allTablesOK && !hasNewsError
+          ? 'success'
+          : allTablesOK || !hasNewsError
+            ? 'partial'
+            : 'error';
 
       return {
         status,
@@ -113,8 +124,8 @@ export class AppController {
           status === 'success'
             ? 'All checks passed!'
             : status === 'partial'
-            ? 'Some checks failed or are missing configuration'
-            : 'Checks failed',
+              ? 'Some checks failed or are missing configuration'
+              : 'Checks failed',
         supabaseUrl: process.env.SUPABASE_URL,
         hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
         tableTests: tableResults,

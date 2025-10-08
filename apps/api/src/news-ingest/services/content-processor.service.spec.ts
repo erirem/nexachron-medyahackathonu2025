@@ -48,9 +48,11 @@ describe('ContentProcessorService', () => {
 
       // Access the private method for testing
       const result = (service as any).filterAAUnwantedContent(mockContent);
-      
+
       expect(result).not.toContain('Spor, Futbol, Dünyadan Spor');
-      expect(result).not.toContain('Şampiyonlar Ligi\'nde ikinci hafta tamamlandı');
+      expect(result).not.toContain(
+        "Şampiyonlar Ligi'nde ikinci hafta tamamlandı",
+      );
       expect(result).not.toContain('Emre Aşıkçı');
       expect(result).not.toContain('📲');
       expect(result).not.toContain('🔹');
@@ -70,7 +72,7 @@ describe('ContentProcessorService', () => {
 
       // Access the private method for testing
       const result = (service as any).cleanContent(mockContent);
-      
+
       expect(result).not.toContain('📲');
       expect(result).not.toContain('WhatsApp');
       expect(result).toContain('Bu gerçek haber içeriği burada olacak');

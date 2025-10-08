@@ -94,7 +94,9 @@ export class AiSummaryService {
   /**
    * Generates an AI summary for a news article (budget-conscious)
    */
-  async generateSummary(request: SummaryRequest): Promise<SummaryResponse | null> {
+  async generateSummary(
+    request: SummaryRequest,
+  ): Promise<SummaryResponse | null> {
     if (!this.canMakeRequest()) {
       this.logger.debug(
         'Skipping AI summary due to budget limits or availability',
@@ -222,11 +224,13 @@ Sadece özet yaz, başka açıklama ekleme.`;
       }
 
       const response = await this.generateSummary(request);
-      results.push(response || {
-        summary: request.description,
-        summary_type: SummaryType.ORIGINAL,
-        confidence: 1.0,
-      });
+      results.push(
+        response || {
+          summary: request.description,
+          summary_type: SummaryType.ORIGINAL,
+          confidence: 1.0,
+        },
+      );
       processedCount++;
 
       // Small delay to be nice to the API
@@ -284,4 +288,3 @@ Sadece özet yaz, başka açıklama ekleme.`;
     this.logger.log(`AI daily request limit updated to: ${limit}`);
   }
 }
-
