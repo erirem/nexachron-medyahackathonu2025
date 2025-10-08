@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, type JSX } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
 import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
@@ -34,6 +34,7 @@ const sideRailItems: readonly SideRailItem[] = [
   { id: "quizzes", label: "Quizler", icon: <BrainIcon /> },
   { id: "profile", label: "Profilim", icon: <UserIcon /> },
   { id: "leaderboard", label: "Liderlik", icon: <TrophyIcon /> },
+  { id: "reels", label: "Explore", icon: <PlayIcon /> },
   { id: "audio", label: "Sesler", icon: <HeadphoneIcon /> },
   { id: "reports", label: "Raporlar", icon: <DocumentIcon /> },
   { id: "briefs", label: "Günlük", icon: <LightningIcon /> },
@@ -59,6 +60,8 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
 
 export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
   const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = pathname.split('/')[1] || 'tr';
   const [sidebarWidth, setSidebarWidth] = useState(320); // Başlangıç genişliği
   const [activeCategory, setActiveCategory] = useState('overview'); // Aktif kategori
   const MIN_WIDTH = 80; // Minimum genişlik (sadece iconlar)
@@ -125,7 +128,9 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
   const handleCategoryChange = (categoryId: string) => {
     if (categoryId === 'profile' || categoryId === 'leaderboard' || categoryId === 'quizzes') {
       // Bu kategoriler için yeni sayfaya yönlendir
-      router.push(`/${categoryId}`);
+      router.push(`/${currentLocale}/${categoryId}`);
+    } else if (categoryId === 'reels') {
+      router.push(`/${currentLocale}/explore`);
     } else {
       // Diğer kategoriler için mevcut sayfada kategori değiştir
       setActiveCategory(categoryId);
@@ -135,7 +140,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
   return (
     <div className="relative flex min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
       <BackdropDecor />
-      
+
       <Sidebar
         width={sidebarWidth}
         onWidthChange={setSidebarWidth}
@@ -147,7 +152,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
         topics={topics}
       />
 
-      <main 
+      <main
         className="relative z-10 flex-1 overflow-hidden transition-all duration-200"
         style={{ marginLeft: `${sidebarWidth}px` }}
       >
@@ -171,7 +176,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
                 </div>
 
                 <div className="mb-8">
-                  <DashboardNewsGrid 
+                  <DashboardNewsGrid
                     items={getFilteredNews()}
                     title={getCategoryInfo().title}
                     subtitle={getCategoryInfo().subtitle}
@@ -187,7 +192,7 @@ export function Dashboard({ news, topics }: DashboardProps): JSX.Element {
   );
 }
 
-type SidebarProps = {
+export type SidebarProps = {
   readonly width: number;
   readonly onWidthChange: (width: number) => void;
   readonly minWidth: number;
@@ -198,7 +203,7 @@ type SidebarProps = {
   readonly topics: readonly DashboardTopic[];
 };
 
-function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, activeCategory, onCategoryChange, topics }: SidebarProps): JSX.Element {
+export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, activeCategory, onCategoryChange, topics }: SidebarProps): JSX.Element {
   const sidebarRef = useRef<HTMLElement>(null);
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
@@ -215,7 +220,7 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDraggingRef.current) return;
-    
+
     const deltaX = e.clientX - startXRef.current;
     const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + deltaX));
     onWidthChange(newWidth);
@@ -230,7 +235,7 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -289,13 +294,11 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
                   key={item.id}
                   type="button"
                   onClick={() => onCategoryChange(item.id)}
-                  className={`group flex h-12 items-center rounded-2xl px-3 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 ${
-                    isCollapsed ? 'justify-center gap-0' : 'justify-start gap-3'
-                  } ${
-                    isActive
+                  className={`group flex h-12 items-center rounded-2xl px-3 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 ${isCollapsed ? 'justify-center gap-0' : 'justify-start gap-3'
+                    } ${isActive
                       ? 'bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-[0_12px_32px_rgba(15,106,205,0.35)]'
                       : 'bg-white/5 text-white/70 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
-                  }`}
+                    }`}
                   aria-label={item.label}
                   title={isCollapsed ? item.label : undefined}
                   style={{ width: isCollapsed ? '60px' : '100%' }}
@@ -304,9 +307,8 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
                     {item.icon}
                   </span>
                   <span
-                    className={`overflow-hidden text-sm font-medium transition-all duration-200 ${
-                      isCollapsed ? 'max-w-0 opacity-0 -translate-x-2' : 'max-w-[160px] opacity-100 translate-x-0'
-                    }`}
+                    className={`overflow-hidden text-sm font-medium transition-all duration-200 ${isCollapsed ? 'max-w-0 opacity-0 -translate-x-2' : 'max-w-[160px] opacity-100 translate-x-0'
+                      }`}
                     aria-hidden={isCollapsed}
                   >
                     {item.label}
@@ -362,22 +364,19 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
               <button
                 type="button"
                 onClick={toggleSidebar}
-                className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${
-                  isCollapsed ? 'shadow-[0_12px_28px_rgba(11,34,63,0.4)]' : 'shadow-[0_12px_28px_rgba(11,34,63,0.3)]'
-                }`}
+                className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${isCollapsed ? 'shadow-[0_12px_28px_rgba(11,34,63,0.4)]' : 'shadow-[0_12px_28px_rgba(11,34,63,0.3)]'
+                  }`}
                 aria-label={isCollapsed ? 'Kütüphaneyi genişlet' : 'Kütüphaneyi daralt'}
               >
                 <span
-                  className={`absolute transition-all duration-200 ${
-                    isCollapsed ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-y-2'
-                  }`}
+                  className={`absolute transition-all duration-200 ${isCollapsed ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-y-2'
+                    }`}
                 >
                   <ExpandIcon />
                 </span>
                 <span
-                  className={`absolute transition-all duration-200 ${
-                    isCollapsed ? 'opacity-0 translate-y-2' : 'opacity-100 translate-x-0'
-                  }`}
+                  className={`absolute transition-all duration-200 ${isCollapsed ? 'opacity-0 translate-y-2' : 'opacity-100 translate-x-0'
+                    }`}
                 >
                   <CloseIcon />
                 </span>
@@ -387,7 +386,7 @@ function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed, active
         </div>
 
         {/* Resize Handle */}
-        <div 
+        <div
           className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-blue-600 hover:bg-opacity-20 transition-colors duration-150 group"
           onMouseDown={handleMouseDown}
         >
@@ -670,11 +669,19 @@ function LightningIcon(): JSX.Element {
   );
 }
 
+function PlayIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path d="M6 4l10 6-10 6V4z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function CloseIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <line x1="18" y1="6" x2="6" y2="18"/>
-      <line x1="6" y1="6" x2="18" y2="18"/>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
 }
