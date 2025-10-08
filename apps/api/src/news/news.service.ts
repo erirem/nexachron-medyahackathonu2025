@@ -264,6 +264,7 @@ export class NewsService {
       content,
       summary,
       category,
+      mode,
       city,
       is_popular,
       created_at,
@@ -363,7 +364,7 @@ export class NewsService {
       isPopular: !!row.is_popular,
       createdAt: row.created_at || new Date().toISOString(),
       updatedAt: row.updated_at ?? null,
-      publishedAt: null, // published_at kolonu veritabanında yok
+      publishedAt: null, // published_at kolonu veritabanında mevcut değil
       media,
       primaryMedia,
       media_summary: row.media_summary || null,

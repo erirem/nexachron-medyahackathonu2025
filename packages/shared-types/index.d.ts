@@ -20,7 +20,6 @@ export interface Database {
           is_popular: boolean;
           created_at: string;
           updated_at: string | null;
-          published_at: string | null;
           summary: string | null;
           media_summary: string | null;
         };
@@ -34,7 +33,6 @@ export interface Database {
           is_popular?: boolean;
           created_at?: string;
           updated_at?: string | null;
-          published_at?: string | null;
           summary?: string | null;
           media_summary?: string | null;
         };
@@ -47,7 +45,6 @@ export interface Database {
           is_popular?: boolean;
           created_at?: string;
           updated_at?: string | null;
-          published_at?: string | null;
           summary?: string | null;
           media_summary?: string | null;
         };
