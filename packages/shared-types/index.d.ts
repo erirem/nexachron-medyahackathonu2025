@@ -178,6 +178,7 @@ export interface NewsWithMediaDto {
   content: string;
   summary: string;
   category: string | null; // DB'deki category kolonu
+  mode: string; // AI-analyzed emotion or legacy mode
   city: string | null;
   isPopular: boolean;
   createdAt: string;

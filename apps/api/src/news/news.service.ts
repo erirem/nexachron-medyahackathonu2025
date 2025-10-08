@@ -359,6 +359,7 @@ export class NewsService {
       content: row.content || '',
       summary: this.resolveSummary(row),
       category: category, // DB'deki category kolonu
+      mode: row.mode || 'WORLD', // AI-analyzed emotion or default
       city: row.city || null,
       isPopular: !!row.is_popular,
       createdAt: row.created_at || new Date().toISOString(),
