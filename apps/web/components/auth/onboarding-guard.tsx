@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthState } from '@/contexts/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -79,31 +79,51 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
     isAuthRoute,
   ]);
 
-  const shouldBlock =
+  const shouldShowLoadingOverlay =
     !pathname ||
-    // Sadece auth yüklenirken bekle
+    // Auth yüklenirken overlay göster
     !authReady ||
-    // Korumalı route ve kullanıcı yoksa beklet (redirect hemen yapılacak)
-    (user === null && needsAuth) ||
-    // Onboarding'i tamamlayan kullanıcı onboarding sayfasına düşerse engelle
-    (user !== null && hasCompletedOnboarding === true && isOnboardingPage) ||
-    // Onboarding gerekli ise engelle
-    (user !== null && (hasCompletedOnboarding === false || isFirstTimeUser === true) && !isOnboardingPage && !isAuthRoute);
+    // Onboarding durumu yüklenirken overlay göster
+    onboardingStatusLoading;
 
-  if (shouldBlock) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-6"></div>
-            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto animate-spin-slow"></div>
+  return (
+    <>
+      {shouldShowLoadingOverlay && <LoadingOverlay />}
+      {children}
+    </>
+  );
+}
+
+function LoadingOverlay(): JSX.Element {
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length >= 3 ? '' : prev + '.'));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden />
+      <div className="relative pointer-events-auto mx-4 max-w-md rounded-2xl border border-white/20 bg-gradient-to-br from-[#0f2847]/95 via-[#1a3a5c]/95 to-[#0c1e3a]/95 px-8 py-6 text-white shadow-[0_24px_80px_rgba(0,0,0,0.5)]">
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative h-16 w-16">
+            <div className="absolute inset-0 animate-ping rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] opacity-60" aria-hidden />
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] shadow-[0_12px_40px_rgba(15,106,205,0.45)]">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="animate-spin">
+                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeLinecap="round" strokeDasharray="60" strokeDashoffset="15" opacity="0.25" />
+                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeLinecap="round" strokeDasharray="60" strokeDashoffset="45" />
+              </svg>
+            </div>
           </div>
-          <p className="text-lg font-medium text-gray-700 mb-2">Hoş geldiniz</p>
-          <p className="text-sm text-gray-500">Tercihleriniz hazırlanıyor...</p>
+          <div className="text-center">
+            <div className="text-lg font-semibold">Yükleniyor{dots}</div>
+            <p className="mt-1 text-sm text-white/70">Kişiselleştirilmiş deneyiminiz hazırlanıyor</p>
+          </div>
         </div>
       </div>
-    );
-  }
-
-  return <>{children}</>;
+    </div>
+  );
 }

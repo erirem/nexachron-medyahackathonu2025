@@ -106,6 +106,7 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
   @override
   Widget build(BuildContext context) {
     final categoryColor = _getCategoryColor();
+    final bool listMode = widget.isListItem;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -131,12 +132,8 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(
-                      0xFF232a3b,
-                    ).withOpacity(widget.isListItem ? 0.7 : 0.8),
-                    const Color(
-                      0xFF1b2130,
-                    ).withOpacity(widget.isListItem ? 0.85 : 0.9),
+                    const Color(0xFF232a3b).withOpacity(listMode ? 0.7 : 0.8),
+                    const Color(0xFF1b2130).withOpacity(listMode ? 0.85 : 0.9),
                     const Color(0xFF111826),
                   ],
                 ),
@@ -147,12 +144,10 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.5),
-                    blurRadius: widget.isListItem
-                        ? 8
-                        : _elevationAnimation.value,
+                    blurRadius: listMode ? 8 : _elevationAnimation.value,
                     offset: Offset(
                       0,
-                      (widget.isListItem ? 4 : _elevationAnimation.value / 2),
+                      (listMode ? 4 : _elevationAnimation.value / 2),
                     ),
                   ),
                   if (_isHovered)
@@ -232,8 +227,8 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.black.withOpacity(0.5),
-                            Colors.black.withOpacity(0.15),
+                            Colors.black.withOpacity(listMode ? 0.65 : 0.5),
+                            Colors.black.withOpacity(listMode ? 0.25 : 0.15),
                           ],
                         ),
                       ),
@@ -263,7 +258,7 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
 
                   // Content
                   Padding(
-                    padding: EdgeInsets.all(widget.isListItem ? 14 : 16),
+                    padding: EdgeInsets.all(listMode ? 14 : 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -327,19 +322,21 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.45),
+                            color: Colors.black.withOpacity(
+                              listMode ? 0.55 : 0.45,
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             widget.news.title,
-                            maxLines: widget.isListItem ? 2 : 3,
+                            maxLines: listMode ? 2 : 3,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: listMode ? 20 : 18,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
-                              height: 1.2,
-                              shadows: [
+                              height: 1.25,
+                              shadows: const [
                                 Shadow(
                                   color: Colors.black87,
                                   blurRadius: 10,
@@ -350,7 +347,7 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
                           ),
                         ),
 
-                        const SizedBox(height: 12),
+                        SizedBox(height: listMode ? 10 : 12),
 
                         // Context line under title: category • city (compact)
                         if ((widget.news.category != null &&
@@ -436,20 +433,100 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.32),
+                              color: Colors.black.withOpacity(
+                                listMode ? 0.4 : 0.32,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               widget.news.summary,
-                              maxLines: widget.isListItem ? 2 : 1,
+                              maxLines: listMode ? 2 : 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: widget.isListItem ? 14 : 13,
+                                fontSize: listMode ? 14 : 13,
                                 color: Colors.white.withOpacity(0.95),
-                                height: 1.35,
+                                height: 1.45,
                               ),
                             ),
                           ),
+
+                        if (listMode) ...[
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              if (widget.news.category != null &&
+                                  widget.news.category!.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: categoryColor.withOpacity(0.22),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: categoryColor.withOpacity(0.28),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _getCategoryIcon(),
+                                        size: 12,
+                                        color: categoryColor.withOpacity(0.95),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        widget.news.category!,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              if (widget.news.city != null &&
+                                  widget.news.city!.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.14),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.18),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.location_on_outlined,
+                                        size: 12,
+                                        color: Colors.white70,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        widget.news.city!,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.white70,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
 
                         // Hover content - AI summary style
                         if (_isHovered)
