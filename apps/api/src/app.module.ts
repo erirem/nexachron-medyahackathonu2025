@@ -9,6 +9,7 @@ import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { GamesModule } from './games/games.module';
 import { TTSModule } from './tts/tts.module';
+import { ReelsModule } from './reels/reels.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TTSModule } from './tts/tts.module';
     BookmarksModule,
     GamesModule,
     TTSModule,
+    ReelsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

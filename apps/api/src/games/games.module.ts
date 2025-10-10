@@ -10,6 +10,7 @@ import { GamificationService } from './services/gamification.service';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersModule } from '../users/users.module';
 import { NewsIngestModule } from '../news-ingest/news-ingest.module';
+import { NewsModule } from '../news/news.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { NewsIngestModule } from '../news-ingest/news-ingest.module';
     SupabaseModule,
     UsersModule, // Kullanıcı yönetimi için
     NewsIngestModule, // AA haberleri için
+    NewsModule, // AI kategori sınıflandırması için
   ],
   controllers: [GamesController],
   providers: [
