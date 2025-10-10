@@ -4,6 +4,7 @@
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback, type JSX } from 'react';
 import { useGamification } from '@/contexts/gamification-context';
+import { SocialShareModal } from '@/components/social-share-modal';
 import type { Quiz, QuizProgress } from '../_types/quiz-types';
 
 interface QuizModalProps {
@@ -29,6 +30,7 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Define before any render-time references (e.g., effect deps) to avoid TDZ
   const handleSubmit = useCallback(() => {
@@ -141,6 +143,10 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
     return progress.answers.reduce((count, answer, index) => {
       return count + (answer === quiz.questions[index]?.correctAnswer ? 1 : 0);
     }, 0);
+  };
+
+  const isPerfectScore = () => {
+    return getCorrectAnswerCount() === quiz.questionCount;
   };
 
   const currentQuestion = quiz.questions[progress.currentQuestion];
@@ -340,6 +346,16 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
                 {t('actions.close')}
               </button>
               
+              {/* Share Button - only show for perfect scores */}
+              {isPerfectScore() && (
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg text-white font-medium transition-all duration-200"
+                >
+                  🎉 Paylaş
+                </button>
+              )}
+              
               <button
                 onClick={() => {
                   setShowResults(false);
@@ -363,6 +379,16 @@ export function QuizModal({ quiz, isOpen, onClose, onComplete }: QuizModalProps)
           </div>
         )}
       </div>
+
+      {/* Social Share Modal */}
+      <SocialShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        gameType="quiz"
+        score={getCorrectAnswerCount()}
+        totalQuestions={quiz.questionCount}
+        isPerfectScore={isPerfectScore()}
+      />
     </div>
   );
 }

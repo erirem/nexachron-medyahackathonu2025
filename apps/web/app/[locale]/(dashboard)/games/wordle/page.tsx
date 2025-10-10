@@ -3,14 +3,20 @@
 import { useState, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGamification } from '@/contexts/gamification-context';
+import { SocialShareModal } from '@/components/social-share-modal';
 import { WordleGame } from '../_components/wordle-game';
 
 export default function WordlePage(): JSX.Element {
   const [isGameOpen, setIsGameOpen] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [lastGameResult, setLastGameResult] = useState<{isWon: boolean, attempts: number, word: string} | null>(null);
   const { userProfile, addXP } = useGamification();
   const router = useRouter();
 
-  const handleGameComplete = (isWon: boolean, attempts: number) => {
+  const handleGameComplete = (isWon: boolean, attempts: number, word: string) => {
+    // Store game result for sharing
+    setLastGameResult({ isWon, attempts, word });
+    
     if (isWon) {
       // Kazanma bonusu: daha az denemede kazanırsa daha fazla XP
       const baseXp = 35;
@@ -125,8 +131,18 @@ export default function WordlePage(): JSX.Element {
           <WordleGame
             onComplete={handleGameComplete}
             onClose={handleClose}
+            onShare={() => setShowShareModal(true)}
           />
         )}
+
+        {/* Social Share Modal */}
+        <SocialShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          gameType="wordle"
+          word={lastGameResult?.word || ''}
+          attempts={lastGameResult?.attempts || 0}
+        />
       </div>
     </div>
   );

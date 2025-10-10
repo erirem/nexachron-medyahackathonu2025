@@ -4,15 +4,32 @@ import { useState, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useGamification } from '@/contexts/gamification-context';
+import { SocialShareModal } from '@/components/social-share-modal';
 import { FlappyAABirdGame } from '../_components/flappy-aa-bird-game';
 
 export default function FlappyAABirdPage(): JSX.Element {
   const [isGameOpen, setIsGameOpen] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [isNewRecord, setIsNewRecord] = useState(false);
   const { userProfile, addXP } = useGamification();
   const router = useRouter();
   const t = useTranslations('games');
 
   const handleGameComplete = (score: number) => {
+    // Store score for sharing
+    setLastScore(score);
+    
+    // Check if it's a new record (simplified - in real app you'd check against stored high score)
+    const previousHighScore = localStorage.getItem('flappy-bird-high-score');
+    const highScore = previousHighScore ? parseInt(previousHighScore) : 0;
+    const isNewRecord = score > highScore;
+    setIsNewRecord(isNewRecord);
+    
+    if (isNewRecord) {
+      localStorage.setItem('flappy-bird-high-score', score.toString());
+    }
+    
     // Calculate XP based on score
     const baseXp = 20;
     const bonusXp = Math.min(score * 2, 50); // Max 50 bonus XP
@@ -192,6 +209,27 @@ export default function FlappyAABirdPage(): JSX.Element {
             onClose={handleClose}
           />
         )}
+
+        {/* Share Button - show after game completion */}
+        {!isGameOpen && lastScore > 0 && (
+          <div className="fixed bottom-6 right-6 z-40">
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg text-white font-medium transition-all duration-200 shadow-lg flex items-center gap-2"
+            >
+              {isNewRecord ? '🏆' : '🎉'} Başarımı Paylaş
+            </button>
+          </div>
+        )}
+
+        {/* Social Share Modal */}
+        <SocialShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          gameType="flappy-bird"
+          highScore={lastScore}
+          isNewRecord={isNewRecord}
+        />
       </div>
     </div>
   );
