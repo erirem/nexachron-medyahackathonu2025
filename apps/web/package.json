@@ -21,6 +21,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "recharts": "^3.2.1",
+    "turkey-cities-data": "^1.2.2",
     "typescript": "^5.7.3",
     "zod": "^4.1.9"
   },
@@ -33,6 +34,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-simple-maps": "^3.0.6",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "jsdom": "^26.0.0",
