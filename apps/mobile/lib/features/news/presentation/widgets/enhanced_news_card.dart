@@ -124,6 +124,11 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
+              height: listMode ? 320 : 380, // Kart yüksekliğini artırdık
+              margin: EdgeInsets.symmetric(
+                horizontal: listMode ? 8 : 12,
+                vertical: listMode ? 6 : 8,
+              ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(
                   widget.isListItem ? 20 : 28,
@@ -132,563 +137,375 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF232a3b).withOpacity(listMode ? 0.7 : 0.8),
-                    const Color(0xFF1b2130).withOpacity(listMode ? 0.85 : 0.9),
+                    const Color(0xFF232a3b).withOpacity(listMode ? 0.8 : 0.9),
+                    const Color(0xFF1b2130).withOpacity(listMode ? 0.9 : 0.95),
                     const Color(0xFF111826),
+                    // Kategori renginden hafif bir ton ekle
+                    categoryColor.withOpacity(0.05),
                   ],
                 ),
-                border: Border.all(
-                  color: categoryColor.withOpacity(0.3),
-                  width: 1,
-                ),
+                // Border yerine gradient border efekti
+                // border: Border.all(
+                //   color: categoryColor.withOpacity(0.5),
+                //   width: 1.5,
+                // ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: listMode ? 8 : _elevationAnimation.value,
+                    color: Colors.black.withOpacity(
+                      0.7,
+                    ), // Gölgeyi daha koyu yaptık
+                    blurRadius: listMode ? 12 : _elevationAnimation.value + 4,
                     offset: Offset(
                       0,
-                      (listMode ? 4 : _elevationAnimation.value / 2),
+                      (listMode ? 6 : _elevationAnimation.value / 2 + 2),
                     ),
+                    spreadRadius: 1, // Gölge yayılmasını artırdık
+                  ),
+                  BoxShadow(
+                    color: categoryColor.withOpacity(
+                      0.15,
+                    ), // Kategori renginde hafif gölge
+                    blurRadius: listMode ? 8 : 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 0.5,
                   ),
                   if (_isHovered)
                     BoxShadow(
-                      color: categoryColor.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: categoryColor.withOpacity(0.4),
+                      blurRadius: 25,
+                      offset: const Offset(0, 12),
+                      spreadRadius: 2,
                     ),
                 ],
               ),
-              child: Stack(
-                children: [
-                  // Background image fills the card
-                  if (widget.news.imageUrl != null)
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          widget.isListItem ? 20 : 28,
-                        ),
-                        child: Image.network(
-                          widget.news.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.white.withOpacity(0.06),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  // Top-right reading time badge
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: categoryColor.withOpacity(0.35),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 12,
-                            color: Colors.white.withOpacity(0.85),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _readingMinutesShort(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.9),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    widget.isListItem ? 20 : 28,
                   ),
-
-                  // Background gradient overlay
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          widget.isListItem ? 20 : 28,
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.black.withOpacity(listMode ? 0.65 : 0.5),
-                            Colors.black.withOpacity(listMode ? 0.25 : 0.15),
-                          ],
-                        ),
-                      ),
-                    ),
+                  // Gradient border efekti
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      categoryColor.withOpacity(0.8), // Alt kısım daha belirgin
+                      categoryColor.withOpacity(0.6),
+                      categoryColor.withOpacity(0.4),
+                      categoryColor.withOpacity(0.2),
+                      categoryColor.withOpacity(0.1), // Üst kısım daha hafif
+                    ],
+                    stops: const [0.0, 0.3, 0.6, 0.8, 1.0],
                   ),
-
-                  // Hover overlay
-                  if (_isHovered)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            widget.isListItem ? 20 : 28,
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.7),
-                              Colors.black.withOpacity(0.85),
-                              Colors.black.withOpacity(0.95),
-                            ],
-                          ),
-                        ),
-                      ),
+                ),
+                child: Container(
+                  margin: const EdgeInsets.all(
+                    1.5,
+                  ), // Border kalınlığı kadar margin
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      widget.isListItem ? 18.5 : 26.5,
                     ),
-
-                  // Content
-                  Padding(
-                    padding: EdgeInsets.all(listMode ? 14 : 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Category row (shows label when there's enough space)
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final bool showCategoryText =
-                                constraints.maxWidth >= 180;
-                            return Row(
-                              children: [
-                                if (widget.news.category != null)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
+                    color: const Color(0xFF111826), // Ana kart rengi
+                  ),
+                  child: Column(
+                    children: [
+                      // Resim kısmı - üstte sabit yükseklik
+                      Expanded(
+                        flex: 3,
+                        child: Stack(
+                          children: [
+                            // Background image - gradyan şekilde aşağı doğru uzatılmış
+                            if (widget.news.imageUrl != null)
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(
+                                      widget.isListItem ? 20 : 28,
                                     ),
+                                    topRight: Radius.circular(
+                                      widget.isListItem ? 20 : 28,
+                                    ),
+                                  ),
+                                  child: Container(
                                     decoration: BoxDecoration(
-                                      color: categoryColor.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: categoryColor.withOpacity(0.3),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          _getCategoryIcon(),
-                                          size: 14,
-                                          color: categoryColor.withOpacity(0.9),
+                                      image: DecorationImage(
+                                        image: NetworkImage(
+                                          widget.news.imageUrl!,
                                         ),
-                                        if (showCategoryText) ...[
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            widget.news.category!.toUpperCase(),
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: categoryColor.withOpacity(
-                                                0.9,
-                                              ),
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 1.2,
-                                            ),
-                                          ),
+                                        fit: BoxFit.cover,
+                                        onError: (exception, stackTrace) {
+                                          // Hata durumunda varsayılan renk
+                                        },
+                                      ),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.transparent,
+                                          Colors.transparent,
+                                          Colors.black.withOpacity(0.1),
+                                          Colors.black.withOpacity(0.4),
+                                          Colors.black.withOpacity(0.7),
+                                          Colors.black.withOpacity(0.9),
                                         ],
-                                      ],
-                                    ),
-                                  ),
-                                const Spacer(),
-                              ],
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // Title overlay at bottom (with semi-transparent backdrop)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(
-                              listMode ? 0.55 : 0.45,
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            widget.news.title,
-                            maxLines: listMode ? 2 : 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: listMode ? 20 : 18,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              height: 1.25,
-                              shadows: const [
-                                Shadow(
-                                  color: Colors.black87,
-                                  blurRadius: 10,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: listMode ? 10 : 12),
-
-                        // Context line under title: category • city (compact)
-                        if ((widget.news.category != null &&
-                                widget.news.category!.isNotEmpty) ||
-                            (widget.news.city != null &&
-                                widget.news.city!.isNotEmpty))
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.news.category != null &&
-                                    widget.news.category!.isNotEmpty) ...[
-                                  Icon(
-                                    _getCategoryIcon(),
-                                    size: 12,
-                                    color: Colors.white.withOpacity(0.9),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    widget.news.category!,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                                if (widget.news.city != null &&
-                                    widget.news.city!.isNotEmpty) ...[
-                                  if (widget.news.category != null &&
-                                      widget.news.category!.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
+                                        stops: const [
+                                          0.0,
+                                          0.4,
+                                          0.6,
+                                          0.8,
+                                          0.95,
+                                          1.0,
+                                        ],
                                       ),
-                                      child: Text(
-                                        '•',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.6),
-                                          fontSize: 12,
+                                    ),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Colors.transparent,
+                                            Colors.transparent,
+                                            Colors.black.withOpacity(0.2),
+                                            Colors.black.withOpacity(0.5),
+                                            Colors.black.withOpacity(0.8),
+                                            Colors.black.withOpacity(0.95),
+                                          ],
+                                          stops: const [
+                                            0.0,
+                                            0.3,
+                                            0.5,
+                                            0.7,
+                                            0.9,
+                                            1.0,
+                                          ],
                                         ),
                                       ),
                                     ),
-                                  Icon(
-                                    Icons.location_on_outlined,
-                                    size: 12,
-                                    color: Colors.white.withOpacity(0.8),
                                   ),
-                                  const SizedBox(width: 4),
-                                  ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 140,
+                                ),
+                              ),
+
+                            // Top-right reading time badge
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: categoryColor.withOpacity(0.5),
+                                    width: 1.2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
                                     ),
-                                    child: Text(
-                                      widget.news.city!,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.access_time,
+                                      size: 12,
+                                      color: Colors.white.withOpacity(0.85),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _readingMinutesShort(),
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-
-                        // One-line compact summary to avoid overflow
-                        if (widget.news.summary.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(
-                                listMode ? 0.4 : 0.32,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              widget.news.summary,
-                              maxLines: listMode ? 2 : 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: listMode ? 14 : 13,
-                                color: Colors.white.withOpacity(0.95),
-                                height: 1.45,
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
 
-                        if (listMode) ...[
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              if (widget.news.category != null &&
-                                  widget.news.category!.isNotEmpty)
-                                Container(
+                            // Kategori etiketi
+                            if (widget.news.category != null)
+                              Positioned(
+                                top: 8,
+                                left: 8,
+                                child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: categoryColor.withOpacity(0.22),
-                                    borderRadius: BorderRadius.circular(8),
+                                    color: categoryColor.withOpacity(0.25),
+                                    borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: categoryColor.withOpacity(0.28),
+                                      color: categoryColor.withOpacity(0.6),
+                                      width: 1.2,
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: categoryColor.withOpacity(0.2),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         _getCategoryIcon(),
-                                        size: 12,
-                                        color: categoryColor.withOpacity(0.95),
+                                        size: 14,
+                                        color: categoryColor.withOpacity(0.9),
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        widget.news.category!,
+                                        widget.news.category!.toUpperCase(),
                                         style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.white.withOpacity(0.9),
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: 10,
+                                          color: categoryColor.withOpacity(0.9),
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.2,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
+                              ),
+
+                            // Başlık - resmin alt kısmında
+                            Positioned(
+                              bottom: 8,
+                              left: 8,
+                              right: 8,
+                              child: Text(
+                                widget.news.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: listMode ? 16 : 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  height: 1.25,
+                                  shadows: const [
+                                    Shadow(
+                                      color: Colors.black87,
+                                      blurRadius: 10,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Metin içeriği alanı - sabit renkli arka plan
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withOpacity(
+                                  0.95,
+                                ), // Daha koyu başlangıç
+                                Colors.black.withOpacity(0.9),
+                                const Color(0xFF1a1f2e),
+                                const Color(0xFF151b2a), // Biraz daha koyu ton
+                                const Color(
+                                  0xFF0f141f,
+                                ), // En alt kısım daha koyu
+                              ],
+                              stops: const [0.0, 0.1, 0.3, 0.7, 1.0],
+                            ),
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(
+                                widget.isListItem ? 20 : 28,
+                              ),
+                              bottomRight: Radius.circular(
+                                widget.isListItem ? 20 : 28,
+                              ),
+                            ),
+                          ),
+                          padding: EdgeInsets.all(listMode ? 12 : 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Şehir bilgisi
                               if (widget.news.city != null &&
-                                  widget.news.city!.isNotEmpty) ...[
-                                const SizedBox(width: 8),
+                                  widget.news.city!.isNotEmpty)
                                 Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.14),
+                                    color: Colors.white.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.18),
+                                      color: Colors.white.withOpacity(0.2),
                                     ),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.location_on_outlined,
                                         size: 12,
-                                        color: Colors.white70,
+                                        color: Colors.white.withOpacity(0.8),
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         widget.news.city!,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 11,
-                                          color: Colors.white70,
+                                          color: Colors.white.withOpacity(0.8),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ],
-                          ),
-                        ],
 
-                        // Hover content - AI summary style
-                        if (_isHovered)
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // AI badge
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            categoryColor.withOpacity(0.3),
-                                            categoryColor.withOpacity(0.2),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: categoryColor.withOpacity(0.3),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.auto_awesome,
-                                            size: 12,
-                                            color: categoryColor,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'AI ile Özetlendi',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: categoryColor,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-
-                                // Bullet points
+                              // Açıklama metni - daha okunabilir
+                              if (widget.news.summary.isNotEmpty)
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '•',
-                                            style: TextStyle(
-                                              color: categoryColor,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              widget.news.summary,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.white,
-                                                height: 1.4,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                  child: Text(
+                                    widget.news.summary,
+                                    maxLines: listMode ? 3 : 4,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: listMode ? 13 : 14,
+                                      color: Colors.white.withOpacity(0.9),
+                                      height: 1.4,
+                                      fontWeight: FontWeight.w400,
+                                    ),
                                   ),
                                 ),
-
-                                // Action buttons
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    _ActionButton(
-                                      icon: Icons.bookmark_outline,
-                                      label: 'Kaydet',
-                                      color: categoryColor,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _ActionButton(
-                                      icon: Icons.volume_up_outlined,
-                                      label: 'Dinle',
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _ActionButton(
-                                      icon: Icons.share_outlined,
-                                      label: 'Paylaş',
-                                      color: Colors.white.withOpacity(0.5),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                            ],
                           ),
-
-                        // Bottom info removed to save space (moved reading time top-right)
-                      ],
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -49,7 +49,7 @@ export function FeaturedNewsCarousel({
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
-      <div className="relative aspect-[21/9] overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a2234] to-[#0f1624] shadow-2xl">
+      <div className="relative aspect-[16/5] overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a2234] to-[#0f1624] shadow-2xl">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
           <Image

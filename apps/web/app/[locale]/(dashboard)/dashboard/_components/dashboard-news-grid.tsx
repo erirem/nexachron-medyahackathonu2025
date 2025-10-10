@@ -31,19 +31,8 @@ function getCategoryLabel(category: string): string {
 }
 
 function needsWideLayout(item: DashboardNewsItem): boolean {
-  const titleLength = item.title.length;
-  const summaryLength = item.summary.trim().length;
-  const detailLength = item.detail.trim().length;
-  const tagCount = item.tags.length;
-
-  // Broaden layout for dense content so button group keeps a single row.
-  return (
-    titleLength > 110 ||
-    summaryLength > 220 ||
-    detailLength > 220 ||
-    summaryLength + detailLength > 420 ||
-    tagCount > 4
-  );
+  // Tüm kartları aynı boyutta yapmak için false döndür
+  return false;
 }
 
 export function DashboardNewsGrid({
@@ -64,8 +53,8 @@ export function DashboardNewsGrid({
   );
   const standardItems = regularItems.filter(item => !sponsoredItems.includes(item));
   
-  return (
-    <section className="w-full space-y-12">
+    return (
+      <section className="w-full space-y-2">
       {/* Featured News Carousel */}
       {featuredItems.length > 0 && (
         <div className="-mx-6 sm:-mx-8 lg:-mx-12 px-6 sm:px-8 lg:px-12">
@@ -91,19 +80,11 @@ export function DashboardNewsGrid({
         </div>
 
 
-        {/* Mixed Grid Layout */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {/* Sponsored/Large Cards - Span 2 columns */}
-          {sponsoredItems.slice(0, 2).map((item, index) => {
-            const spanWide = needsWideLayout(item) || index === 0;
-
-            return (
-              <div
-                key={`${item.id}-${index}`}
-                className={`group relative h-full ${
-                  spanWide ? 'md:col-span-2 lg:col-span-2 xl:col-span-2' : ''
-                }`}
-              >
+        {/* Uniform Grid Layout - 3 columns */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Sponsored Cards */}
+          {sponsoredItems.map((item, index) => (
+            <div key={`${item.id}-${index}`} className="group relative h-full">
               <div className="absolute -top-3 left-4 z-10">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/30 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm whitespace-nowrap">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -113,23 +94,15 @@ export function DashboardNewsGrid({
                 </span>
               </div>
               <DashboardNewsCard item={item} />
-              </div>
-            );
-          })}
+            </div>
+          ))}
           
           {/* Regular Cards */}
-          {standardItems.map((item, index) => {
-            const spanWide = needsWideLayout(item);
-
-            return (
-              <div
-                key={`${item.id}-${index}`}
-                className={`group h-full ${spanWide ? 'md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
-              >
-                <DashboardNewsCard item={item} />
-              </div>
-            );
-          })}
+          {standardItems.map((item, index) => (
+            <div key={`${item.id}-${index}`} className="group h-full">
+              <DashboardNewsCard item={item} />
+            </div>
+          ))}
         </div>
       </div>
     </section>
