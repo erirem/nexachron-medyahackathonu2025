@@ -7,6 +7,7 @@ import { addBookmark, removeBookmark } from '@/services/api';
 import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from './types';
 import { SafeImage } from './safe-image';
+import { SpeedReadTimer } from './speed-read-timer';
 
 // Beyin ikonu - öneriler için
 function BrainIcon(): JSX.Element {
@@ -400,11 +401,17 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
       <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent mix-blend-overlay" aria-hidden />
       <div className="absolute inset-0 opacity-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
       
-      {/* Öneri beyin ikonu - sağ üst köşe */}
-      {item.isRecommended && (
-        <div className="absolute right-6 top-6 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-[0_4px_12px_rgba(15,106,205,0.4)]">
-          <BrainIcon />
-        </div>
+      {/* Speed Read Timer */}
+      {item.isTimeLimited && (
+        <SpeedReadTimer 
+          newsId={item.id}
+          onTimeExpired={() => {
+            // Timer expired - no special action needed
+          }}
+          onSpeedReadComplete={() => {
+            // Speed read completed - XP and badge already awarded
+          }}
+        />
       )}
 
       <div className="relative flex flex-1 flex-col gap-6 p-6">
