@@ -113,13 +113,28 @@ export function MiniProfileWidget({ isCollapsed = false }: MiniProfileWidgetProp
         </div>
       </div>
 
-      {/* Streak & Stats */}
-      <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1">
-          <span>🔥</span>
-          <span className="text-white font-medium">{streakInfo.currentStreak}</span>
-          <span className="text-white/40">gün</span>
+      {/* Streak - Prominent Display */}
+      <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-3 mb-3">
+        <div className="flex items-center justify-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">{streakInfo.currentStreak}</div>
+            <div className="text-xs text-orange-200 font-medium">GÜNLÜK STREAK</div>
+          </div>
+          {streakInfo.nextMilestone > 0 && (
+            <div className="text-right">
+              <div className="text-xs text-orange-200">Sonraki: {streakInfo.nextMilestone}</div>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Other Stats */}
+      <div className="flex items-center justify-between text-xs mb-3">
         <div className="flex items-center gap-3">
           <div className="text-center">
             <div className="text-white font-medium">{userProfile.weeklyXp}</div>
@@ -130,6 +145,14 @@ export function MiniProfileWidget({ isCollapsed = false }: MiniProfileWidgetProp
             <div className="text-white/40">Takip</div>
           </div>
         </div>
+        {userProfile.streakProtection > 0 && (
+          <div className="flex items-center gap-1 bg-purple-500/20 px-2 py-1 rounded-full">
+            <svg className="w-3 h-3 text-purple-300" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 1l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 1z"/>
+            </svg>
+            <span className="text-purple-300 text-xs font-medium">{userProfile.streakProtection}</span>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}

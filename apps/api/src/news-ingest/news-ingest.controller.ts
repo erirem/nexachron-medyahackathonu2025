@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { NewsIngestService } from './news-ingest.service';
 import { MediaStorageService } from './services/media-storage.service';
+import { BatchEmotionUpdaterService } from './services/batch-emotion-updater.service';
 import { AACategory } from './dto/news-item.dto';
 
 @Controller('news-ingest')
@@ -18,6 +19,7 @@ export class NewsIngestController {
   constructor(
     private readonly newsIngestService: NewsIngestService,
     private readonly mediaStorageService: MediaStorageService,
+    private readonly batchEmotionUpdaterService: BatchEmotionUpdaterService,
   ) {}
 
   /**
@@ -339,6 +341,144 @@ export class NewsIngestController {
         message: 'Failed to process URL',
         success: false,
         error: error.message,
+      };
+    }
+  }
+
+  /**
+   * WORLD haberlerini batch olarak duygu analizi ile güncelle
+   * POST /api/news-ingest/update-world-emotions
+   */
+  @Post('update-world-emotions')
+  async updateWorldEmotions(@Body() body: {
+    batchSize?: number;
+    maxDailyLimit?: number;
+  } = {}): Promise<{
+    message: string;
+    success: boolean;
+    processed: number;
+    updated: number;
+    errors: number;
+    remainingBudget: number;
+  }> {
+    this.logger.log('Manual WORLD emotions update requested');
+
+    try {
+      const result = await this.batchEmotionUpdaterService.updateWorldNewsEmotions(
+        body.batchSize || 10,
+        body.maxDailyLimit || 50
+      );
+
+      return {
+        message: `Processed ${result.processed} items, updated ${result.updated}, ${result.errors} errors. Remaining budget: ${result.remainingBudget}`,
+        success: true,
+        processed: result.processed,
+        updated: result.updated,
+        errors: result.errors,
+        remainingBudget: result.remainingBudget,
+      };
+    } catch (error) {
+      this.logger.error('Failed to update WORLD emotions:', error);
+      return {
+        message: 'Failed to update WORLD emotions',
+        success: false,
+        processed: 0,
+        updated: 0,
+        errors: 1,
+        remainingBudget: 0,
+      };
+    }
+  }
+
+  /**
+   * WORLD haber sayısını getir
+   * GET /api/news-ingest/world-count
+   */
+  @Get('world-count')
+  async getWorldCount(): Promise<{
+    count: number;
+    message: string;
+  }> {
+    try {
+      const count = await this.batchEmotionUpdaterService.getWorldNewsCount();
+      return {
+        count,
+        message: `Found ${count} WORLD news items`,
+      };
+    } catch (error) {
+      this.logger.error('Failed to get WORLD count:', error);
+      return {
+        count: 0,
+        message: 'Failed to get WORLD count',
+      };
+    }
+  }
+
+  /**
+   * NEUTRAL haberleri güncelle
+   * POST /api/news-ingest/update-neutral-emotions
+   */
+  @Post('update-neutral-emotions')
+  async updateNeutralEmotions(@Body() body: {
+    batchSize?: number;
+    maxDailyLimit?: number;
+  } = {}): Promise<{
+    message: string;
+    success: boolean;
+    processed: number;
+    updated: number;
+    errors: number;
+    remainingBudget: number;
+  }> {
+    this.logger.log('Manual NEUTRAL emotions update requested');
+
+    try {
+      const result = await this.batchEmotionUpdaterService.updateNeutralNewsEmotions(
+        body.batchSize || 10,
+        body.maxDailyLimit || 50
+      );
+
+      return {
+        message: `Processed ${result.processed} items, updated ${result.updated}, ${result.errors} errors. Remaining budget: ${result.remainingBudget}`,
+        success: true,
+        processed: result.processed,
+        updated: result.updated,
+        errors: result.errors,
+        remainingBudget: result.remainingBudget,
+      };
+    } catch (error) {
+      this.logger.error('Failed to update NEUTRAL emotions:', error);
+      return {
+        message: 'Failed to update NEUTRAL emotions',
+        success: false,
+        processed: 0,
+        updated: 0,
+        errors: 1,
+        remainingBudget: 0,
+      };
+    }
+  }
+
+  /**
+   * NEUTRAL haber sayısını getir
+   * GET /api/news-ingest/neutral-count
+   */
+  @Get('neutral-count')
+  async getNeutralCount(): Promise<{
+    count: number;
+    message: string;
+  }> {
+    try {
+      const count = await this.batchEmotionUpdaterService.getNeutralNewsCount();
+      return {
+        count,
+        message: `Found ${count} NEUTRAL news items`,
+      };
+    } catch (error) {
+      this.logger.error('Failed to get NEUTRAL count:', error);
+      return {
+        count: 0,
+        message: 'Failed to get NEUTRAL count',
       };
     }
   }

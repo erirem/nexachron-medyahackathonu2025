@@ -8,10 +8,13 @@ import { ContentProcessorService } from './services/content-processor.service';
 import { MoodCalculatorService } from './services/mood-calculator.service';
 import { AiSummaryService } from './services/ai-summary.service';
 import { MediaStorageService } from './services/media-storage.service';
+import { EmotionAnalysisService } from './services/emotion-analysis.service';
+import { BatchEmotionUpdaterService } from './services/batch-emotion-updater.service';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { TTSModule } from '../tts/tts.module';
 
 @Module({
-  imports: [HttpModule, ScheduleModule.forRoot(), SupabaseModule],
+  imports: [HttpModule, ScheduleModule.forRoot(), SupabaseModule, TTSModule],
   controllers: [NewsIngestController],
   providers: [
     NewsIngestService,
@@ -20,12 +23,16 @@ import { SupabaseModule } from '../supabase/supabase.module';
     MoodCalculatorService,
     AiSummaryService,
     MediaStorageService,
+    EmotionAnalysisService,
+    BatchEmotionUpdaterService,
   ],
   exports: [
     NewsIngestService,
     MoodCalculatorService,
     AiSummaryService,
     MediaStorageService,
+    EmotionAnalysisService,
+    BatchEmotionUpdaterService,
   ],
 })
 export class NewsIngestModule {}

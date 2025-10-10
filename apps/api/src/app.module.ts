@@ -7,6 +7,8 @@ import { NewsModule } from './news/news.module';
 import { UsersModule } from './users/users.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
+import { UserDataModule } from './user-data/user-data.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 import { PodcastModule } from './podcast/podcast.module';
 
 @Module({
@@ -19,6 +21,8 @@ import { PodcastModule } from './podcast/podcast.module';
     UsersModule,
     NewsIngestModule,
     BookmarksModule,
+    UserDataModule,
+    RecommendationsModule,
     PodcastModule,
   ],
   controllers: [AppController],

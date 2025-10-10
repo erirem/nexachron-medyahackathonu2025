@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { MoodType } from '../dto/news-item.dto';
+import { NewsModeType } from '../dto/news-item.dto';
 
 @Injectable()
 export class MoodCalculatorService {
@@ -11,7 +11,7 @@ export class MoodCalculatorService {
   /**
    * Calculate mood for a news article based on user reactions
    */
-  async calculateMoodForNews(newsId: string): Promise<MoodType> {
+  async calculateMoodForNews(newsId: string): Promise<NewsModeType> {
     try {
       // Get all reactions for this news item
       const { data: reactions, error } =
@@ -25,11 +25,11 @@ export class MoodCalculatorService {
           `Failed to fetch reactions for news ${newsId}:`,
           error,
         );
-        return MoodType.WORLD; // Default fallback
+        return NewsModeType.WORLD; // Default fallback
       }
 
       if (!reactions || reactions.length === 0) {
-        return MoodType.WORLD; // Default for no reactions
+        return NewsModeType.WORLD; // Default for no reactions
       }
 
       // Calculate mood based on reaction distribution
@@ -37,7 +37,7 @@ export class MoodCalculatorService {
       return this.determineMoodFromReactions(reactionCounts);
     } catch (error) {
       this.logger.error(`Error calculating mood for news ${newsId}:`, error);
-      return MoodType.WORLD; // Default fallback
+      return NewsModeType.WORLD; // Default fallback
     }
   }
 
@@ -61,14 +61,14 @@ export class MoodCalculatorService {
    */
   private determineMoodFromReactions(
     reactionCounts: Record<string, number>,
-  ): MoodType {
+  ): NewsModeType {
     const totalReactions = Object.values(reactionCounts).reduce(
       (sum, count) => sum + count,
       0,
     );
 
     if (totalReactions === 0) {
-      return MoodType.WORLD;
+      return NewsModeType.WORLD;
     }
 
     // Calculate percentages
@@ -97,18 +97,18 @@ export class MoodCalculatorService {
 
     // Decision logic
     if (surprisePercentage > 40) {
-      return MoodType.SURPRISE;
+      return NewsModeType.SURPRISE;
     }
 
     if (positivePercentage > 60) {
-      return MoodType.HAPPY;
+      return NewsModeType.HAPPY;
     }
 
     if (negativePercentage > 40 || totalReactions > 20) {
-      return MoodType.TOP; // Important/controversial news gets attention
+      return NewsModeType.TOP; // Important/controversial news gets attention
     }
 
-    return MoodType.WORLD; // Default neutral mood
+    return NewsModeType.WORLD; // Default neutral mood
   }
 
   /**

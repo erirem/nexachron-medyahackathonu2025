@@ -20,13 +20,23 @@ export enum AACategory {
   VIDEO = 'video',
 }
 
-// Mood enum (compatible with database)
-export enum MoodType {
-  HAPPY = 'HAPPY',
-  TOP = 'TOP',
-  WORLD = 'WORLD',
-  SURPRISE = 'SURPRISE',
+// News mode enum (compatible with database)
+export enum NewsModeType {
+  // Legacy categories (not emotions)
+  HAPPY = 'HAPPY',      // Happy news category
+  TOP = 'TOP',          // Top/important news category  
+  WORLD = 'WORLD',      // General world news category
+  SURPRISE = 'SURPRISE', // Surprising news category
+  // AI-analyzed emotions
+  JOY = 'JOY',          // Joy emotion
+  SADNESS = 'SADNESS',  // Sadness emotion
+  ANGER = 'ANGER',      // Anger emotion
+  FEAR = 'FEAR',        // Fear emotion
+  NEUTRAL = 'NEUTRAL',  // Neutral emotion
 }
+
+// Legacy alias for backward compatibility
+export const MoodType = NewsModeType;
 
 // Summary type enum
 export enum SummaryType {
@@ -92,7 +102,7 @@ export const ProcessedNewsItemSchema = z.object({
   media_gallery: MediaGallerySchema.optional(), // All extracted media
   source: z.string(),
   category: z.nativeEnum(AACategory), // Store AA category directly
-  mode: z.nativeEnum(MoodType).optional(), // Will be calculated from user feedback
+  mode: z.nativeEnum(MoodType).optional(), // AI-analyzed emotion or default mode
   city: z.string().optional(),
   original_url: z.string().url(),
   published_at: z.date(),
@@ -100,5 +110,5 @@ export const ProcessedNewsItemSchema = z.object({
 
 export type ProcessedNewsItem = z.infer<typeof ProcessedNewsItemSchema>;
 
-// Default mood for new articles (before user feedback)
-export const DEFAULT_MODE = MoodType.WORLD;
+// Default mode for new articles (before AI analysis)
+export const DEFAULT_MODE = NewsModeType.WORLD;

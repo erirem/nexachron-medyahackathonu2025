@@ -8,6 +8,9 @@ import {
   Badge, 
   XPAction, 
   StreakInfo,
+  DailyActivity,
+  WeeklyActivity,
+  MonthlyActivity,
   XP_VALUES,
   RANK_THRESHOLDS,
   BADGE_INFO,
@@ -23,6 +26,12 @@ interface GamificationContextType {
   useStreakProtection: () => boolean;
   getStreakInfo: () => StreakInfo;
   completeQuiz: (quizId: string, score: number, totalQuestions: number) => void;
+  trackActivity: (type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow') => void;
+  getDailyActivity: () => DailyActivity;
+  getWeeklyActivity: () => WeeklyActivity;
+  getMonthlyActivity: () => MonthlyActivity;
+  completeNews: (newsId: string) => void;
+  completeSpeedRead: (newsId: string) => void;
 }
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
@@ -56,7 +65,124 @@ const MOCK_USER_PROFILE: UserProfile = {
   followedTopics: ['Teknoloji', 'Ekonomi'],
   weeklyXp: 320,
   monthlyXp: 1250,
-  seasonXp: 1250
+  seasonXp: 1250,
+  dailyActivity: {
+    date: new Date(),
+    newsRead: 3,
+    commentsMade: 1,
+    quizzesCompleted: 0,
+    xpEarned: 45,
+    topicsFollowed: 5,
+    streakDays: 5,
+    categoryStats: [
+      {
+        categoryId: 'tech',
+        categoryName: 'Teknoloji',
+        newsRead: 2,
+        totalTimeSpent: 15,
+        lastReadDate: new Date(),
+        favoriteTimeOfDay: 'morning'
+      },
+      {
+        categoryId: 'economy',
+        categoryName: 'Ekonomi',
+        newsRead: 1,
+        totalTimeSpent: 8,
+        lastReadDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'afternoon'
+      }
+    ]
+  },
+  weeklyActivity: {
+    weekStart: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    weekEnd: new Date(),
+    newsRead: 15,
+    commentsMade: 8,
+    quizzesCompleted: 3,
+    xpEarned: 320,
+    topicsFollowed: 5,
+    streakDays: 5,
+    dailyActivities: [],
+    categoryStats: [
+      {
+        categoryId: 'tech',
+        categoryName: 'Teknoloji',
+        newsRead: 8,
+        totalTimeSpent: 120,
+        lastReadDate: new Date(),
+        favoriteTimeOfDay: 'morning'
+      },
+      {
+        categoryId: 'economy',
+        categoryName: 'Ekonomi',
+        newsRead: 4,
+        totalTimeSpent: 60,
+        lastReadDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'afternoon'
+      },
+      {
+        categoryId: 'sports',
+        categoryName: 'Spor',
+        newsRead: 2,
+        totalTimeSpent: 30,
+        lastReadDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'evening'
+      },
+      {
+        categoryId: 'politics',
+        categoryName: 'Siyaset',
+        newsRead: 1,
+        totalTimeSpent: 15,
+        lastReadDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'morning'
+      }
+    ]
+  },
+  monthlyActivity: {
+    monthStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    monthEnd: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+    newsRead: 65,
+    commentsMade: 32,
+    quizzesCompleted: 12,
+    xpEarned: 1250,
+    topicsFollowed: 5,
+    streakDays: 5,
+    weeklyActivities: [],
+    categoryStats: [
+      {
+        categoryId: 'tech',
+        categoryName: 'Teknoloji',
+        newsRead: 35,
+        totalTimeSpent: 525,
+        lastReadDate: new Date(),
+        favoriteTimeOfDay: 'morning'
+      },
+      {
+        categoryId: 'economy',
+        categoryName: 'Ekonomi',
+        newsRead: 18,
+        totalTimeSpent: 270,
+        lastReadDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'afternoon'
+      },
+      {
+        categoryId: 'sports',
+        categoryName: 'Spor',
+        newsRead: 8,
+        totalTimeSpent: 120,
+        lastReadDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'evening'
+      },
+      {
+        categoryId: 'politics',
+        categoryName: 'Siyaset',
+        newsRead: 4,
+        totalTimeSpent: 60,
+        lastReadDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'morning'
+      }
+    ]
+  }
 };
 
 export function GamificationProvider({ children }: { children: ReactNode }) {
@@ -320,12 +446,228 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     });
 
     console.log(`Quiz tamamlandı: ${quizId}, Skor: ${score}/${totalQuestions}, XP: ${totalXP}`);
+    trackActivity('quiz_complete');
+  }, [userProfile, addXP]);
+
+  // Aktivite takibi
+  const trackActivity = useCallback((type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow') => {
+    setUserProfile(prev => {
+      if (!prev) return prev;
+      
+      const now = new Date();
+      const today = new Date(now);
+      today.setHours(0, 0, 0, 0);
+      
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
+      
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      monthEnd.setHours(23, 59, 59, 999);
+      
+      // Günlük aktiviteyi güncelle
+      const updatedDailyActivity = { ...prev.dailyActivity };
+      if (updatedDailyActivity.date.getTime() !== today.getTime()) {
+        // Yeni gün başladıysa sıfırla
+        updatedDailyActivity.date = today;
+        updatedDailyActivity.newsRead = 0;
+        updatedDailyActivity.commentsMade = 0;
+        updatedDailyActivity.quizzesCompleted = 0;
+        updatedDailyActivity.xpEarned = 0;
+        updatedDailyActivity.topicsFollowed = prev.followedTopics.length;
+        updatedDailyActivity.streakDays = prev.currentStreak;
+      }
+      
+      // Haftalık aktiviteyi güncelle
+      const updatedWeeklyActivity = { ...prev.weeklyActivity };
+      if (now > weekEnd) {
+        // Yeni hafta başladıysa sıfırla
+        updatedWeeklyActivity.weekStart = weekStart;
+        updatedWeeklyActivity.weekEnd = weekEnd;
+        updatedWeeklyActivity.newsRead = 0;
+        updatedWeeklyActivity.commentsMade = 0;
+        updatedWeeklyActivity.quizzesCompleted = 0;
+        updatedWeeklyActivity.xpEarned = 0;
+        updatedWeeklyActivity.topicsFollowed = prev.followedTopics.length;
+        updatedWeeklyActivity.streakDays = prev.currentStreak;
+        updatedWeeklyActivity.dailyActivities = [];
+      }
+      
+      // Aylık aktiviteyi güncelle
+      const updatedMonthlyActivity = { ...prev.monthlyActivity };
+      if (now > monthEnd) {
+        // Yeni ay başladıysa sıfırla
+        updatedMonthlyActivity.monthStart = monthStart;
+        updatedMonthlyActivity.monthEnd = monthEnd;
+        updatedMonthlyActivity.newsRead = 0;
+        updatedMonthlyActivity.commentsMade = 0;
+        updatedMonthlyActivity.quizzesCompleted = 0;
+        updatedMonthlyActivity.xpEarned = 0;
+        updatedMonthlyActivity.topicsFollowed = prev.followedTopics.length;
+        updatedMonthlyActivity.streakDays = prev.currentStreak;
+        updatedMonthlyActivity.weeklyActivities = [];
+      }
+      
+      // Aktivite tipine göre sayacı artır
+      switch (type) {
+        case 'news_read':
+          updatedDailyActivity.newsRead += 1;
+          updatedWeeklyActivity.newsRead += 1;
+          updatedMonthlyActivity.newsRead += 1;
+          break;
+        case 'comment':
+          updatedDailyActivity.commentsMade += 1;
+          updatedWeeklyActivity.commentsMade += 1;
+          updatedMonthlyActivity.commentsMade += 1;
+          break;
+        case 'quiz_complete':
+          updatedDailyActivity.quizzesCompleted += 1;
+          updatedWeeklyActivity.quizzesCompleted += 1;
+          updatedMonthlyActivity.quizzesCompleted += 1;
+          break;
+        case 'topic_follow':
+          updatedDailyActivity.topicsFollowed = prev.followedTopics.length;
+          updatedWeeklyActivity.topicsFollowed = prev.followedTopics.length;
+          updatedMonthlyActivity.topicsFollowed = prev.followedTopics.length;
+          break;
+      }
+      
+      return {
+        ...prev,
+        dailyActivity: updatedDailyActivity,
+        weeklyActivity: updatedWeeklyActivity,
+        monthlyActivity: updatedMonthlyActivity
+      };
+    });
+  }, []);
+
+  // Günlük aktivite getir
+  const getDailyActivity = useCallback((): DailyActivity => {
+    if (!userProfile) {
+      return {
+        date: new Date(),
+        newsRead: 0,
+        commentsMade: 0,
+        quizzesCompleted: 0,
+        xpEarned: 0,
+        topicsFollowed: 0,
+        streakDays: 0
+      };
+    }
+    
+    return userProfile.dailyActivity;
+  }, [userProfile]);
+
+  // Haftalık aktivite getir
+  const getWeeklyActivity = useCallback((): WeeklyActivity => {
+    if (!userProfile) {
+      return {
+        weekStart: new Date(),
+        weekEnd: new Date(),
+        newsRead: 0,
+        commentsMade: 0,
+        quizzesCompleted: 0,
+        xpEarned: 0,
+        topicsFollowed: 0,
+        streakDays: 0,
+        dailyActivities: []
+      };
+    }
+    
+    return userProfile.weeklyActivity;
+  }, [userProfile]);
+
+  // Aylık aktivite getir
+  const getMonthlyActivity = useCallback((): MonthlyActivity => {
+    if (!userProfile) {
+      return {
+        monthStart: new Date(),
+        monthEnd: new Date(),
+        newsRead: 0,
+        commentsMade: 0,
+        quizzesCompleted: 0,
+        xpEarned: 0,
+        topicsFollowed: 0,
+        streakDays: 0,
+        weeklyActivities: []
+      };
+    }
+    
+    return userProfile.monthlyActivity;
+  }, [userProfile]);
+  // Haber tamamlama
+  const completeNews = useCallback((newsId: string) => {
+    if (!userProfile) return;
+
+    // XP ekle
+    addXP('NEWS_COMPLETE');
+
+    // Haber kaşifi rozetini kontrol et
+    setUserProfile(prev => {
+      if (!prev) return prev;
+
+      const newBadges = [...prev.badges];
+      
+      // Haber kaşifi rozeti için 100 farklı kategoriden haber okuma gerekli
+      // Bu gerçek uygulamada veritabanından kontrol edilecek
+      const completedNewsCount = 15; // Mock data - gerçekte veritabanından gelecek
+      if (completedNewsCount >= 100 && !newBadges.includes(Badge.TRENDING_FOLLOWER)) {
+        newBadges.push(Badge.TRENDING_FOLLOWER);
+      }
+
+      return {
+        ...prev,
+        badges: newBadges
+      };
+    });
+
+    console.log(`Haber tamamlandı: ${newsId}, XP: ${XP_VALUES.NEWS_COMPLETE}`);
+  }, [userProfile, addXP]);
+
+  // Hızlı okuma tamamlama
+  const completeSpeedRead = useCallback((newsId: string) => {
+    if (!userProfile) return;
+
+    // XP ekle
+    addXP('SPEED_READ');
+
+    // Hızlı okur rozetini kontrol et
+    setUserProfile(prev => {
+      if (!prev) return prev;
+
+      const newBadges = [...prev.badges];
+      
+      // Hızlı okur rozeti için zaman sınırlı haber okuma
+      if (!newBadges.includes(Badge.SPEED_READER)) {
+        newBadges.push(Badge.SPEED_READER);
+      }
+
+      return {
+        ...prev,
+        badges: newBadges
+      };
+    });
+
+    console.log(`Hızlı okuma tamamlandı: ${newsId}, XP: ${XP_VALUES.SPEED_READ}`);
   }, [userProfile, addXP]);
 
   // Component mount olduğunda streak kontrol et
   useEffect(() => {
     checkStreak();
   }, [checkStreak]);
+
+  // Streak bonusu hesapla
+  const calculateStreakBonus = useCallback((streakDays: number): number => {
+    if (streakDays === 0) return 0;
+    if (streakDays < 7) return streakDays * 5;
+    if (streakDays < 30) return streakDays * 10;
+    return streakDays * 20;
+  }, []);
 
   return (
     <GamificationContext.Provider value={{
@@ -336,7 +678,13 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       unfollowTopic,
       useStreakProtection,
       getStreakInfo,
-      completeQuiz
+      completeQuiz,
+      trackActivity,
+      getDailyActivity,
+      getWeeklyActivity,
+      getMonthlyActivity
+      completeNews,
+      completeSpeedRead
     }}>
       {children}
       {/* XP Animasyonları */}
