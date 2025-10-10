@@ -177,8 +177,8 @@ export interface NewsWithMediaDto {
   title: string;
   content: string;
   summary: string;
-  categoryId: string | null;
-  category?: string | null; // Category label/name
+  category: string | null; // DB'deki category kolonu
+  mode: string; // AI-analyzed emotion or legacy mode
   city: string | null;
   isPopular: boolean;
   createdAt: string;

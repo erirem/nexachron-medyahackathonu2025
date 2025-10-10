@@ -273,6 +273,26 @@ body {
   }
 }
 
+@keyframes slideInTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spinSlow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 /* Highlight Utilities */
 .hero-accent-line {
   background: linear-gradient(90deg, rgba(125, 207, 255, 0.85), rgba(125, 207, 255, 0.2));
@@ -361,6 +381,14 @@ body {
   animation: wave 1.5s ease-in-out infinite;
 }
 
+.animate-slide-in-top {
+  animation: slideInTop 0.6s ease-out both;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 3s linear infinite;
+}
+
 /* Stagger Delays for List Items */
 .stagger-delay-1 {
   animation-delay: 0.1s;
@@ -373,6 +401,15 @@ body {
 }
 .stagger-delay-4 {
   animation-delay: 0.4s;
+}
+.stagger-delay-5 {
+  animation-delay: 0.5s;
+}
+.stagger-delay-6 {
+  animation-delay: 0.6s;
+}
+.stagger-delay-7 {
+  animation-delay: 0.7s;
 }
 
 /* Smooth Scroll */
@@ -397,4 +434,16 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(125, 207, 255, 0.6);
+}
+
+/* Global clickable cursor for interactive elements */
+a,
+button,
+[role="button"],
+[role="link"],
+label,
+summary,
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
 }

@@ -5,7 +5,6 @@ import { NewsSidebar } from './_components/news-sidebar';
 import { TimeLimitedWrapper } from './_components/time-limited-wrapper';
 import { SmoothScrollWrapper } from './_components/smooth-scroll-wrapper';
 import { DynamicScrollbarWrapper } from './_components/dynamic-scrollbar-wrapper';
-import type { DashboardNewsItem } from '../../dashboard/_components/types';
 import { fetchNewsById, fetchNewsList } from '@/services/api';
 import type { DashboardNewsItem, NewsImage } from '../../dashboard/_components/types';
 import './_components/scrollbar.css';

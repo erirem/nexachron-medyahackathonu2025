@@ -5,6 +5,8 @@ import { getMessages, unstable_setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/locales";
 import { GamificationProvider } from "@/contexts/gamification-context";
 import { ReactQueryProvider } from "@/contexts/react-query-provider";
+import { AuthProvider } from "@/contexts/auth-context";
+import { OnboardingGuard } from "@/components/auth/onboarding-guard";
 
 
 type LayoutProps = {
@@ -28,12 +30,15 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <GamificationProvider>
-        <ReactQueryProvider>
-          {/* top bar kaldırıldı */}
-          {children}
-        </ReactQueryProvider>
-      </GamificationProvider>
+      <AuthProvider>
+        <GamificationProvider>
+          <ReactQueryProvider>
+            <OnboardingGuard>
+              {children}
+            </OnboardingGuard>
+          </ReactQueryProvider>
+        </GamificationProvider>
+      </AuthProvider>
     </NextIntlClientProvider>
   );
 }

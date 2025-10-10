@@ -109,9 +109,13 @@ export function LoginForm(): JSX.Element {
 
   useEffect(() => {
     const detectExistingSession = async () => {
-      const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
-      if (token) {
-        router.replace(`/${locale}/dashboard`);
+      try {
+        const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
+        if (token) {
+          router.replace(`/${locale}/dashboard`);
+        }
+      } catch (error) {
+        console.error('Error detecting existing session:', error);
       }
     };
 

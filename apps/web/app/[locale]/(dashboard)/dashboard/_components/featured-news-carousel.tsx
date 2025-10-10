@@ -45,13 +45,14 @@ export function FeaturedNewsCarousel({
 
   return (
     <div 
-      className="relative w-full"
+      className="relative w-full overflow-hidden"
+      style={{overflow: 'hidden'}}
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
-      <div className="relative aspect-[21/9] overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a2234] to-[#0f1624] shadow-2xl">
+      <div className="relative aspect-[16/6] overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a2234] to-[#0f1624] shadow-2xl" style={{overflow: 'hidden'}}>
         {/* Background Image with Overlay */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden" style={{overflow: 'hidden'}}>
           <Image
             src={currentItem.imageUrl}
             alt={currentItem.title}
@@ -59,13 +60,14 @@ export function FeaturedNewsCarousel({
             className="object-cover"
             priority
             sizes="100vw"
+            style={{objectFit: 'cover'}}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/30" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex h-full flex-col justify-between p-8 lg:p-12">
+        <div className="relative z-10 flex h-full flex-col justify-between p-6 lg:p-8">
           {/* Top Section */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
@@ -92,10 +94,10 @@ export function FeaturedNewsCarousel({
 
           {/* Middle Section - Main Content */}
           <div className="max-w-3xl">
-            <h2 className="mb-4 text-3xl font-bold leading-tight text-white lg:text-5xl">
+            <h2 className="mb-3 text-2xl font-bold leading-tight text-white lg:text-4xl">
               {currentItem.title}
             </h2>
-            <p className="mb-6 text-lg leading-relaxed text-white/80 lg:text-xl">
+            <p className="mb-4 text-base leading-relaxed text-white/80 lg:text-lg">
               {currentItem.summary}
             </p>
             
@@ -201,21 +203,6 @@ export function FeaturedNewsCarousel({
           </div>
         </div>
 
-        {/* Side Preview (for next items) */}
-        <div className="absolute right-0 top-0 hidden h-full w-1/4 lg:block">
-          <div className="relative h-full opacity-30">
-            {items.length > 1 && (
-              <Image
-                src={items[(currentIndex + 1) % items.length].imageUrl}
-                alt="Next"
-                fill
-                className="object-cover"
-                sizes="25vw"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black" />
-          </div>
-        </div>
       </div>
     </div>
   );
