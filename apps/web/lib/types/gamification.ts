@@ -50,6 +50,82 @@ export interface BadgeInfo {
   totalEarned?: number; // Kaç kişi kazandı (nadir rozetler için)
 }
 
+export interface CategoryReadingStats {
+  categoryId: string;
+  categoryName: string;
+  newsRead: number;
+  totalTimeSpent: number; // dakika cinsinden
+  lastReadDate: Date;
+  favoriteTimeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+}
+
+export interface DailyActivity {
+  date: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface WeeklyActivity {
+  weekStart: Date;
+  weekEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  dailyActivities: DailyActivity[];
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface MonthlyActivity {
+  monthStart: Date;
+  monthEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  weeklyActivities: WeeklyActivity[];
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface PersonalAnalyst {
+  dailyStats: DailyActivity;
+  weeklyStats: WeeklyActivity;
+  monthlyStats: MonthlyActivity;
+  achievements: string[];
+  nextRankProgress: {
+    currentRank: UserRank;
+    nextRank: UserRank;
+    xpToNext: number;
+    progressPercentage: number;
+  };
+  motivationalMessage: string;
+  recommendations: string[];
+  dailyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  weeklyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  monthlyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -69,6 +145,10 @@ export interface UserProfile {
   weeklyXp: number;
   monthlyXp: number;
   seasonXp: number;
+  dailyActivity: DailyActivity;
+  weeklyActivity: WeeklyActivity;
+  monthlyActivity: MonthlyActivity;
+  personalAnalyst?: PersonalAnalyst;
 }
 
 export interface XPAction {

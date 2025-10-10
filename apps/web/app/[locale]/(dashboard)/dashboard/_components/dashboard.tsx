@@ -13,8 +13,13 @@ import { useCategories } from "@/hooks/use-categories";
 import { usePopularNews } from "@/hooks/use-popular-news";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useInfiniteNews } from "@/hooks/use-infinite-news";
+import { useNewsTracking } from "@/contexts/news-tracking-context";
+import { TriviaPopup } from "@/components/trivia-popup";
+import { WelcomeScreen } from "@/components/welcome-screen";
+import { StreakPopup } from "@/components/streak-popup";
 import { postRecommendations } from "@/services/api";
 import { LogoutButton } from "@/components/auth/logout-button";
+
 import type {
   CategoriesOverviewResponse,
   NewsCategorySummary,
@@ -61,6 +66,7 @@ const sideRailItems: readonly SideRailItem[] = [
   { id: "saved", label: "Kaydedilenler", icon: <BookmarkFillIcon /> },
   { id: "watch", label: "Takip", icon: <BellIcon /> },
   { id: "games", label: "Oyunlar", icon: <GamepadIcon /> },
+  { id: "analyst", label: "Kişisel Analist", icon: <AnalystIcon /> },
   { id: "profile", label: "Profilim", icon: <UserIcon /> },
   { id: "leaderboard", label: "Liderlik", icon: <TrophyIcon /> },
   { id: "reels", label: "Explore", icon: <PlayIcon /> },
@@ -95,6 +101,9 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [showTriviaPopup, setShowTriviaPopup] = useState(false);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const chipsScrollRef = useRef<HTMLDivElement>(null);
@@ -118,6 +127,57 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     categoryId: selectedCategoryIds.length === 1 ? selectedCategoryIds[0] : undefined,
     filterCategory: selectedCategoryIds.length === 0 ? activeCategory : undefined,
   });
+
+  const { shouldShowTriviaPopup, getReadPercentage } = useNewsTracking();
+
+  // Check if trivia popup should be shown
+  useEffect(() => {
+    const totalNewsCount = apiNewsItems.length;
+    if (totalNewsCount > 0 && shouldShowTriviaPopup(totalNewsCount)) {
+      setShowTriviaPopup(true);
+    }
+  }, [apiNewsItems.length, shouldShowTriviaPopup]);
+
+  // Show welcome screen on first visit
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('nexachron_welcome_seen');
+    if (!hasSeenWelcome) {
+      setShowWelcomeScreen(true);
+      localStorage.setItem('nexachron_welcome_seen', 'true');
+    } else {
+      // If user has seen welcome before, show streak popup directly
+      showStreakPopupIfNeeded();
+    }
+  }, []);
+
+  // Show streak popup when welcome screen closes (for first-time users)
+  useEffect(() => {
+    if (!showWelcomeScreen) {
+      showStreakPopupIfNeeded();
+    }
+  }, [showWelcomeScreen]);
+
+  // Function to show streak popup if needed
+  const showStreakPopupIfNeeded = useCallback(() => {
+    const lastStreakPopup = localStorage.getItem('nexachron_streak_popup_last_shown');
+    const today = new Date().toDateString();
+    
+    console.log('[Streak Popup] Checking streak popup:', {
+      lastStreakPopup,
+      today,
+      shouldShow: lastStreakPopup !== today
+    });
+    
+    if (lastStreakPopup !== today) {
+      const timer = setTimeout(() => {
+        console.log('[Streak Popup] Showing streak popup');
+        setShowStreakPopup(true);
+        localStorage.setItem('nexachron_streak_popup_last_shown', today);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Infinite scroll effect
   const isNextPageLoadingRef = useRef(false);
@@ -290,7 +350,8 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         categoryId === 'profile' ||
         categoryId === 'leaderboard' ||
         categoryId === 'quizzes' ||
-        categoryId === 'games'
+        categoryId === 'games' ||
+        categoryId === 'analyst'
       ) {
         const destination = categoryId === 'quizzes' ? 'quizzes' : categoryId;
         router.push(`/${locale}/${destination}`);
@@ -623,6 +684,26 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           </button>
         )}
       </main>
+
+      {/* Welcome Screen */}
+      <WelcomeScreen
+        isVisible={showWelcomeScreen}
+        onClose={() => setShowWelcomeScreen(false)}
+      />
+
+      {/* Trivia Popup */}
+      <TriviaPopup
+        isVisible={showTriviaPopup}
+        onClose={() => setShowTriviaPopup(false)}
+        readPercentage={getReadPercentage(apiNewsItems.length)}
+        totalNewsCount={apiNewsItems.length}
+      />
+
+      {/* Streak Popup */}
+      <StreakPopup
+        isVisible={showStreakPopup}
+        onClose={() => setShowStreakPopup(false)}
+      />
     </div>
   );
 }
@@ -1682,6 +1763,16 @@ function EconomyIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  );
+}
+
+function AnalystIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h18z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 12v4c0 .552.448 1 1 1h12c.552 0 1-.448 1-1v-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
