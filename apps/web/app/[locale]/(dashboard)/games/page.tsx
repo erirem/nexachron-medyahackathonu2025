@@ -182,6 +182,10 @@ export default function GamesPage(): JSX.Element {
       router.push(`/${locale}/games/wordle`);
     } else if (game.id === 'flappy-aa-bird') {
       router.push(`/${locale}/games/flappy-aa-bird`);
+    } else if (game.id === 'memory-game') {
+      router.push(`/${locale}/games/memory-game`);
+    } else if (game.id === 'word-puzzle') {
+      router.push(`/${locale}/games/word-puzzle`);
     } else {
       router.push(`/${locale}/games/${game.id}`);
     }
