@@ -10,13 +10,13 @@ import { useAuthState } from '@/contexts/auth-context';
 
 export default function ExplorePage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = use(params);
-    const { user, loading, onboardingStatusLoading, hasCompletedOnboarding } = useAuthState();
+    const { user, loading, onboardingStatusLoading } = useAuthState();
     const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
         // Wait for auth to finish loading
-        if (loading || onboardingStatusLoading || hasCompletedOnboarding === null) {
+        if (loading || onboardingStatusLoading) {
             return;
         }
 
@@ -27,16 +27,12 @@ export default function ExplorePage({ params }: { params: Promise<{ locale: stri
             return;
         }
 
-        // If user is logged in but hasn't completed onboarding, redirect to onboarding
-        if (user && !hasCompletedOnboarding) {
-            const currentLocale = pathname?.split('/')[1] || 'tr';
-            router.push(`/${currentLocale}/onboarding`);
-            return;
-        }
-    }, [user, loading, onboardingStatusLoading, hasCompletedOnboarding, router, pathname]);
+        // Explore sayfası için onboarding kontrolü kaldırıldı
+        // Kullanıcı zaten giriş yapmış ve explore'a erişmeye çalışıyor
+    }, [user, loading, onboardingStatusLoading, router, pathname]);
 
     // Show loading state while checking auth
-    if (loading || onboardingStatusLoading || hasCompletedOnboarding === null) {
+    if (loading || onboardingStatusLoading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">

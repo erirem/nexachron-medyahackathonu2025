@@ -4,25 +4,30 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactionBar from '../../../../components/reels/ReactionBar';
 import { ReelPlayer } from '../../../../components/reels/ReelPlayer';
 import { useReelPlayer, type ReelPlayerItem } from '../../../../components/reels/useReelPlayer';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useAuthState } from '@/contexts/auth-context';
 import { fetchReelById, fetchExploreFeed } from '../../../../services/api';
 
 export default function ReelPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
     const { locale, id } = use(params);
-import ReelPlayer from '../../../../components/reels/ReelPlayer';
-import { useReelPlayer } from '../../../../components/reels/useReelPlayer';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuthState } from '@/contexts/auth-context';
-
-export default function ReelPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
-    const { id } = use(params);
-    const { user, loading, onboardingStatusLoading, hasCompletedOnboarding } = useAuthState();
+    const { user, loading, onboardingStatusLoading } = useAuthState();
     const router = useRouter();
     const pathname = usePathname();
 
+    // Hook'ları her zaman aynı sırada çağır
+    const clientRef = useRef<QueryClient | null>(null);
+    if (!clientRef.current) clientRef.current = new QueryClient({
+        defaultOptions: {
+            queries: {
+                staleTime: 1000 * 60 * 5, // 5 minutes
+                gcTime: 1000 * 60 * 10, // 10 minutes
+            },
+        },
+    });
+
     useEffect(() => {
         // Wait for auth to finish loading
-        if (loading || onboardingStatusLoading || hasCompletedOnboarding === null) {
+        if (loading || onboardingStatusLoading) {
             return;
         }
 
@@ -33,16 +38,12 @@ export default function ReelPage({ params }: { params: Promise<{ locale: string;
             return;
         }
 
-        // If user is logged in but hasn't completed onboarding, redirect to onboarding
-        if (user && !hasCompletedOnboarding) {
-            const currentLocale = pathname?.split('/')[1] || 'tr';
-            router.push(`/${currentLocale}/onboarding`);
-            return;
-        }
-    }, [user, loading, onboardingStatusLoading, hasCompletedOnboarding, router, pathname]);
+        // Reel sayfası için onboarding kontrolü kaldırıldı
+        // Kullanıcı zaten giriş yapmış ve reel'e erişmeye çalışıyor
+    }, [user, loading, onboardingStatusLoading, router, pathname]);
 
     // Show loading state while checking auth
-    if (loading || onboardingStatusLoading || hasCompletedOnboarding === null) {
+    if (loading || onboardingStatusLoading) {
         return (
             <div className="fixed inset-0 bg-black flex items-center justify-center">
                 <div className="text-center">
@@ -61,9 +62,6 @@ export default function ReelPage({ params }: { params: Promise<{ locale: string;
     if (!user) {
         return null;
     }
-
-    const clientRef = useRef<QueryClient | null>(null);
-    if (!clientRef.current) clientRef.current = new QueryClient();
 
     return (
         <QueryClientProvider client={clientRef.current}>
@@ -220,7 +218,7 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
         'default': 'from-white/30 to-white/20',
     };
 
-    const categoryGradient = categoryColors[current.category.toLowerCase()] || categoryColors['default'];
+    const categoryGradient = categoryColors[current.category?.toLowerCase()] || categoryColors['default'];
 
     return (
         <div className="fixed inset-0 bg-black">
@@ -440,7 +438,7 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
                             {/* Hashtags - Modern Pills */}
                             <div className="pointer-events-auto mt-3 flex flex-wrap gap-2">
                                 <span className="rounded-lg bg-black/30 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white ring-1 ring-white/10">
-                                    #{current.category.toLowerCase()}
+                                    #{current.category?.toLowerCase() || 'gündem'}
                                 </span>
                                 <span className="rounded-lg bg-black/30 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white ring-1 ring-white/10">
                                     #gündem
