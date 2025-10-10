@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, type JSX } from 'react';
+import { useTrackEvent } from '@/hooks/use-track-event';
+import { useReadingTime } from '@/hooks/use-reading-time';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
@@ -11,6 +13,7 @@ import { ReaderEngagement } from './reader-engagement';
 import { InlineMedia } from './inline-media';
 import { useNewsTracking } from '@/contexts/news-tracking-context';
 import { useGamification } from '@/contexts/gamification-context';
+import ReadingHistoryBreadcrumbs from './reading-history-breadcrumbs';
 
 interface NewsArticleProps {
   readonly article: DashboardNewsItem;
@@ -20,6 +23,7 @@ interface NewsArticleProps {
 
 export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArticleProps): JSX.Element {
   const locale = useLocale();
+  const track = useTrackEvent();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -28,9 +32,22 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
   const { markNewsAsRead } = useNewsTracking();
   const { trackActivity } = useGamification();
   
+
+  // Reading time tracking
+  const { isReading, readingTime } = useReadingTime({
+    itemId: String(article.id),
+    category: article.category,
+    surface: 'news_detail',
+    minReadingTime: 5, // 5 seconds minimum
+    maxReadingTime: 1800, // 30 minutes maximum
+    heartbeatInterval: 30, // 30 seconds heartbeat
+  });
+
   useEffect(() => {
-    console.debug('[NewsArticle] inline images', article.images);
-  }, [article.images]);
+    // page view event
+    void track({ eventType: 'view', itemId: String(article.id), metadata: { surface: 'detail' } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Track article as read after 3 seconds
   useEffect(() => {
@@ -103,6 +120,12 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
 
   return (
     <article className="max-w-4xl mx-auto">
+      <ReadingHistoryBreadcrumbs 
+        currentId={article.id}
+        currentTitle={article.title}
+        currentCategory={article.category}
+        currentImageUrl={article.imageUrl}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-white/60 mb-8">
         <Link href={`/${locale}/dashboard`} className="hover:text-white/80 transition-colors">
@@ -188,7 +211,10 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
         {/* Social Actions */}
         <div className="flex items-center gap-4 mb-8">
           <button
-            onClick={handleLike}
+            onClick={() => {
+              handleLike();
+              void track({ eventType: 'click', itemId: String(article.id), metadata: { action: 'like', surface: 'detail' } });
+            }}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
               isLiked 
                 ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
@@ -202,7 +228,10 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
           </button>
 
           <button
-            onClick={() => setIsSaved(!isSaved)}
+            onClick={() => {
+              setIsSaved(!isSaved);
+              void track({ eventType: 'click', itemId: String(article.id), metadata: { action: 'save', surface: 'detail' } });
+            }}
             className={`p-2.5 rounded-xl transition-all ${
               isSaved 
                 ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 

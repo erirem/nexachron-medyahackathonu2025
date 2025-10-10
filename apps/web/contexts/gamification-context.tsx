@@ -30,6 +30,8 @@ interface GamificationContextType {
   getDailyActivity: () => DailyActivity;
   getWeeklyActivity: () => WeeklyActivity;
   getMonthlyActivity: () => MonthlyActivity;
+  completeNews: (newsId: string) => void;
+  completeSpeedRead: (newsId: string) => void;
 }
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
@@ -598,6 +600,61 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     
     return userProfile.monthlyActivity;
   }, [userProfile]);
+  // Haber tamamlama
+  const completeNews = useCallback((newsId: string) => {
+    if (!userProfile) return;
+
+    // XP ekle
+    addXP('NEWS_COMPLETE');
+
+    // Haber kaşifi rozetini kontrol et
+    setUserProfile(prev => {
+      if (!prev) return prev;
+
+      const newBadges = [...prev.badges];
+      
+      // Haber kaşifi rozeti için 100 farklı kategoriden haber okuma gerekli
+      // Bu gerçek uygulamada veritabanından kontrol edilecek
+      const completedNewsCount = 15; // Mock data - gerçekte veritabanından gelecek
+      if (completedNewsCount >= 100 && !newBadges.includes(Badge.TRENDING_FOLLOWER)) {
+        newBadges.push(Badge.TRENDING_FOLLOWER);
+      }
+
+      return {
+        ...prev,
+        badges: newBadges
+      };
+    });
+
+    console.log(`Haber tamamlandı: ${newsId}, XP: ${XP_VALUES.NEWS_COMPLETE}`);
+  }, [userProfile, addXP]);
+
+  // Hızlı okuma tamamlama
+  const completeSpeedRead = useCallback((newsId: string) => {
+    if (!userProfile) return;
+
+    // XP ekle
+    addXP('SPEED_READ');
+
+    // Hızlı okur rozetini kontrol et
+    setUserProfile(prev => {
+      if (!prev) return prev;
+
+      const newBadges = [...prev.badges];
+      
+      // Hızlı okur rozeti için zaman sınırlı haber okuma
+      if (!newBadges.includes(Badge.SPEED_READER)) {
+        newBadges.push(Badge.SPEED_READER);
+      }
+
+      return {
+        ...prev,
+        badges: newBadges
+      };
+    });
+
+    console.log(`Hızlı okuma tamamlandı: ${newsId}, XP: ${XP_VALUES.SPEED_READ}`);
+  }, [userProfile, addXP]);
 
   // Component mount olduğunda streak kontrol et
   useEffect(() => {
@@ -626,6 +683,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       getDailyActivity,
       getWeeklyActivity,
       getMonthlyActivity
+      completeNews,
+      completeSpeedRead
     }}>
       {children}
       {/* XP Animasyonları */}

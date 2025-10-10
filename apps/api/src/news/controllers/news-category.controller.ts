@@ -1,9 +1,13 @@
-import { Controller, Post, Get, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, HttpException, HttpStatus, Body } from '@nestjs/common';
 import { NewsCategoryService } from '../news-category.service';
+import { AiCategoryClassificationService } from '../services/ai-category-classification.service';
 
 @Controller('news-category')
 export class NewsCategoryController {
-  constructor(private readonly newsCategoryService: NewsCategoryService) {}
+  constructor(
+    private readonly newsCategoryService: NewsCategoryService,
+    private readonly aiCategoryService: AiCategoryClassificationService,
+  ) {}
 
   /**
    * Haber kategorilerinin güncelliğini kontrol et
@@ -125,6 +129,94 @@ export class NewsCategoryController {
     } catch (error) {
       throw new HttpException(
         `Failed to restore archived news: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * AI ile haber kategorisi belirleme test endpoint'i
+   * POST /api/news-category/test-classification
+   */
+  @Post('test-classification')
+  async testCategoryClassification(@Body() body: { title: string; content?: string; description?: string }) {
+    try {
+      const result = await this.aiCategoryService.classifyCategory({
+        title: body.title,
+        content: body.content,
+        description: body.description,
+      });
+
+      return {
+        success: true,
+        data: result,
+        usageStats: this.aiCategoryService.getUsageStats(),
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to classify category: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * AI kategori servisi kullanım istatistikleri
+   * GET /api/news-category/ai-stats
+   */
+  @Get('ai-stats')
+  async getAiStats() {
+    try {
+      const stats = this.aiCategoryService.getUsageStats();
+      return {
+        success: true,
+        data: stats,
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to get AI stats: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * Duplicate haberleri tespit et ve temizle
+   * POST /api/news-category/cleanup-duplicates
+   */
+  @Post('cleanup-duplicates')
+  async cleanupDuplicates() {
+    try {
+      const result = await this.newsCategoryService.cleanupDuplicateNews();
+      return {
+        success: true,
+        message: 'Duplicate news cleanup completed successfully',
+        data: result
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to cleanup duplicates: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * Eski haberleri AI ile kategorilendir
+   * POST /api/news-category/reclassify-old-news
+   */
+  @Post('reclassify-old-news')
+  async reclassifyOldNews() {
+    try {
+      const result = await this.newsCategoryService.reclassifyOldNewsWithAI();
+      return {
+        success: true,
+        message: 'Old news reclassification completed successfully',
+        data: result
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to reclassify old news: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }

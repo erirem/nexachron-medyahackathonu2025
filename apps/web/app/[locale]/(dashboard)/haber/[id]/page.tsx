@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { type JSX } from 'react';
 import { NewsArticle } from './_components/news-article';
 import { NewsSidebar } from './_components/news-sidebar';
-import { ReadingProgress } from './_components/reading-progress';
+import { TimeLimitedWrapper } from './_components/time-limited-wrapper';
 import { SmoothScrollWrapper } from './_components/smooth-scroll-wrapper';
 import { DynamicScrollbarWrapper } from './_components/dynamic-scrollbar-wrapper';
 import { fetchNewsById, fetchNewsList } from '@/services/api';
@@ -57,9 +57,10 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
     
     return (
       <>
-        <ReadingProgress 
+        <TimeLimitedWrapper 
           articleTitle={article.title}
           articleUrl={currentUrl}
+          newsId={article.id}
         />
         
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)]">

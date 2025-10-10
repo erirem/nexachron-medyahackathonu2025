@@ -48,6 +48,7 @@ export type DashboardNewsItem = {
   readonly timelineOrder?: number; // Order in the timeline
   readonly storyTitle?: string; // Overall story title
   readonly isPopular?: boolean;
+  readonly isTimeLimited?: boolean;
   readonly city?: string | null;
   readonly createdAt?: string;
 };

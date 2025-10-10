@@ -7,6 +7,8 @@ import { GamificationProvider } from "@/contexts/gamification-context";
 import { ReactQueryProvider } from "@/contexts/react-query-provider";
 import { NewsTrackingProvider } from "@/contexts/news-tracking-context";
 import { PersonalAnalystProvider } from "@/contexts/personal-analyst-context";
+import { AuthProvider } from "@/contexts/auth-context";
+import { OnboardingGuard } from "@/components/auth/onboarding-guard";
 
 
 type LayoutProps = {
@@ -40,6 +42,15 @@ export default async function LocaleLayout({
           </PersonalAnalystProvider>
         </NewsTrackingProvider>
       </GamificationProvider>
+      <AuthProvider>
+        <GamificationProvider>
+          <ReactQueryProvider>
+            <OnboardingGuard>
+              {children}
+            </OnboardingGuard>
+          </ReactQueryProvider>
+        </GamificationProvider>
+      </AuthProvider>
     </NextIntlClientProvider>
   );
 }
