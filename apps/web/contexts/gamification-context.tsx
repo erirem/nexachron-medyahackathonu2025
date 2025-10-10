@@ -556,7 +556,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         quizzesCompleted: 0,
         xpEarned: 0,
         topicsFollowed: 0,
-        streakDays: 0
+        streakDays: 0,
+        categoryStats: []
       };
     }
     
@@ -575,7 +576,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         xpEarned: 0,
         topicsFollowed: 0,
         streakDays: 0,
-        dailyActivities: []
+        dailyActivities: [],
+        categoryStats: []
       };
     }
     
@@ -594,7 +596,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         xpEarned: 0,
         topicsFollowed: 0,
         streakDays: 0,
-        weeklyActivities: []
+        weeklyActivities: [],
+        categoryStats: []
       };
     }
     
@@ -682,7 +685,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       trackActivity,
       getDailyActivity,
       getWeeklyActivity,
-      getMonthlyActivity
+      getMonthlyActivity,
       completeNews,
       completeSpeedRead
     }}>

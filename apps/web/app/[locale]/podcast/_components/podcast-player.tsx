@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface Podcast {
   id: string;
@@ -10,6 +10,7 @@ interface Podcast {
   duration: string;
   category: string;
   isPlaying?: boolean;
+  audioUrl?: string;
 }
 
 interface PodcastPlayerProps {
@@ -21,7 +22,10 @@ interface PodcastPlayerProps {
 
 export function PodcastPlayer({ podcast, isPlaying, onClose, onPlayPause }: PodcastPlayerProps) {
   const [currentTime, setCurrentTime] = useState(0);
-  const [totalTime] = useState(900); // 15 minutes in seconds
+  const [totalTime, setTotalTime] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -29,7 +33,72 @@ export function PodcastPlayer({ podcast, isPlaying, onClose, onPlayPause }: Podc
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progress = (currentTime / totalTime) * 100;
+  const progress = totalTime > 0 ? (currentTime / totalTime) * 100 : 0;
+
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadedMetadata = () => {
+      setTotalTime(audio.duration);
+      setIsLoading(false);
+    };
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleError = () => {
+      setError('Audio yüklenirken hata oluştu');
+      setIsLoading(false);
+    };
+
+    const handleLoadStart = () => {
+      setIsLoading(true);
+      setError(null);
+    };
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('loadstart', handleLoadStart);
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('loadstart', handleLoadStart);
+    };
+  }, [podcast.audioUrl]);
+
+  // Play/pause effect
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.play().catch((err) => {
+        console.error('Play failed:', err);
+        setError('Ses çalınamadı');
+      });
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying]);
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || totalTime === 0) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * totalTime;
+    
+    audio.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -44,6 +113,16 @@ export function PodcastPlayer({ podcast, isPlaying, onClose, onPlayPause }: Podc
           </svg>
         </button>
 
+        {/* Hidden Audio Element */}
+        {podcast.audioUrl && (
+          <audio
+            ref={audioRef}
+            src={podcast.audioUrl}
+            preload="metadata"
+            className="hidden"
+          />
+        )}
+
         {/* Podcast Image */}
         <div className="mb-8 flex justify-center">
           <div className="relative">
@@ -57,6 +136,11 @@ export function PodcastPlayer({ podcast, isPlaying, onClose, onPlayPause }: Podc
                 <div className="h-16 w-16 animate-pulse rounded-full bg-white/20 backdrop-blur-sm" />
               </div>
             )}
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -64,6 +148,9 @@ export function PodcastPlayer({ podcast, isPlaying, onClose, onPlayPause }: Podc
         <div className="mb-8 text-center">
           <h2 className="mb-2 text-xl font-bold text-white">{podcast.title}</h2>
           <p className="text-sm text-white/70">{podcast.subtitle}</p>
+          {error && (
+            <p className="mt-2 text-sm text-red-400">{error}</p>
+          )}
         </div>
 
         {/* Progress Bar */}
@@ -72,7 +159,10 @@ export function PodcastPlayer({ podcast, isPlaying, onClose, onPlayPause }: Podc
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(totalTime)}</span>
           </div>
-          <div className="h-2 rounded-full bg-white/20">
+          <div 
+            className="h-2 rounded-full bg-white/20 cursor-pointer"
+            onClick={handleSeek}
+          >
             <div
               className="h-2 rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] transition-all duration-300"
               style={{ width: `${progress}%` }}

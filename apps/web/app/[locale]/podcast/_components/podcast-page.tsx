@@ -6,6 +6,7 @@ import { PodcastCard } from './podcast-card';
 import { PodcastPlayer } from './podcast-player';
 import { Sidebar } from '../../(dashboard)/dashboard/_components/dashboard';
 import { useNews } from '../../../../hooks/use-news';
+import { useTTS } from '../../../../hooks/use-tts';
 
 interface Podcast {
   id: string;
@@ -15,6 +16,7 @@ interface Podcast {
   duration: string;
   category: string;
   isPlaying?: boolean;
+  audioUrl?: string;
 }
 
 // Helper function to convert news to podcast format
@@ -45,10 +47,15 @@ const categories = [
 export function PodcastPage() {
   const [selectedPodcast, setSelectedPodcast] = useState<Podcast | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const router = useRouter();
 
   // Fetch news data
   const { data: newsData, isLoading: isNewsLoading } = useNews({ limit: 30 });
+  
+  // TTS hook
+  const { generateAudio, isLoading: isTTSLoading } = useTTS();
 
   // Convert news to podcast format
   const featuredPodcasts = useMemo(() => {
@@ -62,9 +69,36 @@ export function PodcastPage() {
     return newsData.slice(5, 13).map(convertNewsToPodcast);
   }, [newsData]);
 
-  const handlePodcastSelect = (podcast: Podcast) => {
+  const handlePodcastSelect = async (podcast: Podcast) => {
     setSelectedPodcast(podcast);
-    setIsPlaying(true);
+    setAudioError(null);
+    setIsGeneratingAudio(true);
+    
+    try {
+      // Generate TTS audio for the news
+      const ttsResponse = await generateAudio({
+        newsId: podcast.id,
+        contentType: 'summary', // Use summary for podcast
+        voice: 'alloy',
+        speed: 1.0,
+      });
+      
+      // Update podcast with audio URL
+      const podcastWithAudio = {
+        ...podcast,
+        audioUrl: ttsResponse.audioUrl,
+      };
+      
+      setSelectedPodcast(podcastWithAudio);
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('TTS generation failed:', error);
+      setAudioError('Ses oluşturulamadı. Lütfen tekrar deneyin.');
+      // Still show the player but without audio
+      setSelectedPodcast(podcast);
+    } finally {
+      setIsGeneratingAudio(false);
+    }
   };
 
   const handleCategoryChange = (categoryId: string) => {
@@ -227,10 +261,27 @@ export function PodcastPage() {
       {selectedPodcast && (
         <PodcastPlayer
           podcast={selectedPodcast}
-          isPlaying={isPlaying}
-          onClose={() => setSelectedPodcast(null)}
+          isPlaying={isPlaying && !isGeneratingAudio}
+          onClose={() => {
+            setSelectedPodcast(null);
+            setIsPlaying(false);
+            setAudioError(null);
+          }}
           onPlayPause={() => setIsPlaying(!isPlaying)}
         />
+      )}
+      
+      {/* Loading Overlay for TTS Generation */}
+      {isGeneratingAudio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="rounded-2xl bg-gradient-to-br from-[#1a2234] to-[#0f1624] p-8 shadow-2xl">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <p className="text-white text-lg">Ses oluşturuluyor...</p>
+              <p className="text-white/70 text-sm">Bu işlem birkaç saniye sürebilir</p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
