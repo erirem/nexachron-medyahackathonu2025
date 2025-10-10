@@ -71,7 +71,25 @@ const MOCK_USER_PROFILE: UserProfile = {
     quizzesCompleted: 0,
     xpEarned: 45,
     topicsFollowed: 5,
-    streakDays: 5
+    streakDays: 5,
+    categoryStats: [
+      {
+        categoryId: 'tech',
+        categoryName: 'Teknoloji',
+        newsRead: 2,
+        totalTimeSpent: 15,
+        lastReadDate: new Date(),
+        favoriteTimeOfDay: 'morning'
+      },
+      {
+        categoryId: 'economy',
+        categoryName: 'Ekonomi',
+        newsRead: 1,
+        totalTimeSpent: 8,
+        lastReadDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'afternoon'
+      }
+    ]
   },
   weeklyActivity: {
     weekStart: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
@@ -82,7 +100,41 @@ const MOCK_USER_PROFILE: UserProfile = {
     xpEarned: 320,
     topicsFollowed: 5,
     streakDays: 5,
-    dailyActivities: []
+    dailyActivities: [],
+    categoryStats: [
+      {
+        categoryId: 'tech',
+        categoryName: 'Teknoloji',
+        newsRead: 8,
+        totalTimeSpent: 120,
+        lastReadDate: new Date(),
+        favoriteTimeOfDay: 'morning'
+      },
+      {
+        categoryId: 'economy',
+        categoryName: 'Ekonomi',
+        newsRead: 4,
+        totalTimeSpent: 60,
+        lastReadDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'afternoon'
+      },
+      {
+        categoryId: 'sports',
+        categoryName: 'Spor',
+        newsRead: 2,
+        totalTimeSpent: 30,
+        lastReadDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'evening'
+      },
+      {
+        categoryId: 'politics',
+        categoryName: 'Siyaset',
+        newsRead: 1,
+        totalTimeSpent: 15,
+        lastReadDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'morning'
+      }
+    ]
   },
   monthlyActivity: {
     monthStart: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -93,7 +145,41 @@ const MOCK_USER_PROFILE: UserProfile = {
     xpEarned: 1250,
     topicsFollowed: 5,
     streakDays: 5,
-    weeklyActivities: []
+    weeklyActivities: [],
+    categoryStats: [
+      {
+        categoryId: 'tech',
+        categoryName: 'Teknoloji',
+        newsRead: 35,
+        totalTimeSpent: 525,
+        lastReadDate: new Date(),
+        favoriteTimeOfDay: 'morning'
+      },
+      {
+        categoryId: 'economy',
+        categoryName: 'Ekonomi',
+        newsRead: 18,
+        totalTimeSpent: 270,
+        lastReadDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'afternoon'
+      },
+      {
+        categoryId: 'sports',
+        categoryName: 'Spor',
+        newsRead: 8,
+        totalTimeSpent: 120,
+        lastReadDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'evening'
+      },
+      {
+        categoryId: 'politics',
+        categoryName: 'Siyaset',
+        newsRead: 4,
+        totalTimeSpent: 60,
+        lastReadDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        favoriteTimeOfDay: 'morning'
+      }
+    ]
   }
 };
 

@@ -9,7 +9,7 @@ import { RANK_INFO, LEAGUE_INFO, Badge, XP_VALUES, BADGE_INFO, BadgeType, BadgeC
 export function UserProfilePage() {
   const { userProfile, getStreakInfo } = useGamification();
   const streakInfo = getStreakInfo();
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'badges' | 'activity' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'badges' | 'activity' | 'packages' | 'settings'>('overview');
 
   // Icon render fonksiyonu
   const renderIcon = (iconName: string, className: string = "w-6 h-6") => {
@@ -201,11 +201,12 @@ export function UserProfilePage() {
             { id: 'achievements', label: 'Başarılar', icon: 'trophy-icon' },
             { id: 'badges', label: 'Rozetler', icon: 'badge' },
             { id: 'activity', label: 'Aktivite', icon: 'activity' },
+            { id: 'packages', label: 'Paketler', icon: 'crown' },
             { id: 'settings', label: 'Ayarlar', icon: 'settings' }
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'overview' | 'achievements' | 'badges' | 'activity' | 'settings')}
+              onClick={() => setActiveTab(tab.id as 'overview' | 'achievements' | 'badges' | 'activity' | 'packages' | 'settings')}
               className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeTab === tab.id
                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
@@ -687,6 +688,200 @@ export function UserProfilePage() {
                   <div className="text-green-400 font-bold">+15 XP</div>
                 </div>
                 <div className="text-xs text-white/40 mt-2">1 saat önce</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'packages' && (
+          <div className="space-y-8">
+            {/* Paket Başlığı */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-4">Üyelik Paketleri</h2>
+              <p className="text-white/60 text-lg">Premium özelliklerle deneyimini geliştir</p>
+            </div>
+
+            {/* Paket Kartları */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Ücretsiz Paket */}
+              <div className="bg-gradient-to-br from-[#0f1623] via-[#141b2d] to-[#0d1520] rounded-2xl border border-white/10 p-8 relative hover:border-white/20 hover:shadow-2xl hover:shadow-white/5 transition-all duration-300 hover:scale-105">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center">
+                    {renderIcon('users', "w-8 h-8")}
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Ücretsiz</h3>
+                  <p className="text-white/60 mb-6">Temel özellikler</p>
+                  <div className="text-4xl font-bold text-white mb-8">₺0<span className="text-lg text-white/60">/ay</span></div>
+                  
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Sınırsız haber okuma</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Temel quizler</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Liderlik tablosu</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Temel rozetler</span>
+                    </div>
+                  </div>
+                  
+                  <button className="w-full py-3 px-6 rounded-lg bg-white/10 text-white hover:bg-white/20 hover:scale-105 transition-all duration-200">
+                    Mevcut Plan
+                  </button>
+                </div>
+              </div>
+
+              {/* Premium Paket */}
+              <div className="bg-gradient-to-br from-[#0f1623] via-[#141b2d] to-[#0d1520] rounded-2xl border-2 border-gradient-to-r from-yellow-500 to-orange-500 p-8 relative hover:border-yellow-400 hover:shadow-2xl hover:shadow-yellow-500/20 transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                {/* En Popüler Badge */}
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-4 py-1 rounded-full text-sm font-bold">
+                    EN POPÜLER
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center">
+                    {renderIcon('crown', "w-8 h-8")}
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Premium</h3>
+                  <p className="text-white/60 mb-6">Gelişmiş özellikler</p>
+                  <div className="text-4xl font-bold text-white mb-8">₺29<span className="text-lg text-white/60">/ay</span></div>
+                  
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Sınırsız haber okuma</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Tüm quizler</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Özel rozetler</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">2x XP bonusu</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Öncelikli destek</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Gelişmiş analitik</span>
+                    </div>
+                  </div>
+                  
+                  <button className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold hover:from-yellow-600 hover:to-orange-600 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 transition-all duration-200">
+                    Premium'a Geç
+                  </button>
+                </div>
+              </div>
+
+              {/* Pro Paket */}
+              <div className="bg-gradient-to-br from-[#0f1623] via-[#141b2d] to-[#0d1520] rounded-2xl border border-white/10 p-8 relative hover:border-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    {renderIcon('star', "w-8 h-8")}
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
+                  <p className="text-white/60 mb-6">Profesyonel özellikler</p>
+                  <div className="text-4xl font-bold text-white mb-8">₺59<span className="text-lg text-white/60">/ay</span></div>
+                  
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Premium özellikler</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">3x XP bonusu</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Özel rozetler</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Kişisel analist</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {renderIcon('check-circle', "w-5 h-5 text-green-400")}
+                      <span className="text-white">Özel etkinlikler</span>
+                    </div>
+                  </div>
+                  
+                  <button className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:from-purple-600 hover:to-pink-600 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200">
+                    Pro'ya Geç
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Özellik Karşılaştırması */}
+            <div className="bg-gradient-to-br from-[#0f1623] via-[#141b2d] to-[#0d1520] rounded-2xl border border-white/10 p-8">
+              <h3 className="text-2xl font-bold text-white mb-6 text-center">Özellik Karşılaştırması</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-4 px-4 text-white font-semibold">Özellik</th>
+                      <th className="text-center py-4 px-4 text-white font-semibold">Ücretsiz</th>
+                      <th className="text-center py-4 px-4 text-white font-semibold">Premium</th>
+                      <th className="text-center py-4 px-4 text-white font-semibold">Pro</th>
+                    </tr>
+                  </thead>
+                  <tbody className="space-y-2">
+                    {[
+                      { feature: 'Quiz Erişimi', free: 'Temel', premium: 'Tümü', pro: 'Tümü' },
+                      { feature: 'XP Bonusu', free: '1x', premium: '2x', pro: '3x' },
+                      { feature: 'Rozet Türleri', free: 'Temel', premium: 'Özel', pro: 'Özel + Nadir' },
+                      { feature: 'Analitik', free: 'Temel', premium: 'Gelişmiş', pro: 'Profesyonel' },
+                      { feature: 'Destek', free: 'Topluluk', premium: 'Öncelikli', pro: 'VIP' },
+                      { feature: 'Kişisel Analist', free: '❌', premium: '❌', pro: '✅' }
+                    ].map((row, index) => (
+                      <tr key={index} className="border-b border-white/5">
+                        <td className="py-4 px-4 text-white">{row.feature}</td>
+                        <td className="py-4 px-4 text-center text-white/60">{row.free}</td>
+                        <td className="py-4 px-4 text-center text-yellow-400">{row.premium}</td>
+                        <td className="py-4 px-4 text-center text-purple-400">{row.pro}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* SSS */}
+            <div className="bg-gradient-to-br from-[#0f1623] via-[#141b2d] to-[#0d1520] rounded-2xl border border-white/10 p-8">
+              <h3 className="text-2xl font-bold text-white mb-6 text-center">Sık Sorulan Sorular</h3>
+              <div className="space-y-6">
+                <div className="border-b border-white/10 pb-4">
+                  <h4 className="text-white font-semibold mb-2">Paketimi nasıl değiştirebilirim?</h4>
+                  <p className="text-white/60">Herhangi bir zamanda paket değişikliği yapabilirsiniz. Değişiklik bir sonraki faturalandırma döneminde geçerli olur.</p>
+                </div>
+                <div className="border-b border-white/10 pb-4">
+                  <h4 className="text-white font-semibold mb-2">İptal edebilir miyim?</h4>
+                  <p className="text-white/60">Evet, istediğiniz zaman iptal edebilirsiniz. İptal işlemi sonrası premium özellikleriniz faturalandırma döneminin sonuna kadar devam eder.</p>
+                </div>
+                <div className="border-b border-white/10 pb-4">
+                  <h4 className="text-white font-semibold mb-2">Hangi ödeme yöntemleri kabul ediliyor?</h4>
+                  <p className="text-white/60">Kredi kartı, banka kartı ve PayPal ile ödeme yapabilirsiniz. Tüm ödemeler güvenli şekilde işlenir.</p>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold mb-2">Ücretsiz deneme var mı?</h4>
+                  <p className="text-white/60">Evet! Premium paket için 7 günlük ücretsiz deneme sunuyoruz. Deneme süresinde istediğiniz zaman iptal edebilirsiniz.</p>
+                </div>
               </div>
             </div>
           </div>

@@ -330,28 +330,150 @@ export default function PersonalAnalystPage(): JSX.Element {
           </div>
         )}
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Activity Chart */}
-          <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
-              </svg>
-              Haftalık Aktivite Trendi
-            </h3>
+        {/* Category Analysis */}
+        <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Kategori Analizi
+          </h2>
+          
+          {/* Category Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...currentStats.categoryStats]
+              .sort((a, b) => b.newsRead - a.newsRead)
+              .map((category, index) => (
+              <div key={category.categoryId} className="bg-gradient-to-br from-white/5 to-white/10 rounded-xl p-4 border border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-white">{category.categoryName}</h3>
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    {index + 1}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">Haber Sayısı:</span>
+                    <span className="text-white font-semibold">{category.newsRead}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">Toplam Süre:</span>
+                    <span className="text-white font-semibold">{category.totalTimeSpent} dk</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">Ortalama:</span>
+                    <span className="text-white font-semibold">
+                      {category.newsRead > 0 ? Math.round(category.totalTimeSpent / category.newsRead) : 0} dk/haber
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/60">Favori Zaman:</span>
+                    <span className="text-white font-semibold">
+                      {category.favoriteTimeOfDay === 'morning' ? 'Sabah' :
+                       category.favoriteTimeOfDay === 'afternoon' ? 'Öğleden Sonra' :
+                       category.favoriteTimeOfDay === 'evening' ? 'Akşam' : 'Gece'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Category Reading Chart */}
             <div className="h-64">
+              <h3 className="text-lg font-semibold mb-3 text-white">Okuma Dağılımı</h3>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={activityData}>
+                <BarChart data={[...currentStats.categoryStats].sort((a, b) => b.newsRead - a.newsRead)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="day" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
+                  <XAxis 
+                    dataKey="categoryName" 
+                    stroke="#9CA3AF" 
+                    fontSize={10}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis stroke="#9CA3AF" fontSize={10} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#1F2937', 
                       border: '1px solid #374151',
                       borderRadius: '8px',
-                      color: '#F9FAFB'
+                      color: '#F9FAFB',
+                      fontSize: '12px'
+                    }} 
+                  />
+                  <Bar 
+                    dataKey="newsRead" 
+                    fill="#3B82F6"
+                    radius={[2, 2, 0, 0]}
+                    name="Haber Sayısı"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Reading Time Chart */}
+            <div className="h-64">
+              <h3 className="text-lg font-semibold mb-3 text-white">Okuma Süresi</h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[...currentStats.categoryStats].sort((a, b) => b.totalTimeSpent - a.totalTimeSpent)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis 
+                    dataKey="categoryName" 
+                    stroke="#9CA3AF" 
+                    fontSize={10}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis stroke="#9CA3AF" fontSize={10} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB',
+                      fontSize: '12px'
+                    }} 
+                  />
+                  <Bar 
+                    dataKey="totalTimeSpent" 
+                    fill="#10B981"
+                    radius={[2, 2, 0, 0]}
+                    name="Süre (dk)"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Activity Chart */}
+          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+              </svg>
+              Haftalık Aktivite
+            </h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={activityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} />
+                  <YAxis stroke="#9CA3AF" fontSize={10} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB',
+                      fontSize: '12px'
                     }} 
                   />
                   <Area 
@@ -387,22 +509,22 @@ export default function PersonalAnalystPage(): JSX.Element {
           </div>
 
           {/* Category Breakdown */}
-          <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
               Aktivite Dağılımı
             </h3>
-            <div className="h-64">
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={categoryData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
+                    innerRadius={40}
+                    outerRadius={70}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -415,13 +537,14 @@ export default function PersonalAnalystPage(): JSX.Element {
                       backgroundColor: '#1F2937', 
                       border: '1px solid #374151',
                       borderRadius: '8px',
-                      color: '#F9FAFB'
+                      color: '#F9FAFB',
+                      fontSize: '12px'
                     }} 
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               {categoryData.map((item, index) => (
                 <div key={index} className="flex items-center gap-2 text-sm">
                   <div 
