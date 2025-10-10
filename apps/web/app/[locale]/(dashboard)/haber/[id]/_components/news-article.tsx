@@ -9,6 +9,8 @@ import { ArticleEngagementSections } from './article-engagement-sections';
 import { NewsTimeline } from './news-timeline';
 import { ReaderEngagement } from './reader-engagement';
 import { InlineMedia } from './inline-media';
+import { useNewsTracking } from '@/contexts/news-tracking-context';
+import { useGamification } from '@/contexts/gamification-context';
 
 interface NewsArticleProps {
   readonly article: DashboardNewsItem;
@@ -22,9 +24,26 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(article.likeCount ?? 156);
+  const [hasReadArticle, setHasReadArticle] = useState(false);
+  const { markNewsAsRead } = useNewsTracking();
+  const { trackActivity } = useGamification();
+  
   useEffect(() => {
     console.debug('[NewsArticle] inline images', article.images);
   }, [article.images]);
+
+  // Track article as read after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hasReadArticle) {
+        markNewsAsRead(article.id);
+        trackActivity('news_read');
+        setHasReadArticle(true);
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [article.id, hasReadArticle, markNewsAsRead, trackActivity]);
 
   const allImages = [
     { url: article.imageUrl, alt: article.title, caption: article.title },

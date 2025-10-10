@@ -49,6 +49,70 @@ export interface BadgeInfo {
   totalEarned?: number; // Kaç kişi kazandı (nadir rozetler için)
 }
 
+export interface DailyActivity {
+  date: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+}
+
+export interface WeeklyActivity {
+  weekStart: Date;
+  weekEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  dailyActivities: DailyActivity[];
+}
+
+export interface MonthlyActivity {
+  monthStart: Date;
+  monthEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  weeklyActivities: WeeklyActivity[];
+}
+
+export interface PersonalAnalyst {
+  dailyStats: DailyActivity;
+  weeklyStats: WeeklyActivity;
+  monthlyStats: MonthlyActivity;
+  achievements: string[];
+  nextRankProgress: {
+    currentRank: UserRank;
+    nextRank: UserRank;
+    xpToNext: number;
+    progressPercentage: number;
+  };
+  motivationalMessage: string;
+  recommendations: string[];
+  dailyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  weeklyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  monthlyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -68,6 +132,10 @@ export interface UserProfile {
   weeklyXp: number;
   monthlyXp: number;
   seasonXp: number;
+  dailyActivity: DailyActivity;
+  weeklyActivity: WeeklyActivity;
+  monthlyActivity: MonthlyActivity;
+  personalAnalyst?: PersonalAnalyst;
 }
 
 export interface XPAction {
