@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { type JSX } from 'react';
 import { NewsArticle } from './_components/news-article';
 import { NewsSidebar } from './_components/news-sidebar';
+import { ReaderEngagement } from './_components/reader-engagement';
 import { TimeLimitedWrapper } from './_components/time-limited-wrapper';
 import { SmoothScrollWrapper } from './_components/smooth-scroll-wrapper';
 import { DynamicScrollbarWrapper } from './_components/dynamic-scrollbar-wrapper';
@@ -79,6 +80,11 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
                       relatedNews={relatedNews}
                       allNews={recentNewsData.items.map(transformNewsDataToDashboardItem)}
                     />
+                    
+                    {/* Comments and Engagement Section */}
+                    <div className="mt-16">
+                      <ReaderEngagement articleId={article.id} />
+                    </div>
                   </div>
                 </main>
                 

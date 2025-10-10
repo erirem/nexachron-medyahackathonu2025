@@ -3,6 +3,8 @@
 import type { JSX } from 'react';
 import { DashboardNewsCard } from './dashboard-news-card';
 import { FeaturedNewsCarousel } from './featured-news-carousel';
+import { GameRecommendationCard } from '@/components/dashboard/game-recommendation-card';
+import { useGameRecommendations } from '@/hooks/use-game-recommendations';
 import type { DashboardNewsItem } from './types';
 
 interface DashboardNewsGridProps {
@@ -41,6 +43,8 @@ export function DashboardNewsGrid({
   subtitle,
   showAll = false
 }: DashboardNewsGridProps): JSX.Element {
+  // Oyun önerilerini al
+  const { recommendations, getRecommendationPositions } = useGameRecommendations(items.length);
   // Add time-limited property to some news items (randomly select 2-3 items)
   const itemsWithTimeLimit = items.map((item, index) => {
     // Randomly select 2-3 items to be time-limited
@@ -142,27 +146,61 @@ export function DashboardNewsGrid({
         {/* Uniform Grid Layout - 3 columns */}
         <div className="-mx-6 sm:-mx-8 lg:-mx-12 px-6 sm:px-8 lg:px-12">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Sponsored Cards */}
-          {sponsoredItems.map((item, index) => (
-            <div key={`${item.id}-${index}`} className="group relative h-full">
-              <div className="absolute -top-3 left-4 z-10">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/30 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm whitespace-nowrap">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  SPONSORLU
-                </span>
-              </div>
-              <DashboardNewsCard item={item} />
-            </div>
-          ))}
-          
-          {/* Regular Cards */}
-          {standardItems.map((item, index) => (
-            <div key={`${item.id}-${index}`} className="group h-full">
-              <DashboardNewsCard item={item} />
-            </div>
-          ))}
+          {(() => {
+            // Tüm kartları birleştir ve karıştır
+            const allCards: Array<{ type: 'news' | 'game'; item: any; index: number }> = [];
+            
+            // Sponsored kartları ekle
+            sponsoredItems.forEach((item, index) => {
+              allCards.push({ type: 'news', item: { ...item, isSponsored: true }, index });
+            });
+            
+            // Regular kartları ekle
+            standardItems.forEach((item, index) => {
+              allCards.push({ type: 'news', item, index: index + sponsoredItems.length });
+            });
+            
+            // Oyun önerisi pozisyonlarını al
+            const gamePositions = getRecommendationPositions(allCards.length + recommendations.length);
+            
+            // Oyun kartlarını belirli pozisyonlara ekle
+            gamePositions.forEach((position, gameIndex) => {
+              if (gameIndex < recommendations.length && position < allCards.length + recommendations.length) {
+                allCards.splice(position, 0, { 
+                  type: 'game', 
+                  item: recommendations[gameIndex], 
+                  index: -1 
+                });
+              }
+            });
+            
+            return allCards.map((card, cardIndex) => {
+              if (card.type === 'game') {
+                return (
+                  <div key={`game-${card.item.id}-${cardIndex}`} className="group h-full">
+                    <GameRecommendationCard recommendation={card.item} />
+                  </div>
+                );
+              } else {
+                const newsItem = card.item;
+                return (
+                  <div key={`${newsItem.id}-${cardIndex}`} className="group relative h-full">
+                    {newsItem.isSponsored && (
+                      <div className="absolute -top-3 left-4 z-10">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/30 px-3 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm whitespace-nowrap">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          SPONSORLU
+                        </span>
+                      </div>
+                    )}
+                    <DashboardNewsCard item={newsItem} />
+                  </div>
+                );
+              }
+            });
+          })()}
           </div>
         </div>
       </div>

@@ -32,23 +32,17 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <GamificationProvider>
-        <NewsTrackingProvider>
-          <PersonalAnalystProvider>
-            <ReactQueryProvider>
-              {/* top bar kaldırıldı */}
-              {children}
-            </ReactQueryProvider>
-          </PersonalAnalystProvider>
-        </NewsTrackingProvider>
-      </GamificationProvider>
       <AuthProvider>
         <GamificationProvider>
-          <ReactQueryProvider>
-            <OnboardingGuard>
-              {children}
-            </OnboardingGuard>
-          </ReactQueryProvider>
+          <NewsTrackingProvider>
+            <PersonalAnalystProvider>
+              <ReactQueryProvider>
+                <OnboardingGuard>
+                  {children}
+                </OnboardingGuard>
+              </ReactQueryProvider>
+            </PersonalAnalystProvider>
+          </NewsTrackingProvider>
         </GamificationProvider>
       </AuthProvider>
     </NextIntlClientProvider>

@@ -203,7 +203,7 @@ class NewsApiService {
   Future<List<NewsItem>> fetchRecommendations({int limit = 5}) async {
     try {
       final uri = Uri.parse(
-        '$baseUrl/api/news/recommendations',
+        '$baseUrl/api/v1/recommendations',
       ).replace(queryParameters: {'limit': limit.toString()});
 
       print('📡 Fetching recommendations from: $uri');
@@ -218,14 +218,25 @@ class NewsApiService {
           );
 
       print('📥 Recommendations response status: ${response.statusCode}');
+      print('📦 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        
+        // API response format: { ok: true, items: [...] }
+        if (data['ok'] == true && data['items'] != null) {
+          final items = data['items'] as List<dynamic>;
+          print('✅ Loaded ${items.length} recommendation items');
+          return items.map((item) => NewsItem.fromJson(item)).toList();
+        }
+        
+        // Fallback: check for success/data format
         if (data['success'] == true && data['data'] != null) {
           final items = data['data']['items'] as List<dynamic>;
           print('✅ Loaded ${items.length} recommendation items');
           return items.map((item) => NewsItem.fromJson(item)).toList();
         }
+        
         throw Exception('Invalid response format');
       } else {
         throw Exception(
