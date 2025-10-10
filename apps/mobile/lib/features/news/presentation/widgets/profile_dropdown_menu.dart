@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileDropdownMenu extends StatefulWidget {
   final VoidCallback onClose;
@@ -49,6 +50,21 @@ class _ProfileDropdownMenuState extends State<ProfileDropdownMenu>
 
   @override
   Widget build(BuildContext context) {
+    // Supabase'den kullanıcı bilgilerini çek
+    final session = Supabase.instance.client.auth.currentSession;
+    final user = session?.user;
+    
+    // Kullanıcı adını belirle: username varsa onu, yoksa email'in @ öncesini kullan
+    String displayName = 'Kullanıcı'; // Varsayılan
+    if (user != null) {
+      if (user.userMetadata?['username'] != null) {
+        displayName = user.userMetadata!['username'] as String;
+      } else if (user.email != null) {
+        // Email'den @ öncesini al
+        displayName = user.email!.split('@').first;
+      }
+    }
+    
     return GestureDetector(
       onTap: () {}, // Prevent closing when tapping menu content
       child: AnimatedBuilder(
@@ -106,7 +122,7 @@ class _ProfileDropdownMenuState extends State<ProfileDropdownMenu>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Kullanıcı',
+                                  displayName,
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,

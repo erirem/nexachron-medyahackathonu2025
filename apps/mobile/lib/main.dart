@@ -13,6 +13,8 @@ import 'core/services/locale_controller.dart';
 import 'core/services/locale_scope.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/pages/landing_page.dart';
+import 'features/auth/presentation/pages/onboarding_page.dart';
+import 'features/auth/domain/services/onboarding_status_service.dart';
 import 'features/news/presentation/pages/main_navigation.dart';
 import 'features/games/presentation/pages/quizzes_page.dart';
 import 'features/games/presentation/pages/wordle_page.dart';
@@ -95,16 +97,60 @@ class _AuthRoot extends StatefulWidget {
 class _AuthRootState extends State<_AuthRoot> {
   Session? _session;
   StreamSubscription<AuthState>? _subscription;
+  bool _isCheckingOnboarding = true;
+  bool _hasCompletedOnboarding = false;
+  final OnboardingStatusService _onboardingService = OnboardingStatusService();
 
   @override
   void initState() {
     super.initState();
     final client = Supabase.instance.client;
     _session = client.auth.currentSession;
+
+    // İlk onboarding kontrolü
+    _checkOnboardingStatus();
+
     _subscription = client.auth.onAuthStateChange.listen((event) {
       setState(() {
         _session = event.session;
       });
+
+      // Auth değiştiğinde onboarding'i tekrar kontrol et
+      _checkOnboardingStatus();
+    });
+  }
+
+  Future<void> _checkOnboardingStatus() async {
+    if (_session == null) {
+      setState(() {
+        _isCheckingOnboarding = false;
+        _hasCompletedOnboarding = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isCheckingOnboarding = true;
+    });
+
+    try {
+      final status = await _onboardingService.checkOnboardingStatus();
+      setState(() {
+        _hasCompletedOnboarding = status?.hasCompletedOnboarding ?? false;
+        _isCheckingOnboarding = false;
+      });
+    } catch (error) {
+      // Hata durumunda güvenli tarafta kal, onboarding'i göster
+      setState(() {
+        _hasCompletedOnboarding = false;
+        _isCheckingOnboarding = false;
+      });
+    }
+  }
+
+  void _handleOnboardingComplete() {
+    setState(() {
+      _hasCompletedOnboarding = true;
     });
   }
 
@@ -116,9 +162,33 @@ class _AuthRootState extends State<_AuthRoot> {
 
   @override
   Widget build(BuildContext context) {
+    // Loading state
+    if (_isCheckingOnboarding && _session != null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF030b1a),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF8fb7ff)),
+        ),
+      );
+    }
+
+    // Auth decision tree (Web'deki OnboardingGuard mantığına benzer)
+    Widget page;
+
+    if (_session == null) {
+      // Kullanıcı giriş yapmamış
+      page = const LandingPage();
+    } else if (!_hasCompletedOnboarding) {
+      // Kullanıcı giriş yapmış ama onboarding tamamlanmamış
+      page = OnboardingPage(onComplete: _handleOnboardingComplete);
+    } else {
+      // Kullanıcı giriş yapmış ve onboarding tamamlanmış
+      page = const MainNavigation();
+    }
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
-      child: _session == null ? const LandingPage() : const MainNavigation(),
+      child: page,
     );
   }
 }

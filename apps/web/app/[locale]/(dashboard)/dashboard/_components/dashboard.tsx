@@ -403,7 +403,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#20324a_0%,rgba(25,37,58,0.94)_60%,#141b29_100%)]" aria-hidden />
             <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_top,#365982_0%,rgba(20,28,45,0.82)_70%,transparent_95%)] blur-[80px] opacity-80" aria-hidden />
 
-            <div className="relative z-10 flex flex-col gap-10 px-6 pb-16 pt-10 sm:px-8 lg:px-12">
+            <div className="relative z-10 flex flex-col gap-8 px-6 pb-16 pt-6 sm:px-8 lg:px-12">
               <MobileLibrary topics={topics} />
               <DashboardHeader />
 
@@ -531,38 +531,6 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                     <>
                       {activeCategory === 'forYou' ? (
                         <div className="space-y-4">
-                          {/* AI Öneri Göstergesi */}
-                          <div className="relative overflow-hidden rounded-2xl border border-[#8bc4ff]/20 bg-gradient-to-r from-[#8bc4ff]/8 via-[#6ab2f2]/12 to-[#8bc4ff]/8 p-4 shadow-[0_8px_32px_rgba(139,196,255,0.08)]">
-                            <div className="absolute inset-0 bg-gradient-to-r from-[#8bc4ff]/3 to-transparent" />
-                            <div className="relative flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="relative flex h-10 w-10 items-center justify-center">
-                                  <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] opacity-60" />
-                                  <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] shadow-[0_8px_24px_rgba(15,106,205,0.4)]">
-                                    <BrainIcon />
-                                  </div>
-                                </div>
-                                <div>
-                                  <h3 className="text-base font-bold text-white">AI Kişiselleştirme</h3>
-                                  <p className="text-xs text-white/70">Makine öğrenmesi ile özel öneriler</p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
-                                  <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                                  <span className="text-xs font-medium text-white/80">{recs.length} öneri</span>
-                                </div>
-                                <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-blue-300">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                  </svg>
-                                  <span className="text-xs font-medium text-white/80">Son 30 gün</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
                           {/* Öneri kartları */}
                           <DashboardNewsGrid
                             key={`recs-${recs.length}`}

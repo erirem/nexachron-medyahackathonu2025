@@ -62,6 +62,45 @@ export function DashboardNewsGrid({
         </div>
       )}
 
+      {/* AI Kişiselleştirme Göstergesi - Sadece "Sizin için" kategorisinde göster */}
+      {title === "" && (
+        <div className="-mx-6 sm:-mx-8 lg:-mx-12 px-6 sm:px-8 lg:px-12 mt-4">
+          <div className="relative overflow-hidden rounded-2xl border border-[#8bc4ff]/20 bg-gradient-to-r from-[#8bc4ff]/8 via-[#6ab2f2]/12 to-[#8bc4ff]/8 px-4 py-3 shadow-[0_8px_32px_rgba(139,196,255,0.08)]">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#8bc4ff]/3 to-transparent" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-10 w-10 items-center justify-center">
+                <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] opacity-60" />
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] shadow-[0_8px_24px_rgba(15,106,205,0.4)]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
+                    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1 .34-4.58 2.5 2.5 0 0 1 3.24-3.56A2.5 2.5 0 0 1 9.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0-.34-4.58 2.5 2.5 0 0 0-3.24-3.56A2.5 2.5 0 0 0 14.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">AI Kişiselleştirme</h3>
+                <p className="text-xs text-white/70">AI Algoritmaları ile özel öneriler</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
+                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs font-medium text-white/80">{items.length} öneri</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-blue-300">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs font-medium text-white/80">Son 30 gün</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div>
         <div className="mb-8 flex items-baseline justify-between">
@@ -81,7 +120,8 @@ export function DashboardNewsGrid({
 
 
         {/* Uniform Grid Layout - 3 columns */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="-mx-6 sm:-mx-8 lg:-mx-12 px-6 sm:px-8 lg:px-12">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Sponsored Cards */}
           {sponsoredItems.map((item, index) => (
             <div key={`${item.id}-${index}`} className="group relative h-full">
@@ -103,6 +143,7 @@ export function DashboardNewsGrid({
               <DashboardNewsCard item={item} />
             </div>
           ))}
+          </div>
         </div>
       </div>
     </section>
