@@ -9,6 +9,54 @@ import type {
   NewsWithMediaDto,
 } from '@nexachron/shared-types';
 
+// Games API types
+interface GameQuestion {
+  id: string;
+  question: string;
+  type: 'multiple_choice' | 'true_false';
+  options?: string[];
+  correctAnswer: string;
+  explanation?: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  source: 'manual' | 'news_ai' | 'news_manual';
+  sourceNewsId?: string;
+  gameType: 'quiz' | 'news_trivia' | 'memory' | 'wordle' | 'word_puzzle' | 'timeline' | 'spot_difference';
+  createdAt: string;
+}
+
+interface Game {
+  id: string;
+  gameType: string;
+  mode: 'single' | 'multiplayer';
+  status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
+  timeLimit?: number;
+  startedAt?: string;
+  completedAt?: string;
+  questions: GameQuestion[];
+  currentQuestionIndex: number;
+  score: number;
+  totalQuestions: number;
+}
+
+interface StartGameRequest {
+  gameType: string;
+  mode: 'single' | 'multiplayer';
+  filter?: {
+    gameType?: string;
+    category?: string;
+    difficulty?: string;
+    source?: string;
+    limit?: number;
+  };
+}
+
+interface AnswerQuestionRequest {
+  questionId: string;
+  answer: string;
+  timeSpent: number;
+}
+
 type QueryValue = string | number | boolean | undefined | null;
 
 type QueryRecord = Record<string, QueryValue>;
@@ -86,6 +134,7 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
 
 function ensureSuccess<T>(envelope: ApiResponseEnvelope<T>): T {
   if (!envelope.success) {
+    console.error('API Error Details:', envelope);
     throw new Error(envelope.error ?? 'Unexpected API error');
   }
   return envelope.data;
@@ -492,6 +541,115 @@ export async function triggerManualNewsIngest(
     errors: number;
   }>>(
     '/api/news-ingest/manual',
+    {
+      method: 'POST',
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+// Games API functions
+export async function getAvailableGames(config: RequestConfig = {}) {
+  const envelope = await apiFetch<{
+    games: Array<{
+      id: string;
+      name: string;
+      description: string;
+      icon: string;
+      category: string;
+      difficulty: string;
+      xpReward: number;
+      isAvailable: boolean;
+      supportsMultiplayer: boolean;
+    }>;
+  }>('/api/games', { signal: config.signal });
+
+  return envelope;
+}
+
+export async function startGame(
+  request: StartGameRequest,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<Game>>(
+    '/api/games/start',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function answerQuestion(
+  gameId: string,
+  request: AnswerQuestionRequest,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    isCorrect: boolean;
+    correctAnswer: string;
+    explanation?: string;
+    score: number;
+    timeSpent: number;
+  }>>(
+    `/api/games/${gameId}/answer`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function getGameHistory(
+  gameType?: string,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    games: Array<{
+      id: string;
+      gameType: string;
+      score: number;
+      totalQuestions: number;
+      completedAt: string;
+    }>;
+  }>>(
+    '/api/games/history',
+    {
+      query: gameType ? { gameType } : undefined,
+      headers: authHeaders,
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function generateNewsTriviaQuestions(config: RequestConfig = {}) {
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    success: boolean;
+    message: string;
+    questionsGenerated: number;
+  }>>(
+    '/api/games/questions/refresh',
     {
       method: 'POST',
       signal: config.signal,

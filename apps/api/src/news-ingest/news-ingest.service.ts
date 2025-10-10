@@ -5,6 +5,9 @@ import { RssParserService } from './services/rss-parser.service';
 import { ContentProcessorService } from './services/content-processor.service';
 import { AiSummaryService } from './services/ai-summary.service';
 import { MediaStorageService } from './services/media-storage.service';
+import { EmotionAnalysisService } from './services/emotion-analysis.service';
+import { TTSService } from '../tts/tts.service';
+import { TTSContentType, TTSVoice } from '../tts/dto/tts.dto';
 import { ProcessedNewsItem, AACategory } from './dto/news-item.dto';
 
 @Injectable()
@@ -18,7 +21,29 @@ export class NewsIngestService {
     private readonly contentProcessorService: ContentProcessorService,
     private readonly aiSummaryService: AiSummaryService,
     private readonly mediaStorageService: MediaStorageService,
+    private readonly emotionAnalysisService: EmotionAnalysisService,
+    private readonly ttsService: TTSService,
   ) {}
+
+  /**
+   * Haber için TTS audio oluştur
+   */
+  private async createTTSForNews(newsId: string, title: string): Promise<void> {
+    try {
+      // Summary için TTS oluştur (en popüler kullanım)
+      await this.ttsService.generateTTS({
+        newsId,
+        contentType: TTSContentType.SUMMARY,
+        voice: TTSVoice.ALLOY,
+        speed: 1.0,
+      });
+
+      this.logger.log(`TTS audio queued for news: ${title}`);
+    } catch (error) {
+      this.logger.error(`Failed to create TTS for news ${newsId}:`, error);
+      throw error;
+    }
+  }
 
   /**
    * Manuel haber çekme
@@ -57,7 +82,10 @@ export class NewsIngestService {
 
       this.logger.log(`Processed ${processedItems.length} news items`);
 
-      // 3. Veritabanına kaydet
+      // 3. AI ile duygu analizi yap
+      await this.enhanceWithEmotionAnalysis(processedItems);
+
+      // 4. Veritabanına kaydet
       const saveResult = await this.saveToDatabase(processedItems);
 
       this.logger.log(
@@ -165,7 +193,7 @@ export class NewsIngestService {
               video_url: item.video_url, // Extracted video URL
               tts_url: null, // Future feature
               category: item.category, // Store AA category directly
-              mode: item.mode, // Default mode, will be updated based user feedback
+              mode: item.mode, // AI-analyzed emotion or default mode
               city: item.city,
               original_url: item.original_url, // Store original RSS link
               geo: null, // Future: add GPS coordinates
@@ -194,6 +222,24 @@ export class NewsIngestService {
               );
             }
           }
+
+          // Create TTS audio for the news item (only if content is suitable)
+          try {
+            // İçerik uzunluğunu kontrol et
+            const contentLength = (item.content || item.summary || '').length;
+            this.logger.log(`TTS Check - News: ${item.title}, Content Length: ${contentLength}`);
+            
+            if (contentLength > 0 && contentLength <= 4096) {
+              this.logger.log(`Creating TTS for news: ${item.title} (${contentLength} chars)`);
+              await this.createTTSForNews(insertedNews.id, item.title);
+              this.logger.log(`✅ TTS audio created for: ${item.title}`);
+            } else {
+              this.logger.warn(`❌ Skipping TTS for news: ${item.title} (content too long: ${contentLength} chars)`);
+            }
+          } catch (ttsError) {
+            this.logger.error(`❌ Failed to create TTS for news: ${item.title}`, ttsError);
+          }
+
           saved++;
           this.logger.debug(`Saved news item: ${item.title}`);
         }
@@ -324,6 +370,57 @@ export class NewsIngestService {
    */
   getAiUsageStats() {
     return this.aiSummaryService.getUsageStats();
+  }
+
+  /**
+   * AI ile duygu analizi yaparak haberlerin mode değerlerini güncelle
+   */
+  private async enhanceWithEmotionAnalysis(
+    items: ProcessedNewsItem[],
+  ): Promise<void> {
+    if (!this.emotionAnalysisService.isAvailable()) {
+      this.logger.debug(
+        'Emotion analysis not available, using default modes',
+      );
+      return;
+    }
+
+    this.logger.log(`Analyzing emotions for ${items.length} articles`);
+
+    try {
+      // Prepare requests for emotion analysis
+      const emotionRequests = items.map((item) => ({
+        title: item.title,
+        content: item.content,
+        summary: item.summary,
+        category: item.category,
+      }));
+
+      // Analyze emotions with budget controls
+      const emotionResults = await this.emotionAnalysisService.analyzeBatchEmotions(
+        emotionRequests,
+        20, // Max 20 emotion analyses per batch to control costs
+      );
+
+      // Apply emotion analysis results to items
+      for (let i = 0; i < items.length && i < emotionResults.length; i++) {
+        const emotionResult = emotionResults[i];
+        // Update mode with AI-analyzed emotion
+        items[i].mode = emotionResult.emotion;
+        
+        this.logger.debug(
+          `Article "${items[i].title}" analyzed as ${emotionResult.emotion} (confidence: ${emotionResult.confidence})`,
+        );
+      }
+
+      const usageStats = this.emotionAnalysisService.getUsageStats();
+      this.logger.log(
+        `Emotion analysis completed. Daily usage: ${usageStats.totalRequests}/${usageStats.dailyLimit}`,
+      );
+    } catch (error) {
+      this.logger.error('Failed to analyze emotions:', error);
+      // Continue without emotion analysis - articles keep default modes
+    }
   }
 
   /**
