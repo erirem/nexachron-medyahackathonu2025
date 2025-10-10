@@ -32,6 +32,7 @@ interface GamificationContextType {
   getMonthlyActivity: () => MonthlyActivity;
   completeNews: (newsId: string) => void;
   completeSpeedRead: (newsId: string) => void;
+  useHint: () => boolean; // Returns true if hint was used successfully, false if not enough XP
 }
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
@@ -556,7 +557,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         quizzesCompleted: 0,
         xpEarned: 0,
         topicsFollowed: 0,
-        streakDays: 0
+        streakDays: 0,
+        categoryStats: []
       };
     }
     
@@ -575,7 +577,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         xpEarned: 0,
         topicsFollowed: 0,
         streakDays: 0,
-        dailyActivities: []
+        dailyActivities: [],
+        categoryStats: []
       };
     }
     
@@ -594,7 +597,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         xpEarned: 0,
         topicsFollowed: 0,
         streakDays: 0,
-        weeklyActivities: []
+        weeklyActivities: [],
+        categoryStats: []
       };
     }
     
@@ -669,6 +673,27 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     return streakDays * 20;
   }, []);
 
+  // Hint kullanma - 5 XP harcar
+  const useHint = useCallback((): boolean => {
+    if (!userProfile || userProfile.xp < 5) {
+      return false; // Yeterli XP yok
+    }
+
+    setUserProfile(prev => {
+      if (!prev) return prev;
+      
+      return {
+        ...prev,
+        xp: prev.xp - 5,
+        weeklyXp: prev.weeklyXp - 5,
+        monthlyXp: prev.monthlyXp - 5,
+        seasonXp: prev.seasonXp - 5
+      };
+    });
+
+    return true; // Hint başarıyla kullanıldı
+  }, [userProfile]);
+
   return (
     <GamificationContext.Provider value={{
       userProfile,
@@ -682,9 +707,10 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       trackActivity,
       getDailyActivity,
       getWeeklyActivity,
-      getMonthlyActivity
+      getMonthlyActivity,
       completeNews,
-      completeSpeedRead
+      completeSpeedRead,
+      useHint
     }}>
       {children}
       {/* XP Animasyonları */}

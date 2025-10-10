@@ -353,8 +353,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         categoryId === 'games' ||
         categoryId === 'analyst'
       ) {
-        const destination = categoryId === 'quizzes' ? 'quizzes' : categoryId;
-        router.push(`/${locale}/${destination}`);
+        router.push(`/${locale}/${categoryId}`);
         return;
       }
 

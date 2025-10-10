@@ -30,14 +30,16 @@ const mockQuizzes: Quiz[] = [
         question: "Türkiye'nin yeni uzay programı hangi yılda başlatıldı?",
         options: ['2020', '2021', '2022', '2023'],
         correctAnswer: 1,
-        explanation: 'Türkiye Uzay Ajansı 2021 yılında kuruldu ve uzay programı başlatıldı.'
+        explanation: 'Türkiye Uzay Ajansı 2021 yılında kuruldu ve uzay programı başlatıldı.',
+        hint: 'Bu program, Cumhurbaşkanlığı kararnamesi ile kuruldu ve ilk yılında önemli projeler başlattı.'
       },
       {
         id: '2',
         question: "Hangi ülke 2024 yılında Dünya Kupası'nı kazandı?",
         options: ['Brezilya', 'Arjantin', 'Fransa', 'Almanya'],
         correctAnswer: 1,
-        explanation: "Arjantin 2024 Dünya Kupası'nı kazandı."
+        explanation: "Arjantin 2024 Dünya Kupası'nı kazandı.",
+        hint: 'Bu ülke, 2022 Dünya Kupası\'nda da şampiyon olmuştu ve Messi\'nin ülkesi.'
       }
     ]
   },
@@ -57,7 +59,8 @@ const mockQuizzes: Quiz[] = [
         question: 'Osmanlı İmparatorluğu hangi yılda kuruldu?',
         options: ['1299', '1300', '1301', '1302'],
         correctAnswer: 0,
-        explanation: 'Osmanlı İmparatorluğu 1299 yılında kuruldu.'
+        explanation: 'Osmanlı İmparatorluğu 1299 yılında kuruldu.',
+        hint: 'Bu tarih, Osman Gazi\'nin beyliğini ilan ettiği yıldır ve 13. yüzyılın sonlarına denk gelir.'
       }
     ]
   },
@@ -77,7 +80,8 @@ const mockQuizzes: Quiz[] = [
         question: 'Galatasaray kaç kez UEFA Kupası kazandı?',
         options: ['1', '2', '3', '4'],
         correctAnswer: 0,
-        explanation: "Galatasaray 2000 yılında UEFA Kupası'nı kazandı."
+        explanation: "Galatasaray 2000 yılında UEFA Kupası'nı kazandı.",
+        hint: 'Bu başarı, Türk futbolu için tarihi bir dönüm noktasıydı ve Arsenal\'e karşı kazanıldı.'
       }
     ]
   },
@@ -97,14 +101,16 @@ const mockQuizzes: Quiz[] = [
         question: 'Hangi şirket 2023 yılında ARM tabanlı dizüstü çiplerinde pazar payını artırdı?',
         options: ['Intel', 'AMD', 'Apple', 'Qualcomm'],
         correctAnswer: 2,
-        explanation: 'Apple M-serisi çiplerle ARM tabanlı dizüstü segmentinde payını artırdı.'
+        explanation: 'Apple M-serisi çiplerle ARM tabanlı dizüstü segmentinde payını artırdı.',
+        hint: 'Bu şirket, iPhone ve iPad\'lerde kullandığı çiplerin dizüstü bilgisayarlara uyarlanmasıyla dikkat çekti.'
       },
       {
         id: '2',
         question: 'Git sürüm kontrol sisteminde uzak depoya değişiklik göndermek için hangi komut kullanılır?',
         options: ['git push', 'git pull', 'git commit', 'git merge'],
         correctAnswer: 0,
-        explanation: 'Uzak depoya yerel commitleri göndermek için git push kullanılır.'
+        explanation: 'Uzak depoya yerel commitleri göndermek için git push kullanılır.',
+        hint: 'Bu komut, yerel değişiklikleri "itmek" anlamına gelir ve uzak sunucuya gönderir.'
       }
     ]
   },
@@ -124,14 +130,16 @@ const mockQuizzes: Quiz[] = [
         question: 'Enflasyon oranı artarken para biriminin satın alma gücüne ne olur?',
         options: ['Artar', 'Azalır', 'Değişmez', 'Sadece ihracatı etkiler'],
         correctAnswer: 1,
-        explanation: 'Enflasyon yükseldikçe bir birim paranın satın alma gücü düşer.'
+        explanation: 'Enflasyon yükseldikçe bir birim paranın satın alma gücü düşer.',
+        hint: 'Enflasyon, genel fiyat seviyesindeki artıştır ve aynı para ile daha az mal alınabilir hale gelir.'
       },
       {
         id: '2',
         question: 'Merkez bankalarının en sık kullandığı politika aracı nedir?',
         options: ['Zorunlu karşılık', 'Faiz oranı', 'Açık piyasa işlemleri', 'Döviz kuru sabitleme'],
         correctAnswer: 1,
-        explanation: 'Politika faizi, para politikasının temel aktarım kanalıdır.'
+        explanation: 'Politika faizi, para politikasının temel aktarım kanalıdır.',
+        hint: 'Bu araç, kredi maliyetlerini doğrudan etkiler ve ekonomik aktiviteyi yönlendirir.'
       }
     ]
   },
@@ -151,14 +159,16 @@ const mockQuizzes: Quiz[] = [
         question: 'Suyun kimyasal formülü nedir?',
         options: ['H2', 'H2O', 'O2', 'CO2'],
         correctAnswer: 1,
-        explanation: 'Su, iki hidrojen ve bir oksijen atomundan oluşur: H2O.'
+        explanation: 'Su, iki hidrojen ve bir oksijen atomundan oluşur: H2O.',
+        hint: 'Bu formül, iki hidrojen atomu (H) ve bir oksijen atomu (O) içerir.'
       },
       {
         id: '2',
         question: 'Işık hızına en yakın hızlarda hareket eden parçacıkları inceleyen fizik dalı hangisidir?',
         options: ['Klasik mekanik', 'Termodinamik', 'Görelilik', 'Elektromanyetizma'],
         correctAnswer: 2,
-        explanation: 'Özel görelilik, ışık hızına yakın hızlarda fizik yasalarını açıklar.'
+        explanation: 'Özel görelilik, ışık hızına yakın hızlarda fizik yasalarını açıklar.',
+        hint: 'Einstein\'ın bu teorisi, zaman ve uzayın göreceli olduğunu ve ışık hızının evrensel limit olduğunu gösterir.'
       }
     ]
   }

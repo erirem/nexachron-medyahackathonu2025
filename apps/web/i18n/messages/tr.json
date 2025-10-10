@@ -492,6 +492,12 @@
           "good": "İyi iş! 👍",
           "okay": "Fena değil! 😊",
           "needsWork": "Daha çok çalışmalısın! 💪"
+        },
+        "hint": {
+          "button": "İpucu Al (-5 XP)",
+          "used": "İpucu Kullanıldı",
+          "label": "İpucu:",
+          "insufficientXp": "Yeterli XP yok"
         }
       }
     },
@@ -586,6 +592,12 @@
       },
       "labels": {
         "questionProgress": "Soru {current} / {total}"
+      },
+      "hint": {
+        "button": "İpucu Al (-5 XP)",
+        "used": "İpucu Kullanıldı",
+        "label": "İpucu:",
+        "insufficientXp": "Yeterli XP yok"
       },
       "results": {
         "title": "Quiz Tamamlandı!",
