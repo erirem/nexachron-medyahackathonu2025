@@ -5,8 +5,9 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { newsItems } from '../../dashboard/_components/news-data';
 import type { DashboardNewsItem } from '../../dashboard/_components/types';
-import { TurkeyMap, TURKEY_PROVINCE_NAMES } from '../_components/turkey-map';
+import { TurkeyMap } from '../_components/turkey-map-d3';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import turkeyCitiesData from 'turkey-cities-data';
 
 function buildOptions(from: readonly DashboardNewsItem[], correctCity: string, seed: string): string[] {
   const cities = Array.from(
@@ -60,6 +61,397 @@ function seededShuffle<T>(arr: T[], seedString: string): T[] {
   return copy;
 }
 
+// Motivasyon mesajları
+const motivationMessages = {
+  correct: ["Harika gidiyorsun!", "Mükemmel!", "Devam et!", "Süpersin!", "Harika bir tahmin!", "Çok iyisin!"],
+  wrong: ["Bir dahaki sefere!", "Pes etme!", "Öğreniyorsun!", "Denemeye devam!", "Başarısızlık başarının ta kendisidir!", "Denemek önemli!"],
+  win: ["Şampiyon!", "Rakibini geçtin!", "Harikasın!", "Efsanesin!", "Tam bir uzman!", "Muhteşemsin!"],
+  lose: ["Vazgeçme!", "Bir sonrakinde!", "Daha iyisini yaparsın!", "Çalışmaya devam!", "Seni durduramayacaklar!", "Her kayıp bir ders!"],
+  draw: ["İyi mücadele!", "Dengeli!", "İkiniz de harikasınız!", "Eşit güçtesiniz!", "Mükemmel bir eşleşme!", "Adil bir sonuç!"]
+};
+
+// Rastgele motivasyon mesajı al
+function getRandomMotivation(type: keyof typeof motivationMessages): string {
+  const messages = motivationMessages[type];
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+// Icon Components
+const TrophyIcon = ({ className = "w-12 h-12" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" />
+  </svg>
+);
+
+const CelebrationIcon = ({ className = "w-12 h-12" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z" clipRule="evenodd" />
+  </svg>
+);
+
+const ThumbsUpIcon = ({ className = "w-12 h-12" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M7.493 18.5c-.425 0-.82-.236-.975-.632A7.48 7.48 0 0 1 6 15.125c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75A.75.75 0 0 1 15 2a2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23h-.777ZM2.331 10.727a11.969 11.969 0 0 0-.831 4.398 12 12 0 0 0 .52 3.507C2.28 19.482 3.105 20 3.994 20H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 0 1-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227Z" />
+  </svg>
+);
+
+const MuscleIcon = ({ className = "w-12 h-12" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clipRule="evenodd" />
+  </svg>
+);
+
+const HandshakeIcon = ({ className = "w-12 h-12" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+  </svg>
+);
+
+const SadFaceIcon = ({ className = "w-12 h-12" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-2.625 6c-.54 0-.828.419-.936.634a1.96 1.96 0 0 0-.189.866c0 .298.059.605.189.866.108.215.395.634.936.634.54 0 .828-.419.936-.634.13-.26.189-.568.189-.866 0-.298-.059-.605-.189-.866-.108-.215-.395-.634-.936-.634Zm4.314.634c.108-.215.395-.634.936-.634.54 0 .828.419.936.634.13.26.189.568.189.866 0 .298-.059.605-.189.866-.108.215-.395.634-.936.634-.54 0-.828-.419-.936-.634a1.96 1.96 0 0 1-.189-.866c0-.298.059-.605.189-.866Zm-4.34 7.964a.75.75 0 0 1-1.061-1.06 5.236 5.236 0 0 1 3.73-1.538 5.236 5.236 0 0 1 3.695 1.538.75.75 0 1 1-1.061 1.06 3.736 3.736 0 0 0-2.639-1.098 3.736 3.736 0 0 0-2.664 1.098Z" clipRule="evenodd" />
+  </svg>
+);
+
+const StarIcon = ({ className = "w-12 h-12" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" />
+  </svg>
+);
+
+const CheckCircleIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+  </svg>
+);
+
+// Toast component
+interface ToastProps {
+  message: string;
+  show: boolean;
+}
+
+function Toast({ message, show }: ToastProps): JSX.Element | null {
+  if (!show) return null;
+
+  return (
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] animate-slide-in-top">
+      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-glow">
+        <StarIcon className="w-6 h-6" />
+        <span className="font-bold text-lg">{message}</span>
+      </div>
+    </div>
+  );
+}
+
+// FinalResultsModal component
+interface FinalResultsModalProps {
+  correctCount: number;
+  wrongCount: number;
+  totalQuestions: number;
+  onClose: () => void;
+  onReplay: () => void;
+}
+
+function FinalResultsModal({ correctCount, wrongCount, totalQuestions, onClose, onReplay }: FinalResultsModalProps): JSX.Element {
+  const [showToast, setShowToast] = useState(false);
+  const totalXP = correctCount * 10;
+  const successRate = Math.round((correctCount / totalQuestions) * 100);
+
+  const handleClaimXP = () => {
+    // Toast göster
+    setShowToast(true);
+
+    // 2 saniye sonra toast'ı kapat ve sayfayı kapat
+    setTimeout(() => {
+      setShowToast(false);
+      setTimeout(() => {
+        onClose();
+      }, 300);
+    }, 2000);
+  };
+
+  // Başarı oranına göre mesaj ve renk
+  let performanceConfig: {
+    gradient: string;
+    icon: JSX.Element;
+    title: string;
+    message: string;
+  };
+
+  if (successRate >= 80) {
+    performanceConfig = {
+      gradient: 'from-yellow-400 to-amber-500',
+      icon: <TrophyIcon className="w-16 h-16 text-white" />,
+      title: 'Mükemmel Performans!',
+      message: 'Harika bir performans sergileyerek oyunu tamamladın!'
+    };
+  } else if (successRate >= 60) {
+    performanceConfig = {
+      gradient: 'from-green-500 to-emerald-600',
+      icon: <CelebrationIcon className="w-16 h-16 text-white" />,
+      title: 'Çok İyi!',
+      message: 'Güzel bir başarı! Devam edersen daha da iyisini yaparsın.'
+    };
+  } else if (successRate >= 40) {
+    performanceConfig = {
+      gradient: 'from-blue-500 to-cyan-600',
+      icon: <ThumbsUpIcon className="w-16 h-16 text-white" />,
+      title: 'İyi Deneme!',
+      message: 'Fena değil! Biraz daha pratikle çok daha iyisini yapabilirsin.'
+    };
+  } else {
+    performanceConfig = {
+      gradient: 'from-purple-500 to-indigo-600',
+      icon: <MuscleIcon className="w-16 h-16 text-white" />,
+      title: 'Daha İyi Olabilir!',
+      message: 'Pes etme! Her oyun bir öğrenme fırsatı.'
+    };
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in pointer-events-auto px-4">
+      <div className={`relative bg-gradient-to-br ${performanceConfig.gradient} rounded-2xl p-6 shadow-2xl max-w-md w-full animate-scale-in animate-bounce-finite`}>
+        {/* Icon */}
+        <div className="flex justify-center mb-3">{performanceConfig.icon}</div>
+
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-white text-center mb-1">Oyun Bitti!</h2>
+        <h3 className="text-lg font-semibold text-white/90 text-center mb-3">{performanceConfig.title}</h3>
+
+        {/* Message */}
+        <p className="text-white/90 text-center text-sm mb-4">{performanceConfig.message}</p>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-white/10 backdrop-blur rounded-lg p-3 text-center">
+            <div className="text-white/70 text-xs mb-1">Toplam Soru</div>
+            <div className="text-white font-bold text-2xl">{totalQuestions}</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur rounded-lg p-3 text-center">
+            <div className="text-white/70 text-xs mb-1">Başarı Oranı</div>
+            <div className="text-white font-bold text-2xl">{successRate}%</div>
+          </div>
+        </div>
+
+        {/* Detailed Stats */}
+        <div className="bg-white/10 backdrop-blur rounded-lg p-4 mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-white/90 text-sm">Doğru Cevaplar:</span>
+            <span className="text-green-300 font-bold text-xl">{correctCount}</span>
+          </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-white/90 text-sm">Yanlış Cevaplar:</span>
+            <span className="text-red-300 font-bold text-xl">{wrongCount}</span>
+          </div>
+          <div className="border-t border-white/20 pt-2 mt-2">
+            <div className="flex justify-between items-center">
+              <span className="text-white font-semibold text-sm">Toplam XP Kazancı:</span>
+              <span className="text-yellow-300 font-bold text-2xl">+{totalXP} XP</span>
+            </div>
+            <p className="text-white/60 text-xs text-right mt-1">({correctCount} doğru × 10 XP)</p>
+          </div>
+        </div>
+
+        {/* Achievement Badge */}
+        {successRate === 100 && (
+          <div className="bg-white/10 backdrop-blur rounded-lg p-2.5 mb-3 text-center animate-glow">
+            <div className="flex justify-center mb-1">
+              <StarIcon className="w-8 h-8 text-yellow-300" />
+            </div>
+            <div className="text-white font-bold text-sm">Mükemmel Skor!</div>
+            <div className="text-white/70 text-xs">Tüm soruları doğru bildin!</div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className={`grid gap-3 ${totalXP > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {/* Tekrar Oyna Button */}
+          <button
+            onClick={onReplay}
+            disabled={showToast}
+            className="px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold text-base transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span className="hidden sm:inline">Tekrar Oyna</span>
+            <span className="sm:hidden">Tekrar</span>
+          </button>
+
+          {/* XP Al ve Çık Button - Sadece XP > 0 ise göster */}
+          {totalXP > 0 && (
+            <button
+              onClick={handleClaimXP}
+              disabled={showToast}
+              className="px-4 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold text-base transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+            >
+              {showToast ? (
+                <>
+                  <CheckCircleIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">XP Alındı!</span>
+                  <span className="sm:hidden">Alındı!</span>
+                </>
+              ) : (
+                <>
+                  <StarIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">{totalXP} XP Al</span>
+                  <span className="sm:hidden">{totalXP} XP</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Toast Message */}
+      <Toast message={`+${totalXP} XP Kazandın!`} show={showToast} />
+    </div>
+  );
+}
+
+// ResultModal component
+interface ResultModalProps {
+  mode: 'single' | 'multi';
+  lastResult: 'correct' | 'wrong';
+  roundOutcome: 'win' | 'lose' | 'draw' | null;
+  correctCount: number;
+  wrongCount: number;
+  totalQuestions: number;
+  correctCity?: string;
+  onClose: () => void;
+}
+
+function ResultModal({ mode, lastResult, roundOutcome, correctCount, wrongCount, totalQuestions, correctCity, onClose }: ResultModalProps): JSX.Element {
+  // Duruma göre konfigürasyon
+  let config: {
+    gradient: string;
+    icon: JSX.Element;
+    title: string;
+    motivation: string;
+    animationClass: string;
+  };
+
+  if (mode === 'multi' && roundOutcome) {
+    if (roundOutcome === 'win') {
+      config = {
+        gradient: 'from-yellow-400 to-amber-500',
+        icon: <TrophyIcon className="w-12 h-12 text-white" />,
+        title: 'Kazandın!',
+        motivation: getRandomMotivation('win'),
+        animationClass: 'animate-bounce animate-glow'
+      };
+    } else if (roundOutcome === 'lose') {
+      config = {
+        gradient: 'from-purple-500 to-indigo-600',
+        icon: <MuscleIcon className="w-12 h-12 text-white" />,
+        title: 'Bu Sefer Olmadı',
+        motivation: getRandomMotivation('lose'),
+        animationClass: 'animate-shake'
+      };
+    } else {
+      config = {
+        gradient: 'from-blue-500 to-cyan-600',
+        icon: <HandshakeIcon className="w-12 h-12 text-white" />,
+        title: 'Berabere!',
+        motivation: getRandomMotivation('draw'),
+        animationClass: 'animate-glow animate-wave'
+      };
+    }
+  } else {
+    if (lastResult === 'correct') {
+      config = {
+        gradient: 'from-green-500 to-emerald-600',
+        icon: <CelebrationIcon className="w-12 h-12 text-white" />,
+        title: 'Tebrikler! Doğru Bildiniz!',
+        motivation: getRandomMotivation('correct'),
+        animationClass: 'animate-bounce animate-glow'
+      };
+    } else {
+      config = {
+        gradient: 'from-red-500 to-rose-600',
+        icon: <SadFaceIcon className="w-12 h-12 text-white" />,
+        title: 'Üzgünüz, Yanlış Cevap',
+        motivation: getRandomMotivation('wrong'),
+        animationClass: 'animate-shake'
+      };
+    }
+  }
+
+  // XP hesaplama: Sadece doğru cevap durumunda XP ver
+  const earnedXP = lastResult === 'correct' ? 10 : 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in pointer-events-auto">
+      <div className={`relative bg-gradient-to-br ${config.gradient} rounded-2xl p-8 shadow-2xl max-w-md w-[90%] animate-scale-in ${config.animationClass}`}>
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-all hover:rotate-90 duration-300"
+          aria-label="Kapat"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Icon */}
+        <div className="flex justify-center mb-4">{config.icon}</div>
+
+        {/* Title */}
+        <h3 className="text-3xl font-bold text-white text-center mb-3">{config.title}</h3>
+
+        {/* Motivation Message */}
+        <p className="text-white/90 text-center text-lg mb-4">{config.motivation}</p>
+
+        {/* Stats */}
+        <div className="bg-white/10 backdrop-blur rounded-lg p-4 mb-2">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-white/90">Doğru:</span>
+            <span className="text-green-300 font-bold text-lg">{correctCount}</span>
+          </div>
+          {lastResult === 'wrong' && (
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-white/90">Yanlış:</span>
+              <span className="text-red-300 font-bold text-lg">{wrongCount}</span>
+            </div>
+          )}
+          <div className="flex justify-between items-center border-t border-white/20 pt-2">
+            <span className="text-white/90 font-semibold">Toplam Skor:</span>
+            <span className="text-white font-bold text-xl">{correctCount}/{totalQuestions}</span>
+          </div>
+        </div>
+
+        {/* Correct Answer for Wrong - Sadece yanlış cevap durumunda göster */}
+        {lastResult === 'wrong' && correctCity && (
+          <div className="bg-white/10 backdrop-blur rounded-lg p-3 text-center mb-3">
+            <p className="text-white/70 text-sm mb-1">Doğru Cevap:</p>
+            <p className="text-white font-bold text-lg">{correctCity}</p>
+          </div>
+        )}
+
+        {/* XP Info - Sadece doğru cevap durumunda göster */}
+        {lastResult === 'correct' && earnedXP > 0 && (
+          <div className="text-center text-white/90 text-base mt-3 mb-2">
+            <div className="inline-block bg-white/10 px-4 py-2 rounded-full">
+              <span className="font-bold text-yellow-300">+{earnedXP} XP</span> kazandın! 🌟
+            </div>
+            <p className="text-white/60 text-xs mt-2">(Doğru cevap × 10 XP)</p>
+          </div>
+        )}
+
+        {/* Kapat Butonu */}
+        <button
+          onClick={onClose}
+          className="w-full mt-4 px-6 py-3 bg-white/20 hover:bg-white/30 rounded-lg text-white font-semibold transition-all hover:scale-105"
+        >
+          Devam Et
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function NewsGuessrPage(): JSX.Element {
   const t = useTranslations('newsGuessr');
   const router = useRouter();
@@ -101,7 +493,7 @@ export default function NewsGuessrPage(): JSX.Element {
   }, [searchParams, mode]);
 
   const items = useMemo(() => {
-    const validCities = new Set(TURKEY_PROVINCE_NAMES);
+    const validCities = new Set(turkeyCitiesData.map(city => city.label));
     const candidates = newsItems.filter((n) => !!n.dateline && !!n.imageUrl && validCities.has(n.dateline));
     const base = seededShuffle(candidates, roomId || 'single').slice(0, 6);
     return base.map((n) => ({
@@ -330,9 +722,9 @@ export default function NewsGuessrPage(): JSX.Element {
                   <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
                     <div className="text-blue-300 font-semibold">{t('yourGuess', { default: 'Senin Tahminlerin' })}</div>
                     <div className="text-xs text-white/70">
-                      <span className="text-green-400 font-semibold">{selfGuesses.filter(g=>g.correct).length}</span>
+                      <span className="text-green-400 font-semibold">{selfGuesses.filter(g => g.correct).length}</span>
                       <span className="text-white/50"> / </span>
-                      <span className="text-red-400 font-semibold">{selfGuesses.filter(g=>!g.correct).length}</span>
+                      <span className="text-red-400 font-semibold">{selfGuesses.filter(g => !g.correct).length}</span>
                     </div>
                   </div>
                   <div className="px-4 py-3 text-xs text-white/60">@Sen</div>
@@ -355,7 +747,7 @@ export default function NewsGuessrPage(): JSX.Element {
               </aside>
 
               {/* Center: Map */}
-              <div className="lg:col-span-12 order-1 lg:order-2">
+              <div className="lg:col-span-12 order-1 lg:order-2 lg:mx-20">
                 <TurkeyMap
                   selected={selected}
                   correct={showResult ? current.city : null}
@@ -378,9 +770,9 @@ export default function NewsGuessrPage(): JSX.Element {
                   <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
                     <div className="text-purple-300 font-semibold">{t('opponentGuess', { default: 'Rakibin Tahminleri' })}</div>
                     <div className="text-xs text-white/70">
-                      <span className="text-green-400 font-semibold">{opponentGuesses.filter(g=>g.correct).length}</span>
+                      <span className="text-green-400 font-semibold">{opponentGuesses.filter(g => g.correct).length}</span>
                       <span className="text-white/50"> / </span>
-                      <span className="text-red-400 font-semibold">{opponentGuesses.filter(g=>!g.correct).length}</span>
+                      <span className="text-red-400 font-semibold">{opponentGuesses.filter(g => !g.correct).length}</span>
                     </div>
                   </div>
                   <div className="px-4 py-3 text-xs text-white/60">@Rakip</div>
@@ -402,91 +794,63 @@ export default function NewsGuessrPage(): JSX.Element {
                 </div>
               </aside>
             </div>
-            {showResult && lastResult && (
-              <div className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
-                <div className={`px-6 py-3 rounded-lg text-2xl font-bold backdrop-blur bg-black/40 ${lastResult === 'correct' ? 'text-green-400' : 'text-red-400'}`}>
-                  {mode === 'multi' && roundOutcome
-                    ? roundOutcome === 'win'
-                      ? t('youWin', { default: 'Kazandın!' })
-                      : roundOutcome === 'lose'
-                        ? t('youLose', { default: 'Kaybettin' })
-                        : t('draw', { default: 'Berabere' })
-                    : lastResult === 'correct' ? t('correct', { default: 'Doğru!' }) : t('wrong', { default: 'Yanlış' })}
-                </div>
-              </div>
-            )}
           </div>
-            {/* Edge-fixed side panels for large screens */}
-            <div className="hidden lg:block">
-              {/* Left fixed: Self */}
-              <div className="fixed left-6 top-1/2 -translate-y-1/2 z-30 w-72">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-blue-950/40 to-blue-900/20 hover:from-blue-900/50 hover:to-blue-800/30 transition shadow-xl">
-                  <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                    <div className="text-blue-300 font-semibold">{t('yourGuess', { default: 'Senin Tahminlerin' })}</div>
-                    <div className="text-xs text-white/70">
-                      <span className="text-green-400 font-semibold">{selfGuesses.filter(g=>g.correct).length}</span>
-                      <span className="text-white/50"> / </span>
-                      <span className="text-red-400 font-semibold">{selfGuesses.filter(g=>!g.correct).length}</span>
-                    </div>
+          {/* Edge-fixed side panels for large screens */}
+          <div className="hidden lg:block">
+            {/* Left fixed: Self */}
+            <div className="fixed left-4 top-1/2 -translate-y-1/2 z-30 w-64">
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-blue-950/40 to-blue-900/20 hover:from-blue-900/50 hover:to-blue-800/30 transition shadow-xl">
+                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                  <div className="text-blue-300 font-semibold">{t('yourGuess', { default: 'Senin Tahminlerin' })}</div>
+                  <div className="text-xs text-white/70">
+                    <span className="text-green-400 font-semibold">{selfGuesses.filter(g => g.correct).length}</span>
+                    <span className="text-white/50"> / </span>
+                    <span className="text-red-400 font-semibold">{selfGuesses.filter(g => !g.correct).length}</span>
                   </div>
-                  <div className="px-4 py-3 text-xs text-white/60">@Sen</div>
-                  <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
-                    {selfGuesses.length === 0 && (
-                      <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
-                    )}
-                    {selfGuesses.map((g) => (
-                      <li key={`self-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
-                        <span className="text-white/80">Soru {g.idx + 1}</span>
-                        <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
-              </div>
-              {/* Right fixed: Opponent */}
-              <div className="fixed right-6 top-1/2 -translate-y-1/2 z-30 w-72">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-purple-950/40 to-purple-900/20 hover:from-purple-900/50 hover:to-purple-800/30 transition shadow-xl">
-                  <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                    <div className="text-purple-300 font-semibold">{t('opponentGuess', { default: 'Rakibin Tahminleri' })}</div>
-                    <div className="text-xs text-white/70">
-                      <span className="text-green-400 font-semibold">{opponentGuesses.filter(g=>g.correct).length}</span>
-                      <span className="text-white/50"> / </span>
-                      <span className="text-red-400 font-semibold">{opponentGuesses.filter(g=>!g.correct).length}</span>
-                    </div>
-                  </div>
-                  <div className="px-4 py-3 text-xs text-white/60">@Rakip</div>
-                  <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
-                    {opponentGuesses.length === 0 && (
-                      <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
-                    )}
-                    {opponentGuesses.map((g) => (
-                      <li key={`opp-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
-                        <span className="text-white/80">Soru {g.idx + 1}</span>
-                        <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <div className="px-4 py-3 text-xs text-white/60">@Sen</div>
+                <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
+                  {selfGuesses.length === 0 && (
+                    <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
+                  )}
+                  {selfGuesses.map((g) => (
+                    <li key={`self-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
+                      <span className="text-white/80">Soru {g.idx + 1}</span>
+                      <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
+            {/* Right fixed: Opponent */}
+            <div className="fixed right-4 top-1/2 -translate-y-1/2 z-30 w-64">
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-purple-950/40 to-purple-900/20 hover:from-purple-900/50 hover:to-purple-800/30 transition shadow-xl">
+                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                  <div className="text-purple-300 font-semibold">{t('opponentGuess', { default: 'Rakibin Tahminleri' })}</div>
+                  <div className="text-xs text-white/70">
+                    <span className="text-green-400 font-semibold">{opponentGuesses.filter(g => g.correct).length}</span>
+                    <span className="text-white/50"> / </span>
+                    <span className="text-red-400 font-semibold">{opponentGuesses.filter(g => !g.correct).length}</span>
+                  </div>
+                </div>
+                <div className="px-4 py-3 text-xs text-white/60">@Rakip</div>
+                <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
+                  {opponentGuesses.length === 0 && (
+                    <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
+                  )}
+                  {opponentGuesses.map((g) => (
+                    <li key={`opp-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
+                      <span className="text-white/80">Soru {g.idx + 1}</span>
+                      <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
           {/* footer removed: auto-advance enabled */}
         </div>
 
-        {showFinal && (
-          <div className="mt-6 p-6 bg-[#1a2234] border border-white/10 rounded-2xl text-center">
-            <h3 className="text-2xl font-semibold mb-4">{t('results.title', { default: 'Sonuçlar' })}</h3>
-            <div className="flex items-center justify-center gap-6 mb-6">
-              <div className="text-green-400 text-xl font-bold">{t('results.correct', { default: 'Doğru' })}: {correctCount}</div>
-              <div className="text-red-400 text-xl font-bold">{t('results.wrong', { default: 'Yanlış' })}: {wrongCount}</div>
-            </div>
-            <button
-              onClick={() => router.back()}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-medium"
-            >
-              {t('actions.back', { default: 'Çıkış' })}
-            </button>
-          </div>
-        )}
         {/* Manual next fallback after results in multiplayer */}
         {mode === 'multi' && showResult && !showFinal && (
           <div className="mt-4 flex justify-center">
@@ -499,6 +863,48 @@ export default function NewsGuessrPage(): JSX.Element {
           </div>
         )}
       </div>
+
+      {/* Result Modal */}
+      {showResult && lastResult && mode !== 'none' && !showFinal && (
+        <ResultModal
+          mode={mode}
+          lastResult={lastResult}
+          roundOutcome={roundOutcome}
+          correctCount={correctCount}
+          wrongCount={wrongCount}
+          totalQuestions={items.length}
+          correctCity={current.city}
+          onClose={() => {
+            advanceToNext();
+          }}
+        />
+      )}
+
+      {/* Final Results Modal */}
+      {showFinal && (
+        <FinalResultsModal
+          correctCount={correctCount}
+          wrongCount={wrongCount}
+          totalQuestions={items.length}
+          onClose={() => router.back()}
+          onReplay={() => {
+            // Tüm state'leri sıfırla
+            setIndex(0);
+            setScore(0);
+            setCorrectCount(0);
+            setWrongCount(0);
+            setShowFinal(false);
+            setSelfGuesses([]);
+            setOpponentGuesses([]);
+            setSelected(null);
+            setShowResult(false);
+            setLastResult(null);
+            setOpponentGuess(null);
+            setRoundOutcome(null);
+          }}
+        />
+      )}
+
       {/* Mode selector overlay */}
       {mode === 'none' && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
