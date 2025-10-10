@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SupabaseModule } from './supabase/supabase.module';
@@ -9,12 +10,14 @@ import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { GamesModule } from './games/games.module';
 import { TTSModule } from './tts/tts.module';
+import { ReelsModule } from './reels/reels.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(), // For cron jobs in ReelsService
     SupabaseModule,
     NewsModule,
     UsersModule,
@@ -22,8 +25,9 @@ import { TTSModule } from './tts/tts.module';
     BookmarksModule,
     GamesModule,
     TTSModule,
+    ReelsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

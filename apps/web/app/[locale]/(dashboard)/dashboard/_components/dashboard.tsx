@@ -441,8 +441,8 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                       )}
                       {/* Load more trigger */}
                       {hasNextPage && (
-                        <div 
-                          ref={loadMoreTriggerRef} 
+                        <div
+                          ref={loadMoreTriggerRef}
                           className="h-20 flex items-center justify-center"
                         >
                           {!(isFetchingNextPage || isLoadingMore) && (
@@ -798,8 +798,8 @@ function SearchBox(): JSX.Element {
 
   return (
     <div className={`relative flex min-w-[280px] flex-1 items-center rounded-full border transition-all duration-300 ${isFocused
-        ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]'
-        : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
+      ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]'
+      : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
       }`}>
       <div className="pl-5 pr-3">
         <SearchIcon />
@@ -945,8 +945,8 @@ function CategoryChip({ category, isActive, onSelect }: CategoryChipProps): JSX.
       type="button"
       onClick={() => onSelect(category.id)}
       className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${isActive
-          ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
-          : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
+        ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
+        : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
         }`}
     >
       <span>{category.label}</span>

@@ -4,11 +4,11 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { TTSService } from './tts.service';
 import { VideoComposerService } from './video-composer.service';
-import { 
-  Reel, 
-  ReelSourceType, 
-  ReelTemplate, 
-  ReelStatus, 
+import {
+  Reel,
+  ReelSourceType,
+  ReelTemplate,
+  ReelStatus,
   ReelGenerationRequest,
   ReelContent,
   TTSVoice
@@ -28,25 +28,25 @@ export class ReelGeneratorService {
     private readonly aiSummaryService: AiSummaryService,
     private readonly ttsService: TTSService,
     private readonly videoComposerService: VideoComposerService
-  ) {}
+  ) { }
 
   /**
    * Generate a reel from news item
    */
   async generateReel(newsItem: ProcessedNewsItem, request?: Partial<ReelGenerationRequest>, newsId?: string): Promise<Reel> {
     const reelId = crypto.randomUUID();
-    
+
     this.logger.log(`Starting reel generation for news: ${newsItem.title}`);
 
     // 1. Determine source type from ProcessedNewsItem and news_media table
     let sourceType = await this.determineSourceType(newsItem, newsId);
-    
+
     // 2. Get media analysis for asset preparation
     let mediaAnalysis: Awaited<ReturnType<typeof this.analyzeNewsMedia>> | null = null;
     if (newsId) {
       mediaAnalysis = await this.analyzeNewsMedia(newsId);
     }
-    
+
     const template = request?.template || this.selectTemplate(newsItem, sourceType);
 
     // 2. Create initial reel record
@@ -101,7 +101,7 @@ export class ReelGeneratorService {
 
       reel.status = ReelStatus.COMPLETED;
       reel.updated_at = new Date();
-      
+
       this.logger.log(`Reel generation completed: ${reelId}`);
       return reel;
 
@@ -135,7 +135,7 @@ export class ReelGeneratorService {
         return ReelSourceType.VIDEO;
       }
     }
-    
+
     if (newsItem.image_url || (newsItem.media_gallery?.images && newsItem.media_gallery.images.length > 0)) {
       return ReelSourceType.IMAGE;
     }
@@ -145,7 +145,7 @@ export class ReelGeneratorService {
       const mediaAnalysis = await this.analyzeNewsMedia(newsId);
       return mediaAnalysis.sourceType;
     }
-    
+
     return ReelSourceType.TEXT_ONLY;
   }
 
@@ -234,8 +234,8 @@ export class ReelGeneratorService {
    * Prepare assets based on media analysis
    */
   private prepareAssetsFromMediaAnalysis(
-    sourceType: ReelSourceType, 
-    mediaAnalysis: any, 
+    sourceType: ReelSourceType,
+    mediaAnalysis: any,
     newsItem: ProcessedNewsItem
   ): any {
     const assets: any = {
@@ -294,10 +294,10 @@ export class ReelGeneratorService {
   private async generateAIImages(newsItem: ProcessedNewsItem): Promise<string[]> {
     try {
       this.logger.log(`Generating AI images for: ${newsItem.title}`);
-      
+
       // Create prompt based on news content
       const prompt = this.createImagePrompt(newsItem);
-      
+
       // TODO: Integrate with AI image generation service (DALL-E, Midjourney, etc.)
       // For now, return placeholder URLs
       const aiImages = [
@@ -305,10 +305,10 @@ export class ReelGeneratorService {
         'https://example.com/ai-image-2.jpg',
         'https://example.com/ai-image-3.jpg'
       ];
-      
+
       this.logger.log(`Generated ${aiImages.length} AI images for text-only reel`);
       return aiImages;
-      
+
     } catch (error) {
       this.logger.error('Failed to generate AI images:', error);
       return [];
@@ -321,7 +321,7 @@ export class ReelGeneratorService {
   private createImagePrompt(newsItem: ProcessedNewsItem): string {
     const category = newsItem.category || 'genel';
     const title = newsItem.title;
-    
+
     // Create category-specific prompts
     const categoryPrompts: Record<string, string> = {
       'spor': `Sports news image: ${title}. Dynamic, energetic, professional sports photography style.`,
@@ -331,7 +331,7 @@ export class ReelGeneratorService {
       'sağlık': `Health news image: ${title}. Medical, healthcare, clean and professional.`,
       'genel': `News image: ${title}. Professional journalism, clear and informative.`
     };
-    
+
     return categoryPrompts[category] || categoryPrompts['genel'];
   }
 
@@ -341,8 +341,8 @@ export class ReelGeneratorService {
   private selectTemplate(newsItem: ProcessedNewsItem, sourceType: ReelSourceType): ReelTemplate {
     // Check for breaking news keywords
     const breakingKeywords = ['son dakika', 'acil', 'önemli', 'kritik', 'alarm'];
-    if (breakingKeywords.some(keyword => 
-      newsItem.title.toLowerCase().includes(keyword) || 
+    if (breakingKeywords.some(keyword =>
+      newsItem.title.toLowerCase().includes(keyword) ||
       newsItem.content.toLowerCase().includes(keyword)
     )) {
       return ReelTemplate.BREAKING_NEWS;
@@ -371,7 +371,7 @@ export class ReelGeneratorService {
    */
   private async generateReelContent(newsItem: ProcessedNewsItem): Promise<ReelContent> {
     // Create reel-specific headline (max 80 chars)
-    const headline = newsItem.title.length > 80 
+    const headline = newsItem.title.length > 80
       ? newsItem.title.substring(0, 77) + '...'
       : newsItem.title;
 
@@ -491,16 +491,16 @@ export class ReelGeneratorService {
     // Generate the same content that will be used for TTS
     const content = await this.generateReelContent(newsItem);
     const ttsText = content.summary_sentences.join('. ');
-    
+
     const ttsDuration = this.estimateTTSTextDuration(ttsText, ttsSpeed);
-    
+
     this.logger.log(`Estimated TTS duration: ${ttsDuration}s for text: ${ttsText.substring(0, 100)}...`);
-    
+
     // Add some buffer for video transitions and effects
     const videoDuration = Math.max(ttsDuration + 2, 15); // Minimum 15s, add 2s buffer
-    
+
     this.logger.log(`Final video duration: ${videoDuration}s`);
-    
+
     // Cap at 30 seconds maximum
     return Math.min(videoDuration, 30);
   }
@@ -513,13 +513,13 @@ export class ReelGeneratorService {
     const wordsPerMinute = 120 * speed;
     const wordCount = text.split(/\s+/).length;
     const durationMinutes = wordCount / wordsPerMinute;
-    
+
     // Add extra buffer for natural pauses and sentence breaks
     const baseDuration = Math.ceil(durationMinutes * 60);
     const bufferedDuration = Math.ceil(baseDuration * 1.3); // 30% buffer
-    
+
     this.logger.log(`TTS estimation: ${wordCount} words, ${wordsPerMinute} WPM, base: ${baseDuration}s, buffered: ${bufferedDuration}s`);
-    
+
     return bufferedDuration;
   }
 
@@ -573,7 +573,7 @@ export class ReelGeneratorService {
    */
   private async processVideoSource(reel: Reel, newsItem: ProcessedNewsItem): Promise<void> {
     this.logger.log(`Processing video source for reel: ${reel.id}`);
-    
+
     reel.processing_log?.push({
       step: 'video_processing',
       status: 'started',
@@ -582,7 +582,7 @@ export class ReelGeneratorService {
 
     // Get source video URL
     const videoUrl = newsItem.video_url || newsItem.media_gallery?.featured_video;
-    
+
     if (!videoUrl) {
       throw new Error('No video source found for VIDEO type reel');
     }
@@ -593,9 +593,9 @@ export class ReelGeneratorService {
     // - Add overlay elements (headline, captions)
     // - Resize to 9:16 aspect ratio
     // - Add branding elements
-    
+
     reel.assets.background_image = videoUrl; // Temporary - will be processed video
-    
+
     reel.processing_log?.push({
       step: 'video_processing',
       status: 'completed',
@@ -609,7 +609,7 @@ export class ReelGeneratorService {
    */
   private async processImageSource(reel: Reel, newsItem: ProcessedNewsItem, newsId?: string): Promise<void> {
     this.logger.log(`Processing image source for reel: ${reel.id}`);
-    
+
     reel.processing_log?.push({
       step: 'image_processing',
       status: 'started',
@@ -618,20 +618,20 @@ export class ReelGeneratorService {
 
     // Get source image URL
     const imageUrl = newsItem.image_url || newsItem.media_gallery?.featured_image;
-    
+
     if (!imageUrl) {
       throw new Error('No image source found for IMAGE type reel');
     }
 
     // Get additional images for transitions
     const additionalImages = await this.getAdditionalImagesFromNews(newsItem, newsId);
-    
+
     reel.assets.background_image = imageUrl;
     if (additionalImages.length > 0) {
       reel.assets.additional_images = additionalImages;
       this.logger.log(`Found ${additionalImages.length} additional images for transitions`);
     }
-    
+
     reel.processing_log?.push({
       step: 'image_processing',
       status: 'completed',
@@ -645,7 +645,7 @@ export class ReelGeneratorService {
    */
   private async processTextOnlySource(reel: Reel, newsItem: ProcessedNewsItem): Promise<void> {
     this.logger.log(`Processing text-only source for reel: ${reel.id}`);
-    
+
     reel.processing_log?.push({
       step: 'text_processing',
       status: 'started',
@@ -658,11 +658,11 @@ export class ReelGeneratorService {
     // - Add dynamic backgrounds (gradients, patterns)
     // - Create engaging visual elements
     // - Add category-specific visual themes
-    
+
     // For now, use a default background
     // Get background image (will be updated later with newsId if available)
     reel.assets.background_image = await this.getBackgroundFromNews(newsItem);
-    
+
     reel.processing_log?.push({
       step: 'text_processing',
       status: 'completed',
@@ -676,7 +676,7 @@ export class ReelGeneratorService {
    */
   private async generateTTSAudio(reel: Reel, request?: any): Promise<void> {
     this.logger.log(`Generating TTS audio for reel: ${reel.id}`);
-    
+
     reel.processing_log?.push({
       step: 'tts_generation',
       status: 'started',
@@ -685,7 +685,7 @@ export class ReelGeneratorService {
 
     // Prepare text for TTS - use only summary_sentences to avoid duplication
     const ttsText = reel.content.summary_sentences.join('. ');
-    
+
     this.logger.log(`TTS text (${reel.content.summary_sentences.length} sentences): ${ttsText}`);
     this.logger.log(`Individual sentences: ${reel.content.summary_sentences.join(' | ')}`);
 
@@ -695,7 +695,7 @@ export class ReelGeneratorService {
     // 2. Google Cloud Text-to-Speech
     // 3. AWS Polly
     // 4. ElevenLabs (premium quality)
-    
+
     // Use real TTS service (create instance directly to avoid DI issues)
     try {
       const ttsService = new TTSService(this.configService, this.httpService, this.supabaseService);
@@ -706,10 +706,10 @@ export class ReelGeneratorService {
         'en-US-AriaNeural': TTSVoice.FEMALE_EN,
         'en-US-DavisNeural': TTSVoice.MALE_EN
       };
-      
+
       const voiceString = request?.tts_voice || 'tr-TR-EmelNeural';
       const voiceEnum = voiceMapping[voiceString] || TTSVoice.FEMALE_TR;
-      
+
       const ttsResult = await ttsService.generateTTS({
         text: ttsText,
         voice: voiceEnum,
@@ -724,7 +724,7 @@ export class ReelGeneratorService {
       // Fallback to mock URL
       reel.assets.audio_url = `https://example.com/tts/${crypto.randomUUID()}.mp3`;
     }
-    
+
     reel.processing_log?.push({
       step: 'tts_generation',
       status: 'completed',
@@ -738,7 +738,7 @@ export class ReelGeneratorService {
    */
   private async composeReelVideo(reel: Reel): Promise<void> {
     this.logger.log(`Composing final video for reel: ${reel.id}`);
-    
+
     reel.processing_log?.push({
       step: 'video_composition',
       status: 'started',
@@ -751,7 +751,7 @@ export class ReelGeneratorService {
     // 2. Canvas API for dynamic graphics
     // 3. Remotion for programmatic video creation
     // 4. After Effects scripting for complex animations
-    
+
     // Composition steps:
     // 1. Create base video canvas (1080x1920)
     // 2. Add background (video/image/generated)
@@ -760,11 +760,11 @@ export class ReelGeneratorService {
     // 5. Sync with TTS audio
     // 6. Add captions/subtitles
     // 7. Export final video
-    
+
     // For now, simulate video composition
     const videoUrl = await this.composeVideoWithFFmpeg(reel);
     reel.assets.video_url = videoUrl;
-    
+
     reel.processing_log?.push({
       step: 'video_composition',
       status: 'completed',
@@ -785,7 +785,7 @@ export class ReelGeneratorService {
     // - Extract frame at 1-2 seconds
     // - Add overlay with headline
     // - Optimize for mobile preview
-    
+
     reel.assets.thumbnail_url = reel.assets.video_url + '?thumbnail=true'; // Placeholder
   }
 
@@ -817,7 +817,7 @@ export class ReelGeneratorService {
 
       const videos = mediaData?.filter(item => item.media_type === 'VIDEO') || [];
       const images = mediaData?.filter(item => item.media_type === 'IMAGE') || [];
-      
+
       return {
         videos,
         images,
@@ -837,12 +837,12 @@ export class ReelGeneratorService {
     if (newsItem.image_url) {
       return newsItem.image_url;
     }
-    
+
     // Try to get featured image from media gallery
     if (newsItem.media_gallery?.featured_image) {
       return newsItem.media_gallery.featured_image;
     }
-    
+
     // Try to get first high-quality image from media gallery
     if (newsItem.media_gallery?.images && newsItem.media_gallery.images.length > 0) {
       const images = newsItem.media_gallery.images;
@@ -861,17 +861,17 @@ export class ReelGeneratorService {
         return mediaData.bestImage.url;
       }
     }
-    
+
     // Fallback to category-based solid color
     return this.getCategoryColorBackground(newsItem.category);
   }
 
   private async getAdditionalImagesFromNews(newsItem: ProcessedNewsItem, newsId?: string): Promise<string[]> {
     const additionalImages: string[] = [];
-    
+
     this.logger.log(`Getting additional images for newsId: ${newsId}`);
     this.logger.log(`Media gallery images count: ${newsItem.media_gallery?.images?.length || 0}`);
-    
+
     // Get additional images from media gallery
     if (newsItem.media_gallery?.images && newsItem.media_gallery.images.length > 1) {
       const images = newsItem.media_gallery.images
@@ -895,7 +895,7 @@ export class ReelGeneratorService {
         this.logger.log(`Found ${extraImages.length} additional images from news_media`);
       }
     }
-    
+
     this.logger.log(`Total additional images found: ${additionalImages.length}`);
     return additionalImages;
   }
@@ -937,7 +937,7 @@ export class ReelGeneratorService {
    */
   private async generateTTSWithAzure(text: string, config: any): Promise<string> {
     this.logger.log(`Generating TTS for text: ${text.substring(0, 50)}...`);
-    
+
     try {
       // Use the injected TTS service
       const result = await this.ttsService.generateTTS({
@@ -946,7 +946,7 @@ export class ReelGeneratorService {
         speed: config.speed || 1.0,
         language: config.language || 'tr-TR'
       });
-      
+
       return result.audio_url;
     } catch (error) {
       this.logger.error(`TTS generation failed: ${error.message}`);
@@ -960,11 +960,11 @@ export class ReelGeneratorService {
    */
   private async composeVideoWithFFmpeg(reel: Reel): Promise<string> {
     this.logger.log(`Composing video for reel: ${reel.id}`);
-    
+
     try {
       this.logger.log(`Starting video composition with background: ${reel.assets.background_image?.substring(0, 50)}...`);
       this.logger.log(`Audio URL: ${reel.assets.audio_url}`);
-      
+
       // Use real Video Composer service (create instance directly to avoid DI issues)
       const videoComposerService = new VideoComposerService(this.configService, this.httpService, this.supabaseService);
       const result = await videoComposerService.composeVideo({
@@ -972,7 +972,7 @@ export class ReelGeneratorService {
         backgroundUrl: reel.assets.background_image,
         audioUrl: reel.assets.audio_url
       });
-      
+
       this.logger.log(`Video composed successfully: ${result.videoUrl}`);
       return result.videoUrl;
     } catch (error) {
