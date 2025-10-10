@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type JSX } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import { createGameRoom, joinGameRoom, getGameRooms } from '@/services/api';
 
 interface GameRoom {
@@ -39,8 +39,11 @@ export function MultiplayerLobby({ onRoomJoined, onRoomCreated }: MultiplayerLob
   const loadRooms = async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 Loading rooms...');
       const data = await getGameRooms('news_trivia', 'waiting', 20);
+      console.log('📋 Rooms data received:', data);
       setRooms(data.rooms);
+      console.log('✅ Rooms state updated:', data.rooms);
     } catch (error) {
       console.error('Failed to load rooms:', error);
       setError('Failed to load rooms');
@@ -49,6 +52,11 @@ export function MultiplayerLobby({ onRoomJoined, onRoomCreated }: MultiplayerLob
     }
   };
 
+  // Component mount olduğunda odaları yükle
+  useEffect(() => {
+    loadRooms();
+  }, []);
+
   const handleCreateRoom = async () => {
     if (!roomName.trim()) return;
 
@@ -56,6 +64,7 @@ export function MultiplayerLobby({ onRoomJoined, onRoomCreated }: MultiplayerLob
       setIsLoading(true);
       setError(null);
 
+      console.log('🏗️ Creating room:', { roomName: roomName.trim(), isPrivate, password });
       const roomData = await createGameRoom({
         gameType: 'news_trivia',
         roomName: roomName.trim(),
@@ -63,7 +72,12 @@ export function MultiplayerLobby({ onRoomJoined, onRoomCreated }: MultiplayerLob
         isPrivate,
         password: isPrivate ? password : undefined,
       });
+      console.log('✅ Room created:', roomData);
 
+      // Oda oluşturulduktan sonra odaları yeniden yükle
+      console.log('🔄 Reloading rooms after creation...');
+      await loadRooms();
+      
       onRoomCreated(roomData.room.id);
     } catch (error) {
       console.error('Failed to create room:', error);
@@ -259,7 +273,16 @@ export function MultiplayerLobby({ onRoomJoined, onRoomCreated }: MultiplayerLob
 
       {/* Available Rooms */}
       <div className="bg-gradient-to-br from-purple-900/20 to-purple-800/10 border border-purple-500/30 rounded-2xl p-6">
-        <h3 className="text-xl font-semibold text-white mb-4">Mevcut Odalar</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold text-white">Mevcut Odalar</h3>
+          <button
+            onClick={loadRooms}
+            disabled={isLoading}
+            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-3 py-1 rounded-lg text-sm transition-colors disabled:opacity-50"
+          >
+            {isLoading ? 'Yükleniyor...' : 'Yenile'}
+          </button>
+        </div>
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>

@@ -213,6 +213,16 @@ export class GamesController {
   }
 
   /**
+   * Test endpoint
+   * GET /api/games/test
+   */
+  @Get('test')
+  testEndpoint() {
+    console.log('Test endpoint called');
+    return { message: 'Games controller is working!' };
+  }
+
+  /**
    * Multiplayer odalarını listele
    * GET /api/games/rooms
    */
@@ -222,7 +232,10 @@ export class GamesController {
     @Query('status') status?: string,
     @Query('limit') limit: number = 20,
   ) {
-    return this.multiplayerService.getGameRooms(gameType, status, limit);
+    console.log(`Getting game rooms with params:`, { gameType, status, limit });
+    const rooms = await this.multiplayerService.getGameRooms(gameType, status, limit);
+    console.log(`Returning ${rooms.length} rooms`);
+    return { rooms };
   }
 
   /**

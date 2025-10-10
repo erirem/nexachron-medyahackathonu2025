@@ -206,8 +206,12 @@ export class MultiplayerService {
       const { data, error } = await query;
 
       if (error) {
+        this.logger.error(`Database error: ${error.message}`);
         throw new Error(`Failed to fetch game rooms: ${error.message}`);
       }
+
+      this.logger.log(`Found ${data?.length || 0} game rooms`);
+      this.logger.log(`Query result:`, data);
 
       return data.map(room => ({
         ...room,
@@ -274,7 +278,7 @@ export class MultiplayerService {
         id: room.id,
         game_id: room.gameId,
         name: room.name,
-        game_type: 'quiz', // Şimdilik sadece quiz
+        game_type: 'news_trivia', // News trivia oyunu
         max_players: room.maxPlayers,
         current_players: room.currentPlayers,
         is_private: room.isPrivate,

@@ -128,7 +128,19 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
     throw new Error(message);
   }
 
-  return (await response.json()) as T;
+  // Boş response'ları handle et
+  const text = await response.text();
+  if (!text) {
+    console.warn('Empty response from server');
+    return {} as T;
+  }
+  
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    console.error('Failed to parse JSON response:', text);
+    throw new Error(`Invalid JSON response: ${error.message}`);
+  }
 }
 
 function ensureSuccess<T>(envelope: ApiResponseEnvelope<T>): T {
