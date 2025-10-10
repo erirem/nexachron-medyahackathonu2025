@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, type JSX } from 'react';
 import { useTrackEvent } from '@/hooks/use-track-event';
+import { useReadingTime } from '@/hooks/use-reading-time';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
@@ -25,6 +26,17 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(article.likeCount ?? 156);
+
+  // Reading time tracking
+  const { isReading, readingTime } = useReadingTime({
+    itemId: String(article.id),
+    category: article.category,
+    surface: 'news_detail',
+    minReadingTime: 5, // 5 seconds minimum
+    maxReadingTime: 1800, // 30 minutes maximum
+    heartbeatInterval: 30, // 30 seconds heartbeat
+  });
+
   useEffect(() => {
     // page view event
     void track({ eventType: 'view', itemId: String(article.id), metadata: { surface: 'detail' } });

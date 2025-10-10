@@ -62,17 +62,40 @@ export class UserDataService {
     return { ok: true, count: rows.length };
   }
 
-  async getPreferences(userId: string) {
-    const { data, error } = await this.supabaseService.supabase
+  async getPreferences(userId: string | undefined, accessToken?: string) {
+    if (!userId) {
+      return { ok: false, error: 'Missing user identifier' };
+    }
+
+    const client = accessToken
+      ? this.supabaseService.getUserClient(accessToken)
+      : this.supabaseService.supabase;
+
+    const { data, error } = await client
       .from('user_profile_preferences')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
-    return { ok: true, data };
+
+    const hasCompletedOnboarding = !!data?.personalization_opt_in;
+    const isFirstTimeUser = !data;
+
+    return {
+      ok: true,
+      data,
+      meta: {
+        hasCompletedOnboarding,
+        isFirstTimeUser,
+      },
+    };
   }
 
-  async upsertPreferences(userId: string, body: any) {
+  async upsertPreferences(userId: string | undefined, body: any, accessToken?: string) {
+    if (!userId) {
+      return { ok: false, error: 'Missing user identifier' };
+    }
+
     // Align with migration schema: categories (jsonb), target_moods (jsonb), language (text)
     const { categories, targetMoods, language, personalizationOptIn } = body ?? {};
     const payload: any = {
@@ -84,14 +107,26 @@ export class UserDataService {
     if (targetMoods !== undefined) payload.target_moods = targetMoods;
     if (language !== undefined) payload.language = language;
 
-    const { data, error } = await this.supabaseService.supabase
+    const client = accessToken
+      ? this.supabaseService.getUserClient(accessToken)
+      : this.supabaseService.supabase;
+
+    const { data, error } = await client
       .from('user_profile_preferences')
       .upsert(payload, { onConflict: 'user_id' })
       .select('*')
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
-    return { ok: true, data };
+
+    const hasCompletedOnboarding = !!data?.personalization_opt_in;
+
+    return {
+      ok: true,
+      data,
+      meta: {
+        hasCompletedOnboarding,
+        isFirstTimeUser: !hasCompletedOnboarding,
+      },
+    };
   }
 }
-
-

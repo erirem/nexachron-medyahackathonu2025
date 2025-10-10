@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, type JSX } from "react";
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { useProfile } from '@/contexts/auth-context';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
 import { NewsCard } from "./news-card";
@@ -13,6 +14,7 @@ import { usePopularNews } from "@/hooks/use-popular-news";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useInfiniteNews } from "@/hooks/use-infinite-news";
 import { postRecommendations } from "@/services/api";
+import { LogoutButton } from "@/components/auth/logout-button";
 import type {
   CategoriesOverviewResponse,
   NewsCategorySummary,
@@ -87,6 +89,7 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
 
 export function Dashboard({ initialNews, topics, categoriesOverview, initialPopularNews }: DashboardProps): JSX.Element {
   const router = useRouter();
+  const profile = useProfile();
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [activeCategory, setActiveCategory] = useState('forYou');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -527,14 +530,28 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                           {/* Özel band */}
                           <div className="relative overflow-hidden rounded-2xl border border-[#8bc4ff]/30 bg-gradient-to-r from-[#8bc4ff]/10 via-[#6ab2f2]/15 to-[#8bc4ff]/10 p-6 shadow-[0_20px_60px_rgba(139,196,255,0.15)]">
                             <div className="absolute inset-0 bg-gradient-to-r from-[#8bc4ff]/5 to-transparent" />
-                            <div className="relative flex items-center gap-4">
-                              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] shadow-[0_12px_32px_rgba(15,106,205,0.35)]">
-                                <BrainIcon />
+                            <div className="relative flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] shadow-[0_12px_32px_rgba(15,106,205,0.35)]">
+                                  <BrainIcon />
+                                </div>
+                                <div>
+                                  <h2 className="text-2xl font-bold text-white">Sizin İçin Önerilen</h2>
+                                  <p className="text-sm text-white/80">Kişiselleştirilmiş öneriler - etkileşimlerinize göre seçildi</p>
+                                </div>
                               </div>
-                              <div>
-                                <h2 className="text-2xl font-bold text-white">Sizin İçin Önerilen</h2>
-                                <p className="text-sm text-white/80">Etkileşimlerin ve popülerlik sinyallerine göre seçildi</p>
-                              </div>
+                              
+                              {/* Debug bilgisi - sadece development'ta göster */}
+                              {process.env.NODE_ENV === 'development' && recs.length > 0 && (
+                                <div className="text-xs text-white/60 bg-white/10 rounded-lg px-3 py-2">
+                                  <div className="font-semibold">Algoritma: Hibrit + Okuma Süresi</div>
+                                  <div>Kartlar: {recs.length}</div>
+                                  <div>Veri: Son 30 gün</div>
+                                  <div className="text-[10px] text-white/40 mt-1">
+                                    📊 Okuma süresi, kategori tercihleri ve popülerlik
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                           
@@ -905,20 +922,27 @@ function MobileLibrary({ topics }: MobileLibraryProps): JSX.Element {
 }
 
 function DashboardHeader(): JSX.Element {
+  const profile = useProfile();
+  
   return (
     <header className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.42em] text-white/60">AA panoraması</p>
-          <h1 className="text-[2rem] font-semibold leading-[1.15] text-white">Günün Akışına Anında Erişim</h1>
+          <h1 className="text-[2rem] font-semibold leading-[1.15] text-white">
+            {profile?.full_name ? `Hoş geldiniz, ${profile.full_name}` : 'Günün Akışına Anında Erişim'}
+          </h1>
           <p className="mt-2 max-w-xl text-sm text-white/70">
-            Modern akış deneyimini Anadolu Ajansı tonlarıyla buluşturan panoda gündem, piyasa ve saha haberlerini tek
-            ekrandan yönetin.
+            {profile?.full_name 
+              ? `Merhaba ${profile.first_name || 'Kullanıcı'}! Kişiselleştirilmiş haber akışınız hazır.`
+              : 'Modern akış deneyimini Anadolu Ajansı tonlarıyla buluşturan panoda gündem, piyasa ve saha haberlerini tek ekrandan yönetin.'
+            }
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <LivePill />
+          <LogoutButton className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60" />
           <button
             type="button"
             className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"

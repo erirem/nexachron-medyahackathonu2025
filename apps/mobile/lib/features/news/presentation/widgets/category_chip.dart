@@ -5,6 +5,7 @@ class CategoryChip extends StatelessWidget {
   final int? count;
   final bool isActive;
   final VoidCallback onTap;
+  final bool compact;
 
   const CategoryChip({
     super.key,
@@ -12,6 +13,7 @@ class CategoryChip extends StatelessWidget {
     this.count,
     required this.isActive,
     required this.onTap,
+    this.compact = false,
   });
 
   @override
@@ -21,26 +23,29 @@ class CategoryChip extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 12 : 16,
+            vertical: compact ? 8 : 12,
+          ),
           decoration: BoxDecoration(
             gradient: isActive
                 ? const LinearGradient(
                     colors: [Color(0xFF0f6acd), Color(0xFF1a8dff)],
                   )
                 : null,
-            color: isActive ? null : Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(24),
+            color: isActive ? null : Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(compact ? 18 : 24),
             border: Border.all(
               color: isActive
                   ? Colors.white.withOpacity(0.3)
-                  : Colors.white.withOpacity(0.15),
+                  : Colors.white.withOpacity(0.12),
             ),
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF0f6acd).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      color: const Color(0xFF0f6acd).withOpacity(0.25),
+                      blurRadius: compact ? 8 : 12,
+                      offset: const Offset(0, 3),
                     ),
                   ]
                 : null,
@@ -51,7 +56,7 @@ class CategoryChip extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: compact ? 13 : 14,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   color: isActive
                       ? Colors.white
@@ -74,7 +79,7 @@ class CategoryChip extends StatelessWidget {
                   child: Text(
                     count.toString(),
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: compact ? 11 : 12,
                       fontWeight: FontWeight.w600,
                       color: isActive
                           ? Colors.white

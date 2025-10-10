@@ -23,12 +23,13 @@ class NexachronApiClient {
   final String _baseUrl;
 
   Future<Map<String, dynamic>> fetchProfile(String accessToken) async {
-    final uri = Uri.parse('$_baseUrl/me');
+    final uri = Uri.parse('$_baseUrl/api/me');
     final response = await _client.get(
       uri,
       headers: {
         'Authorization': 'Bearer $accessToken',
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     );
 

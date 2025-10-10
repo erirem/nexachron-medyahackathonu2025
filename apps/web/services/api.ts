@@ -18,7 +18,8 @@ type ApiFetchOptions = RequestInit & {
   readonly signal?: AbortSignal;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+// Geliştirme ortamında .env tanımlı değilse API'yi localhost:4000'a sabitle
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(/\/$/, '');
 
 function assertApiUrl(): string {
   if (!API_BASE_URL) {

@@ -139,6 +139,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           height: 1.5,
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      // Günün özetleri
+                      _DailyBriefing(),
                     ],
                   ),
                 ),
@@ -158,8 +161,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           return CategoryChip(
-                            label: 'Tümü',
+                            label: 'Senin için',
                             isActive: selectedCategory == null,
+                            compact: true,
                             onTap: () {
                               ref
                                   .read(selectedCategoryProvider.notifier)
@@ -176,6 +180,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           label: category.label,
                           count: category.total,
                           isActive: selectedCategory == category.id,
+                          compact: true,
                           onTap: () {
                             ref
                                 .read(selectedCategoryProvider.notifier)
@@ -197,20 +202,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-              // News Grid - Infinite Scroll
+              // News List - Infinite Scroll (single column)
               if (infiniteNews.items.isEmpty && infiniteNews.isLoading)
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
+                  sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildSkeletonCard(),
+                      (context, index) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildSkeletonCard(),
+                      ),
                       childCount: 6,
                     ),
                   ),
@@ -227,28 +228,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               else
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
+                  sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final news = infiniteNews.items[index];
-                      return EnhancedNewsCard(
-                        news: news,
-                        index: index,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  NewsDetailPage(newsId: news.id),
-                            ),
-                          );
-                        },
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: EnhancedNewsCard(
+                          news: news,
+                          index: index,
+                          isListItem: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    NewsDetailPage(newsId: news.id),
+                              ),
+                            );
+                          },
+                        ),
                       );
                     }, childCount: infiniteNews.items.length),
                   ),
@@ -283,18 +281,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildSkeletonCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: Container(
+    return SizedBox(
+      height: 220,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Görsel placeholder
+            Container(
+              height: 140,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: const BorderRadius.vertical(
@@ -302,10 +302,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
+            // Metin placeholderları
+            Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,8 +328,62 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyBriefing extends StatelessWidget {
+  const _DailyBriefing();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _Chip(label: 'Sabah Özeti'),
+            const SizedBox(width: 8),
+            _Chip(label: 'Öğlen Özeti'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Güne başlarken: Piyasalar sakin, diplomasi trafiği yoğun. Teknoloji ve savunma gündeminde öne çıkan başlıklar için özet akışını inceleyin.',
+          style: TextStyle(
+            fontSize: 12,
+            height: 1.5,
+            color: Colors.white.withOpacity(0.7),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  const _Chip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.white.withOpacity(0.85),
+        ),
       ),
     );
   }

@@ -15,14 +15,13 @@ export class UserDataController {
   @UseGuards(SupabaseAuthGuard)
   @Get('preferences')
   async getPreferences(@Req() req: any) {
-    return this.userDataService.getPreferences(req.user?.id);
+    return this.userDataService.getPreferences(req.user?.id, req.accessToken);
   }
 
   @UseGuards(SupabaseAuthGuard)
   @Put('preferences')
   async upsertPreferences(@Req() req: any, @Body() body: any) {
-    return this.userDataService.upsertPreferences(req.user?.id, body);
+    return this.userDataService.upsertPreferences(req.user?.id, body, req.accessToken);
   }
 }
-
 
