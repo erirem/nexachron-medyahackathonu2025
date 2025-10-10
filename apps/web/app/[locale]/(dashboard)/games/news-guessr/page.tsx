@@ -470,6 +470,9 @@ export default function NewsGuessrPage(): JSX.Element {
   const [roundOutcome, setRoundOutcome] = useState<null | 'win' | 'lose' | 'draw'>(null);
   const [selfGuesses, setSelfGuesses] = useState<Array<{ idx: number; guess: string; correct: boolean }>>([]);
   const [opponentGuesses, setOpponentGuesses] = useState<Array<{ idx: number; guess: string; correct: boolean }>>([]);
+  const [showNewsPreview, setShowNewsPreview] = useState(true);
+  const [previewProgress, setPreviewProgress] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
   const clientIdRef = useRef<string>(Math.random().toString(36).slice(2));
   const channelRef = useRef<ReturnType<ReturnType<typeof getSupabaseClient>['channel']> | null>(null);
   const roundResolvedRef = useRef<boolean>(false);
@@ -491,6 +494,36 @@ export default function NewsGuessrPage(): JSX.Element {
       setRoomId(room);
     }
   }, [searchParams, mode]);
+
+  // Preview timer effect - sadece oyun başladıktan sonra
+  useEffect(() => {
+    if (!gameStarted) return;
+
+    setShowNewsPreview(true);
+    setPreviewProgress(0);
+
+    // Progress bar için interval (50ms'de bir güncelle)
+    const progressInterval = setInterval(() => {
+      setPreviewProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        return prev + 1; // 50ms * 100 = 5000ms için %1 artış
+      });
+    }, 50);
+
+    // 5 saniye sonra preview'ı kapat
+    const timer = setTimeout(() => {
+      setShowNewsPreview(false);
+      clearInterval(progressInterval);
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(progressInterval);
+    };
+  }, [index, gameStarted]);
 
   const items = useMemo(() => {
     const validCities = new Set(turkeyCitiesData.map(city => city.label));
@@ -683,6 +716,55 @@ export default function NewsGuessrPage(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
+      {/* News Preview */}
+      {gameStarted && showNewsPreview && (
+        <div className="fixed inset-0 z-50 bg-[#1a2234] animate-fade-in">
+          <div className="container mx-auto px-6 py-8 max-w-4xl h-full flex flex-col">
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-100"
+                  style={{ width: `${previewProgress}%` }}
+                />
+              </div>
+              <div className="text-center text-white/60 text-sm mt-2">
+                {Math.ceil((100 - previewProgress) / 20)} saniye
+              </div>
+            </div>
+
+            {/* News Content */}
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                {/* Image */}
+                {current.imageUrl && (
+                  <div className="w-full h-64 md:h-96 overflow-hidden">
+                    <img
+                      src={current.imageUrl}
+                      alt={current.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Text Content */}
+                <div className="p-8">
+                  <div className="text-sm text-white/50 mb-3">
+                    Soru {index + 1} / {items.length}
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    {current.title}
+                  </h2>
+                  <p className="text-xl text-white/80 leading-relaxed">
+                    {current.summary}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -696,29 +778,97 @@ export default function NewsGuessrPage(): JSX.Element {
             </button>
             <h1 className="text-3xl font-bold">{t('title', { default: 'NewsGuessr' })}</h1>
           </div>
-          <div className="text-[#8fb8ff]">{t('score', { score, total: items.length })}</div>
+          {gameStarted && <div className="text-[#8fb8ff]">{t('score', { score, total: items.length })}</div>}
         </div>
 
-        <div className="bg-[#1a2234] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-          <div className="p-6 border-b border-white/10">
-            <div className="text-sm text-white/70 mb-2">
-              {t('progress', { current: index + 1, total: items.length })}
-            </div>
-            <h2 className="text-2xl font-semibold mb-2">{current.title}</h2>
-            <p className="text-white/70">{current.summary}</p>
-          </div>
+        {gameStarted && !showNewsPreview && (
+          <div className="bg-[#1a2234] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-slide-in-top">
+            <div className="p-6 relative">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left: Self guesses panel */}
+                <aside className="lg:col-span-3 order-2 lg:order-1 lg:hidden">
+                  <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-blue-950/40 to-blue-900/20 hover:from-blue-900/50 hover:to-blue-800/30 transition">
+                    <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                      <div className="text-blue-300 font-semibold">{t('yourGuess', { default: 'Senin Tahminlerin' })}</div>
+                      <div className="text-xs text-white/70">
+                        <span className="text-green-400 font-semibold">{selfGuesses.filter(g => g.correct).length}</span>
+                        <span className="text-white/50"> / </span>
+                        <span className="text-red-400 font-semibold">{selfGuesses.filter(g => !g.correct).length}</span>
+                      </div>
+                    </div>
+                    <div className="px-4 py-3 text-xs text-white/60">@Sen</div>
+                    <ul className="max-h-64 overflow-auto p-3 space-y-2">
+                      {selfGuesses.length === 0 && (
+                        <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
+                      )}
+                      {selfGuesses.map((g) => (
+                        <li
+                          key={`self-${g.idx}`}
+                          className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`}
+                          title={`Soru ${g.idx + 1}`}
+                        >
+                          <span className="text-white/80">Soru {g.idx + 1}</span>
+                          <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </aside>
 
-          {current.imageUrl && (
-            <div className="w-full h-64 md:h-80 overflow-hidden">
-              <img src={current.imageUrl} alt={current.title} className="w-full h-full object-cover" />
-            </div>
-          )}
+                {/* Center: Map */}
+                <div className="lg:col-span-12 order-1 lg:order-2 lg:mx-20">
+                  <TurkeyMap
+                    selected={selected}
+                    correct={showResult ? current.city : null}
+                    disabled={!!selected}
+                    onSelect={(province) => handleSelect(province)}
+                  />
+                  {mode === 'multi' && (selected || opponentGuess) && (
+                    <div className="mt-4 text-sm text-white/80">
+                      <div className="flex items-center gap-4">
+                        <span>{t('yourGuess', { default: 'Senin tahminin' })}: <strong>{selected ?? '-'}</strong></span>
+                        <span>{t('opponentGuess', { default: 'Rakibin tahmini' })}: <strong>{opponentGuess ?? '-'}</strong></span>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-          <div className="p-6 relative">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left: Self guesses panel */}
-              <aside className="lg:col-span-3 order-2 lg:order-1 lg:hidden">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-blue-950/40 to-blue-900/20 hover:from-blue-900/50 hover:to-blue-800/30 transition">
+                {/* Right: Opponent guesses panel */}
+                <aside className="lg:col-span-3 order-3 lg:hidden">
+                  <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-purple-950/40 to-purple-900/20 hover:from-purple-900/50 hover:to-purple-800/30 transition">
+                    <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                      <div className="text-purple-300 font-semibold">{t('opponentGuess', { default: 'Rakibin Tahminleri' })}</div>
+                      <div className="text-xs text-white/70">
+                        <span className="text-green-400 font-semibold">{opponentGuesses.filter(g => g.correct).length}</span>
+                        <span className="text-white/50"> / </span>
+                        <span className="text-red-400 font-semibold">{opponentGuesses.filter(g => !g.correct).length}</span>
+                      </div>
+                    </div>
+                    <div className="px-4 py-3 text-xs text-white/60">@Rakip</div>
+                    <ul className="max-h-64 overflow-auto p-3 space-y-2">
+                      {opponentGuesses.length === 0 && (
+                        <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
+                      )}
+                      {opponentGuesses.map((g) => (
+                        <li
+                          key={`opp-${g.idx}`}
+                          className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`}
+                          title={`Soru ${g.idx + 1}`}
+                        >
+                          <span className="text-white/80">Soru {g.idx + 1}</span>
+                          <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </aside>
+              </div>
+            </div>
+            {/* Edge-fixed side panels for large screens */}
+            <div className="hidden lg:block">
+              {/* Left fixed: Self */}
+              <div className="fixed left-4 top-1/2 -translate-y-1/2 z-30 w-64">
+                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-blue-950/40 to-blue-900/20 hover:from-blue-900/50 hover:to-blue-800/30 transition shadow-xl">
                   <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
                     <div className="text-blue-300 font-semibold">{t('yourGuess', { default: 'Senin Tahminlerin' })}</div>
                     <div className="text-xs text-white/70">
@@ -728,45 +878,22 @@ export default function NewsGuessrPage(): JSX.Element {
                     </div>
                   </div>
                   <div className="px-4 py-3 text-xs text-white/60">@Sen</div>
-                  <ul className="max-h-64 overflow-auto p-3 space-y-2">
+                  <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
                     {selfGuesses.length === 0 && (
                       <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
                     )}
                     {selfGuesses.map((g) => (
-                      <li
-                        key={`self-${g.idx}`}
-                        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`}
-                        title={`Soru ${g.idx + 1}`}
-                      >
+                      <li key={`self-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
                         <span className="text-white/80">Soru {g.idx + 1}</span>
                         <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-              </aside>
-
-              {/* Center: Map */}
-              <div className="lg:col-span-12 order-1 lg:order-2 lg:mx-20">
-                <TurkeyMap
-                  selected={selected}
-                  correct={showResult ? current.city : null}
-                  disabled={!!selected}
-                  onSelect={(province) => handleSelect(province)}
-                />
-                {mode === 'multi' && (selected || opponentGuess) && (
-                  <div className="mt-4 text-sm text-white/80">
-                    <div className="flex items-center gap-4">
-                      <span>{t('yourGuess', { default: 'Senin tahminin' })}: <strong>{selected ?? '-'}</strong></span>
-                      <span>{t('opponentGuess', { default: 'Rakibin tahmini' })}: <strong>{opponentGuess ?? '-'}</strong></span>
-                    </div>
-                  </div>
-                )}
               </div>
-
-              {/* Right: Opponent guesses panel */}
-              <aside className="lg:col-span-3 order-3 lg:hidden">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-purple-950/40 to-purple-900/20 hover:from-purple-900/50 hover:to-purple-800/30 transition">
+              {/* Right fixed: Opponent */}
+              <div className="fixed right-4 top-1/2 -translate-y-1/2 z-30 w-64">
+                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-purple-950/40 to-purple-900/20 hover:from-purple-900/50 hover:to-purple-800/30 transition shadow-xl">
                   <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
                     <div className="text-purple-300 font-semibold">{t('opponentGuess', { default: 'Rakibin Tahminleri' })}</div>
                     <div className="text-xs text-white/70">
@@ -776,80 +903,135 @@ export default function NewsGuessrPage(): JSX.Element {
                     </div>
                   </div>
                   <div className="px-4 py-3 text-xs text-white/60">@Rakip</div>
-                  <ul className="max-h-64 overflow-auto p-3 space-y-2">
+                  <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
                     {opponentGuesses.length === 0 && (
                       <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
                     )}
                     {opponentGuesses.map((g) => (
-                      <li
-                        key={`opp-${g.idx}`}
-                        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`}
-                        title={`Soru ${g.idx + 1}`}
-                      >
+                      <li key={`opp-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
                         <span className="text-white/80">Soru {g.idx + 1}</span>
                         <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-              </aside>
-            </div>
-          </div>
-          {/* Edge-fixed side panels for large screens */}
-          <div className="hidden lg:block">
-            {/* Left fixed: Self */}
-            <div className="fixed left-4 top-1/2 -translate-y-1/2 z-30 w-64">
-              <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-blue-950/40 to-blue-900/20 hover:from-blue-900/50 hover:to-blue-800/30 transition shadow-xl">
-                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                  <div className="text-blue-300 font-semibold">{t('yourGuess', { default: 'Senin Tahminlerin' })}</div>
-                  <div className="text-xs text-white/70">
-                    <span className="text-green-400 font-semibold">{selfGuesses.filter(g => g.correct).length}</span>
-                    <span className="text-white/50"> / </span>
-                    <span className="text-red-400 font-semibold">{selfGuesses.filter(g => !g.correct).length}</span>
-                  </div>
-                </div>
-                <div className="px-4 py-3 text-xs text-white/60">@Sen</div>
-                <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
-                  {selfGuesses.length === 0 && (
-                    <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
-                  )}
-                  {selfGuesses.map((g) => (
-                    <li key={`self-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
-                      <span className="text-white/80">Soru {g.idx + 1}</span>
-                      <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
-            {/* Right fixed: Opponent */}
-            <div className="fixed right-4 top-1/2 -translate-y-1/2 z-30 w-64">
-              <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-purple-950/40 to-purple-900/20 hover:from-purple-900/50 hover:to-purple-800/30 transition shadow-xl">
-                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                  <div className="text-purple-300 font-semibold">{t('opponentGuess', { default: 'Rakibin Tahminleri' })}</div>
-                  <div className="text-xs text-white/70">
-                    <span className="text-green-400 font-semibold">{opponentGuesses.filter(g => g.correct).length}</span>
-                    <span className="text-white/50"> / </span>
-                    <span className="text-red-400 font-semibold">{opponentGuesses.filter(g => !g.correct).length}</span>
+            {/* footer removed: auto-advance enabled */}
+          </div>
+        )}
+
+        {/* Oyun Giriş Ekranı */}
+        {!gameStarted && (
+          <div className="bg-gradient-to-br from-[#1a2234] via-[#1e2a3f] to-[#1a2234] border border-white/20 rounded-3xl shadow-2xl shadow-blue-900/20 overflow-hidden animate-fade-in backdrop-blur-sm">
+            <div className="p-10 md:p-12 text-center">
+              {/* Icon */}
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <div className="absolute inset-0 w-24 h-24 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
+                  <div className="relative w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/50 animate-pulse ring-4 ring-blue-400/30 ring-offset-4 ring-offset-[#1a2234]">
+                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
                   </div>
                 </div>
-                <div className="px-4 py-3 text-xs text-white/60">@Rakip</div>
-                <ul className="max-h-[40vh] overflow-auto p-3 space-y-2">
-                  {opponentGuesses.length === 0 && (
-                    <li className="text-white/50 text-sm">{t('noGuesses', { default: 'Henüz tahmin yok.' })}</li>
-                  )}
-                  {opponentGuesses.map((g) => (
-                    <li key={`opp-fixed-${g.idx}`} className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition hover:shadow-lg hover:-translate-y-0.5 ${g.correct ? 'bg-green-900/20 hover:bg-green-900/30' : 'bg-red-900/20 hover:bg-red-900/30'}`} title={`Soru ${g.idx + 1}`}>
-                      <span className="text-white/80">Soru {g.idx + 1}</span>
-                      <span className={`ml-3 font-semibold ${g.correct ? 'text-green-400' : 'text-red-400'}`}>{g.guess}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
+
+              {/* Başlık */}
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent mb-4 drop-shadow-lg">
+                NewsGuessr
+              </h2>
+              <p className="text-2xl text-white/90 mb-8 drop-shadow-md">
+                Haberlerden Şehir Tahmin Et!
+              </p>
+
+              {/* Oyun Açıklaması */}
+              <div className="relative bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-2xl p-6 mb-8 text-left shadow-xl hover:shadow-2xl hover:border-white/30 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-2xl"></div>
+                <div className="relative">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Nasıl Oynanır?
+                  </h3>
+                  <div className="space-y-3 text-white/70">
+                    <div className="flex items-start gap-3">
+                      <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5 shadow-lg shadow-blue-500/30">1</div>
+                      <p>Her soru için 5 saniye haber önizlemesi gösterilir</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5 shadow-lg shadow-blue-500/30">2</div>
+                      <p>Haberin hangi şehirde geçtiğini tahmin et</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5 shadow-lg shadow-blue-500/30">3</div>
+                      <p>Doğru cevap için 10 XP kazan</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5 shadow-lg shadow-blue-500/30">4</div>
+                      <p>6 soru ile oyunu tamamla</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Özellikler */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="relative group bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-xl p-5 text-center transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-green-500/20 hover:border-green-400/40">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative">
+                    <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/40 group-hover:shadow-xl group-hover:shadow-green-500/60 transition-all duration-300">
+                      <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-bold text-white mb-2 text-lg">Doğru Cevap</h4>
+                    <p className="text-white/70 text-sm">+10 XP kazan</p>
+                  </div>
+                </div>
+                <div className="relative group bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-xl p-5 text-center transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/20 hover:border-yellow-400/40">
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative">
+                    <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-yellow-500/40 group-hover:shadow-xl group-hover:shadow-yellow-500/60 transition-all duration-300">
+                      <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-bold text-white mb-2 text-lg">5 Saniye</h4>
+                    <p className="text-white/70 text-sm">Haber önizlemesi</p>
+                  </div>
+                </div>
+                <div className="relative group bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-xl p-5 text-center transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-400/40">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative">
+                    <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-500/40 group-hover:shadow-xl group-hover:shadow-purple-500/60 transition-all duration-300">
+                      <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-bold text-white mb-2 text-lg">Çok Oyunculu</h4>
+                    <p className="text-white/70 text-sm">Arkadaşlarınla yarış</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Başla Butonu */}
+              <button
+                onClick={() => setGameStarted(true)}
+                className="relative group px-10 py-5 bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 hover:from-blue-600 hover:via-cyan-600 hover:to-blue-700 text-white font-bold text-2xl rounded-2xl shadow-2xl shadow-blue-500/40 transition-all hover:scale-105 hover:shadow-blue-500/60 flex items-center gap-4 mx-auto animate-pulse border border-blue-400/50"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                <span className="relative flex items-center gap-4">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-5-8V6a2 2 0 012-2h2a2 2 0 012 2v2M7 7h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z" />
+                  </svg>
+                  Oyunu Başlat
+                </span>
+              </button>
             </div>
           </div>
-          {/* footer removed: auto-advance enabled */}
-        </div>
+        )}
 
         {/* Manual next fallback after results in multiplayer */}
         {mode === 'multi' && showResult && !showFinal && (
@@ -901,12 +1083,13 @@ export default function NewsGuessrPage(): JSX.Element {
             setLastResult(null);
             setOpponentGuess(null);
             setRoundOutcome(null);
+            setGameStarted(false);
           }}
         />
       )}
 
       {/* Mode selector overlay */}
-      {mode === 'none' && (
+      {gameStarted && mode === 'none' && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[#1a2234] border border-white/10 rounded-2xl p-8 w-[90%] max-w-md text-center">
             <h3 className="text-2xl font-semibold mb-2">{t('selectMode.title', { default: 'Oyun Modu Seç' })}</h3>

@@ -538,3 +538,37 @@ input[type="checkbox"],
 input[type="radio"] {
   cursor: pointer;
 }
+
+/* Slide in top animation */
+@keyframes slideInTop {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-top {
+  animation: slideInTop 0.4s ease-out;
+}
+
+/* Slide in top animation */
+@keyframes slideInTop {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-top {
+  animation: slideInTop 0.4s ease-out;
+}
