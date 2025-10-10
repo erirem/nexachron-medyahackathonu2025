@@ -110,7 +110,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
       const roomDetails = await this.multiplayerService.getGameRoomDetails(data.roomId);
       this.logger.log(`Room details:`, roomDetails);
 
-      // Notify all clients in the room
+      // Notify all clients in the room (including the joining client)
       this.logger.log(`Emitting playerJoined to room ${data.roomId}`);
       this.server.to(data.roomId).emit('playerJoined', {
         participant,
@@ -125,6 +125,21 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
         roomDetails,
         timestamp: new Date(),
       });
+
+      // Send existing participants to the joining client
+      if (roomDetails.participants && roomDetails.participants.length > 0) {
+        this.logger.log(`Sending ${roomDetails.participants.length} existing participants to client ${client.id}`);
+        for (const existingParticipant of roomDetails.participants) {
+          if (existingParticipant.player_id !== client.userId) {
+            this.logger.log(`Sending existing participant:`, existingParticipant);
+            client.emit('playerJoined', {
+              participant: existingParticipant,
+              roomDetails,
+              timestamp: new Date(),
+            });
+          }
+        }
+      }
 
     } catch (error) {
       this.logger.error(`Failed to join room: ${error.message}`);

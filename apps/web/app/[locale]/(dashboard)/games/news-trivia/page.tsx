@@ -170,32 +170,40 @@ export default function NewsTriviaPage(): JSX.Element {
     if (!socket) return;
 
     const handlePlayerJoined = (data: { participant: any; roomDetails: any; timestamp: Date }) => {
-      console.log('Player joined:', data);
+      console.log('🔵 Player joined event received:', data);
+      console.log('🔵 Participant object:', data.participant);
       
       // Backend participant'ını Frontend Player interface'ine map et
       const player: Player = {
-        id: data.participant.id,
-        name: data.participant.playerName || data.participant.name || 'Oyuncu',
-        score: data.participant.currentScore || 0,
-        isReady: data.participant.isReady || false,
+        id: data.participant.player_id || data.participant.playerId || data.participant.id, // player_id kullan
+        name: data.participant.player_name || data.participant.playerName || data.participant.name || 'Oyuncu',
+        score: data.participant.current_score || data.participant.currentScore || 0,
+        isReady: data.participant.is_ready || data.participant.isReady || false,
         hasAnswered: false,
       };
       
+      console.log('🔵 Mapped player object:', player);
+      
       setMultiplayerState(prev => {
+        console.log('🔵 Previous state:', prev);
         // Duplicate kontrolü - aynı oyuncu zaten var mı?
         const existingPlayer = prev.players.find(p => p.id === player.id);
         if (existingPlayer) {
-          console.log('Player already exists, updating:', player);
-          return {
+          console.log('🔵 Player already exists, updating:', player);
+          const newState = {
             ...prev,
             players: prev.players.map(p => p.id === player.id ? player : p),
           };
+          console.log('🔵 New state (updated):', newState);
+          return newState;
         }
         
-        return {
+        const newState = {
           ...prev,
           players: [...prev.players, player],
         };
+        console.log('🔵 New state (added):', newState);
+        return newState;
       });
     };
 
@@ -272,10 +280,10 @@ export default function NewsTriviaPage(): JSX.Element {
       
       // Backend participant'ını Frontend Player interface'ine map et
       const player: Player = {
-        id: data.participant.id,
-        name: data.participant.playerName || data.participant.name || 'Oyuncu',
-        score: data.participant.currentScore || 0,
-        isReady: data.participant.isReady || false,
+        id: data.participant.player_id || data.participant.playerId || data.participant.id, // player_id kullan
+        name: data.participant.player_name || data.participant.playerName || data.participant.name || 'Oyuncu',
+        score: data.participant.current_score || data.participant.currentScore || 0,
+        isReady: data.participant.is_ready || data.participant.isReady || false,
         hasAnswered: false,
       };
       
@@ -283,11 +291,23 @@ export default function NewsTriviaPage(): JSX.Element {
       
       setMultiplayerState(prev => {
         console.log('🔵 Previous state:', prev);
+        // Duplicate kontrolü - aynı oyuncu zaten var mı?
+        const existingPlayer = prev.players.find(p => p.id === player.id);
+        if (existingPlayer) {
+          console.log('🔵 Player already exists, updating:', player);
+          const newState = {
+            ...prev,
+            players: prev.players.map(p => p.id === player.id ? player : p),
+          };
+          console.log('🔵 New state (updated):', newState);
+          return newState;
+        }
+        
         const newState = {
           ...prev,
-          players: [player], // Kendi oyuncuyu ekle
+          players: [...prev.players, player], // Mevcut oyunculara ekle
         };
-        console.log('🔵 New state:', newState);
+        console.log('🔵 New state (added):', newState);
         return newState;
       });
     };
@@ -720,13 +740,14 @@ export default function NewsTriviaPage(): JSX.Element {
               // Join room via WebSocket
               console.log('🚀 Attempting to join room:', { roomId, currentUser, socketActions: !!socketActions });
               if (socketActions && currentUser) {
+                const playerName = currentUser.displayName || currentUser.username || 'User';
                 console.log('🚀 Calling socketActions.joinRoom with:', {
                   roomId,
-                  playerName: currentUser.displayName || currentUser.username,
+                  playerName,
                 });
                 socketActions.joinRoom({
                   roomId,
-                  playerName: currentUser.displayName || currentUser.username,
+                  playerName,
                 });
               } else {
                 console.error('🚀 Cannot join room:', { socketActions: !!socketActions, currentUser });
@@ -743,13 +764,14 @@ export default function NewsTriviaPage(): JSX.Element {
               // Join room via WebSocket
               console.log('🚀 Attempting to join room:', { roomId, currentUser, socketActions: !!socketActions });
               if (socketActions && currentUser) {
+                const playerName = currentUser.displayName || currentUser.username || 'User';
                 console.log('🚀 Calling socketActions.joinRoom with:', {
                   roomId,
-                  playerName: currentUser.displayName || currentUser.username,
+                  playerName,
                 });
                 socketActions.joinRoom({
                   roomId,
-                  playerName: currentUser.displayName || currentUser.username,
+                  playerName,
                 });
               } else {
                 console.error('🚀 Cannot join room:', { socketActions: !!socketActions, currentUser });

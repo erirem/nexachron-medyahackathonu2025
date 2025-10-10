@@ -101,7 +101,29 @@ export class MultiplayerService {
       // Kullanıcı zaten katılmış mı kontrol et
       const existingParticipant = await this.getParticipant(gameId, userId);
       if (existingParticipant) {
-        // Kullanıcı zaten odada, mevcut participant'ı getir
+        // Kullanıcı zaten odada, eğer playerName farklıysa güncelle
+        if (existingParticipant.playerName !== playerName) {
+          this.logger.log(`Updating existing participant's name from ${existingParticipant.playerName} to ${playerName}`);
+          const { error: updateError } = await this.supabaseService.supabase
+            .from('game_participants')
+            .update({ 
+              player_name: playerName
+            })
+            .eq('game_id', gameId)
+            .eq('player_id', userId);
+
+          if (updateError) {
+            this.logger.error(`Failed to update participant name: ${updateError.message}`);
+            throw new Error(`Failed to update participant name: ${updateError.message}`);
+          }
+          
+          // Güncellenmiş katılımcıyı tekrar çek
+          const updatedParticipant = await this.getParticipant(gameId, userId);
+          if (!updatedParticipant) {
+            throw new Error('Failed to retrieve updated participant');
+          }
+          return updatedParticipant;
+        }
         return existingParticipant;
       }
 
@@ -564,7 +586,7 @@ export class MultiplayerService {
       .from('game_participants')
       .select('current_score')
       .eq('game_id', room.gameId)
-      .eq('user_id', userId)
+      .eq('player_id', userId)
       .single();
 
     if (fetchError) {
@@ -579,7 +601,7 @@ export class MultiplayerService {
         updated_at: new Date().toISOString(),
       })
       .eq('game_id', room.gameId)
-      .eq('user_id', userId);
+      .eq('player_id', userId);
 
     if (error) {
       throw new Error(`Failed to update participant score: ${error.message}`);
