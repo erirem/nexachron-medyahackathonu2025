@@ -1,8 +1,10 @@
+import type { JSX } from 'react';
+
 export interface Game {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: string | JSX.Element;
   color: 'blue' | 'purple' | 'green' | 'cyan' | 'yellow' | 'red' | 'orange';
   category: 'educational' | 'memory' | 'word' | 'trivia' | 'timeline' | 'visual' | 'arcade';
   difficulty: 'easy' | 'medium' | 'hard';

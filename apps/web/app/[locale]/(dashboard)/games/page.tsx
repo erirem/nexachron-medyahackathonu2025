@@ -9,6 +9,79 @@ import { useGamification } from '@/contexts/gamification-context';
 import { GameCard } from './_components/game-card';
 import type { Game } from './_types/game-types';
 
+// Icon Components
+const GamepadIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M17.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-3-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12zM2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0z"/>
+  </svg>
+);
+
+const BookIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
+  </svg>
+);
+
+const BrainIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+  </svg>
+);
+
+const AlphabetIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+  </svg>
+);
+
+const LightningIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+  </svg>
+);
+
+const CalendarIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+  </svg>
+);
+
+const SearchIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+  </svg>
+);
+
+const TargetIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+  </svg>
+);
+
+const PuzzleIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/>
+  </svg>
+);
+
+const MapIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/>
+  </svg>
+);
+
+const DocumentIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+  </svg>
+);
+
+const BirdIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 5.5V7.5L21 9ZM3 9L9 7.5V5.5L3 7V9ZM12 8C9.8 8 8 9.8 8 12S9.8 16 12 16 16 14.2 16 12 14.2 8 12 8ZM12 14C10.9 14 10 13.1 10 12S10.9 10 12 10 14 10.9 14 12 13.1 14 12 14Z"/>
+  </svg>
+);
+
 type BaseGame = Omit<Game, 'title' | 'description' | 'estimatedTime'> & {
   readonly translationKey: string;
 };
@@ -17,7 +90,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'quizzes',
     translationKey: 'quizzes',
-    icon: '🧠',
+    icon: <BrainIcon className="w-6 h-6" />,
     color: 'blue',
     category: 'educational',
     difficulty: 'easy',
@@ -29,7 +102,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'memory-game',
     translationKey: 'memoryGame',
-    icon: '🧩',
+    icon: <PuzzleIcon className="w-6 h-6" />,
     color: 'purple',
     category: 'memory',
     difficulty: 'medium',
@@ -41,7 +114,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'word-puzzle',
     translationKey: 'wordPuzzle',
-    icon: '🔤',
+    icon: <AlphabetIcon className="w-6 h-6" />,
     color: 'green',
     category: 'word',
     difficulty: 'medium',
@@ -53,7 +126,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'news-trivia',
     translationKey: 'newsTrivia',
-    icon: '⚡',
+    icon: <LightningIcon className="w-6 h-6" />,
     color: 'yellow',
     category: 'trivia',
     difficulty: 'easy',
@@ -65,7 +138,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'news-guessr',
     translationKey: 'newsGuessr',
-    icon: '🗺️',
+    icon: <MapIcon className="w-6 h-6" />,
     color: 'cyan',
     category: 'trivia',
     difficulty: 'medium',
@@ -77,7 +150,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'timeline-game',
     translationKey: 'timelineGame',
-    icon: '📅',
+    icon: <CalendarIcon className="w-6 h-6" />,
     color: 'cyan',
     category: 'timeline',
     difficulty: 'hard',
@@ -89,7 +162,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'spot-the-difference',
     translationKey: 'spotTheDifference',
-    icon: '🔍',
+    icon: <SearchIcon className="w-6 h-6" />,
     color: 'red',
     category: 'visual',
     difficulty: 'medium',
@@ -101,7 +174,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'wordle',
     translationKey: 'wordle',
-    icon: '📝',
+    icon: <DocumentIcon className="w-6 h-6" />,
     color: 'green',
     category: 'word',
     difficulty: 'medium',
@@ -113,7 +186,7 @@ const baseGames: readonly BaseGame[] = [
   {
     id: 'flappy-aa-bird',
     translationKey: 'flappyAABird',
-    icon: '🐦',
+    icon: <BirdIcon className="w-6 h-6" />,
     color: 'orange',
     category: 'arcade',
     difficulty: 'medium',
@@ -124,15 +197,15 @@ const baseGames: readonly BaseGame[] = [
   },
 ];
 
-const baseCategories: readonly { readonly id: string; readonly icon: string }[] = [
-  { id: 'all', icon: '🎮' },
-  { id: 'educational', icon: '📚' },
-  { id: 'memory', icon: '🧠' },
-  { id: 'word', icon: '🔤' },
-  { id: 'trivia', icon: '⚡' },
-  { id: 'timeline', icon: '📅' },
-  { id: 'visual', icon: '🔍' },
-  { id: 'arcade', icon: '🎯' },
+const baseCategories: readonly { readonly id: string; readonly icon: JSX.Element }[] = [
+  { id: 'all', icon: <GamepadIcon className="w-5 h-5" /> },
+  { id: 'educational', icon: <BookIcon className="w-5 h-5" /> },
+  { id: 'memory', icon: <BrainIcon className="w-5 h-5" /> },
+  { id: 'word', icon: <AlphabetIcon className="w-5 h-5" /> },
+  { id: 'trivia', icon: <LightningIcon className="w-5 h-5" /> },
+  { id: 'timeline', icon: <CalendarIcon className="w-5 h-5" /> },
+  { id: 'visual', icon: <SearchIcon className="w-5 h-5" /> },
+  { id: 'arcade', icon: <TargetIcon className="w-5 h-5" /> },
 ];
 
 export default function GamesPage(): JSX.Element {
@@ -395,7 +468,7 @@ export default function GamesPage(): JSX.Element {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center ${
                   selectedCategory === category.id
                     ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
                     : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
