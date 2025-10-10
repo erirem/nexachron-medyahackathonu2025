@@ -8,6 +8,16 @@ import { useLocale } from 'next-intl';
 import type { DashboardNewsItem } from './types';
 import { SafeImage } from './safe-image';
 
+// Beyin ikonu - öneriler için
+function BrainIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1 .34-4.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0-.34-4.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+    </svg>
+  );
+}
+
 interface DashboardNewsCardProps {
   readonly item: DashboardNewsItem;
 }
@@ -385,10 +395,17 @@ export function DashboardNewsCard({ item }: DashboardNewsCardProps): JSX.Element
   const insightItems = buildInsightItems(item, tagline);
 
   return (
-    <Link href={`/${locale}/haber/${item.id}`} className="block h-full">
+    <Link href={`/${locale}/haber/${item.id}?from=dashboard`} className="block h-full">
       <article className={`group relative flex h-full flex-col overflow-hidden rounded-[28px] border ${theme.border} ${theme.surface} text-white shadow-[0_24px_56px_rgba(0,0,0,0.5)] transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-opacity-50 hover:shadow-[0_36px_80px_rgba(0,0,0,0.65)] cursor-pointer`}>
       <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent mix-blend-overlay" aria-hidden />
       <div className="absolute inset-0 opacity-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
+      
+      {/* Öneri beyin ikonu - sağ üst köşe */}
+      {item.isRecommended && (
+        <div className="absolute right-6 top-6 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-[0_4px_12px_rgba(15,106,205,0.4)]">
+          <BrainIcon />
+        </div>
+      )}
 
       <div className="relative flex flex-1 flex-col gap-6 p-6">
         <header className="flex items-start">

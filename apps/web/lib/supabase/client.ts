@@ -46,6 +46,8 @@ export function getSupabaseClient(persistSession = true): SupabaseClient {
   const client = createBrowserClient(url, key, {
     auth: {
       persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
       storage: persistSession ? window.localStorage : window.sessionStorage,
       storageKey: resolveStorageKey(persistSession ? "auth" : "session"),
     },

@@ -199,4 +199,43 @@ class NewsApiService {
       throw Exception('Failed to search news: ${response.statusCode}');
     }
   }
+
+  Future<List<NewsItem>> fetchRecommendations({int limit = 5}) async {
+    try {
+      final uri = Uri.parse(
+        '$baseUrl/api/news/recommendations',
+      ).replace(queryParameters: {'limit': limit.toString()});
+
+      print('📡 Fetching recommendations from: $uri');
+
+      final response = await http
+          .get(uri, headers: _getHeaders())
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
+
+      print('📥 Recommendations response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final items = data['data']['items'] as List<dynamic>;
+          print('✅ Loaded ${items.length} recommendation items');
+          return items.map((item) => NewsItem.fromJson(item)).toList();
+        }
+        throw Exception('Invalid response format');
+      } else {
+        throw Exception(
+          'Failed to load recommendations: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('❌ Error fetching recommendations: $e');
+      // Fallback: random news if recommendations fail
+      return await fetchNewsList(page: 1, pageSize: limit);
+    }
+  }
 }

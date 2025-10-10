@@ -7,9 +7,8 @@ import { NewsModule } from './news/news.module';
 import { UsersModule } from './users/users.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
-import { GamesModule } from './games/games.module';
-import { TTSModule } from './tts/tts.module';
-import { ReelsModule } from './reels/reels.module';
+import { UserDataModule } from './user-data/user-data.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -21,9 +20,8 @@ import { ReelsModule } from './reels/reels.module';
     UsersModule,
     NewsIngestModule,
     BookmarksModule,
-    GamesModule,
-    TTSModule,
-    ReelsModule,
+    UserDataModule,
+    RecommendationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
