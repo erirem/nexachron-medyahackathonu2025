@@ -144,17 +144,30 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
     };
 
     const categoryColors: Record<string, string> = {
-        'teknoloji': 'from-blue-500/80 to-purple-600/80',
-        'spor': 'from-green-500/80 to-emerald-600/80',
-        'ekonomi': 'from-yellow-500/80 to-orange-600/80',
-        'gundem': 'from-red-500/80 to-pink-600/80',
-        'savunma': 'from-slate-500/80 to-gray-600/80',
-        'enerji': 'from-amber-500/80 to-yellow-600/80',
-        'kultur': 'from-purple-500/80 to-fuchsia-600/80',
-        'default': 'from-white/20 to-white/10',
+        'teknoloji': 'from-blue-500 to-purple-600',
+        'technology': 'from-blue-500 to-purple-600',
+        'spor': 'from-green-500 to-emerald-600',
+        'sports': 'from-green-500 to-emerald-600',
+        'ekonomi': 'from-yellow-500 to-orange-600',
+        'economy': 'from-yellow-500 to-orange-600',
+        'gundem': 'from-red-500 to-pink-600',
+        'agenda': 'from-red-500 to-pink-600',
+        'savunma': 'from-slate-500 to-gray-600',
+        'defense': 'from-slate-500 to-gray-600',
+        'enerji': 'from-amber-500 to-yellow-600',
+        'energy': 'from-amber-500 to-yellow-600',
+        'kultur': 'from-purple-500 to-fuchsia-600',
+        'culture': 'from-purple-500 to-fuchsia-600',
+        'dunya': 'from-cyan-500 to-blue-600',
+        'world': 'from-cyan-500 to-blue-600',
+        'saglik': 'from-rose-500 to-red-600',
+        'health': 'from-rose-500 to-red-600',
+        'siyaset': 'from-indigo-500 to-purple-600',
+        'politics': 'from-indigo-500 to-purple-600',
+        'default': 'from-white/30 to-white/20',
     };
 
-    const categoryGradient = categoryColors[current.category] || categoryColors['default'];
+    const categoryGradient = categoryColors[current.category.toLowerCase()] || categoryColors['default'];
 
     return (
         <div className="fixed inset-0 bg-black">
@@ -173,17 +186,16 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
                             </div>
                         )}
 
-                        {/* Top Bar - Instagram Style */}
-                        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/40 via-transparent to-transparent p-4 pb-24">
+                        {/* Top Bar - Modern Transparent */}
+                        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/50 via-black/20 to-transparent p-4 pb-24">
                             {/* Close Button */}
                             <div className="pointer-events-auto mb-3 flex items-center justify-between">
                                 <button
                                     onClick={onClose}
-                                    className="group flex h-9 w-9 items-center justify-center text-white transition-all hover:scale-110"
+                                    className="group flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-md text-white transition-all hover:scale-110 hover:bg-black/50 ring-1 ring-white/10"
                                     aria-label="Kapat"
-                                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
                                 >
-                                    <svg className="transition-transform group-hover:rotate-90" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <svg className="transition-transform group-hover:rotate-90" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                         <line x1="18" y1="6" x2="6" y2="18" />
                                         <line x1="6" y1="6" x2="18" y2="18" />
                                     </svg>
@@ -191,11 +203,11 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
 
                                 {/* Category Badge & Volume Control */}
                                 <div className="flex flex-col items-end gap-2">
+                                    {/* Category Badge - Colorful Gradient */}
                                     <div
-                                        className="pointer-events-auto rounded-full bg-white/20 px-3 py-1 backdrop-blur-sm"
-                                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                                        className={`pointer-events-auto rounded-xl bg-gradient-to-r ${categoryGradient} px-3 py-1.5 shadow-lg ring-1 ring-white/20`}
                                     >
-                                        <span className="text-xs font-bold uppercase tracking-wider text-white">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-white drop-shadow-lg">
                                             {current.category}
                                         </span>
                                     </div>
@@ -203,20 +215,19 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
                                     {/* Volume Control - Transparent */}
                                     <button
                                         onClick={() => setIsMuted(!isMuted)}
-                                        className="pointer-events-auto transition-all hover:scale-110"
+                                        className="pointer-events-auto rounded-full bg-black/30 backdrop-blur-md p-2 transition-all hover:scale-110 hover:bg-black/50 ring-1 ring-white/10"
                                         aria-label={isMuted ? 'Sesi Aç' : 'Sesi Kapat'}
-                                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
                                     >
                                         {isMuted ? (
-                                            // Muted icon
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            // Muted icon - Red
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                                                 <line x1="23" y1="9" x2="17" y2="15"></line>
                                                 <line x1="17" y1="9" x2="23" y2="15"></line>
                                             </svg>
                                         ) : (
-                                            // Unmuted icon
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            // Unmuted icon - White
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                                                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
                                                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -227,16 +238,15 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
                             </div>
 
                             {/* Source Info */}
-                            <div className="pointer-events-auto flex items-center gap-3">
+                            <div className="pointer-events-auto flex items-center gap-3 rounded-full bg-black/20 backdrop-blur-md py-2 px-3 ring-1 ring-white/10 w-fit">
                                 <div
-                                    className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-bold text-white"
-                                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}
+                                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${categoryGradient} text-sm font-bold text-white shadow-lg`}
                                 >
                                     NA
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>Nexachron</p>
-                                    <p className="text-xs text-white/90" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>Haber Merkezi</p>
+                                    <p className="text-sm font-bold text-white drop-shadow-lg">Nexachron</p>
+                                    <p className="text-xs text-white/80 drop-shadow-lg">Haber Merkezi</p>
                                 </div>
                             </div>
                         </div>
@@ -329,78 +339,77 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
                             </button>
                         </div>
 
-                        {/* Bottom Info - Instagram Style */}
-                        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/50 via-transparent to-transparent px-4 pb-4 pt-20">
-                            {/* Stats */}
-                            <div className="pointer-events-auto mb-2 flex items-center gap-3 text-[10px] text-white/90" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}>
-                                <div className="flex items-center gap-1">
+                        {/* Bottom Info - Modern Transparent */}
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/60 via-black/30 to-transparent px-4 pb-5 pt-24">
+                            {/* Stats - Transparent Container */}
+                            <div className="pointer-events-auto mb-3 flex items-center gap-3 rounded-full bg-black/20 backdrop-blur-md px-3 py-1.5 text-[10px] text-white/90 w-fit ring-1 ring-white/10">
+                                <div className="flex items-center gap-1.5">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
-                                    <span className="font-semibold">{viewCount > 999 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount}</span>
+                                    <span className="font-bold">{viewCount > 999 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="h-3 w-px bg-white/20"></div>
+                                <div className="flex items-center gap-1.5">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <polyline points="12 6 12 12 16 14"></polyline>
                                     </svg>
-                                    <span>2 saat önce</span>
+                                    <span className="font-medium">2 saat önce</span>
                                 </div>
                             </div>
 
                             {/* Title */}
-                            <h2 className="pointer-events-auto mb-1.5 text-base font-bold leading-tight text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}>
+                            <h2 className="pointer-events-auto mb-2 text-base font-bold leading-tight text-white drop-shadow-2xl">
                                 {current.title}
                             </h2>
 
                             {/* Description */}
                             <div className="pointer-events-auto relative">
                                 <p
-                                    className={`text-xs leading-snug text-white/90 ${showFullDescription ? '' : 'line-clamp-2'
+                                    className={`text-xs leading-relaxed text-white/95 drop-shadow-lg ${showFullDescription ? '' : 'line-clamp-2'
                                         }`}
                                     onClick={() => setShowFullDescription(!showFullDescription)}
-                                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}
                                 >
                                     {current.summary}
                                 </p>
                                 {current.summary.length > 100 && (
                                     <button
                                         onClick={() => setShowFullDescription(!showFullDescription)}
-                                        className="mt-0.5 text-[10px] font-semibold text-white/90 hover:underline"
-                                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}
+                                        className="mt-1 text-[11px] font-bold text-white hover:underline drop-shadow-lg"
                                     >
                                         {showFullDescription ? 'Daha az' : 'Devamını oku'}
                                     </button>
                                 )}
                             </div>
 
-                            {/* Hashtags */}
-                            <div className="pointer-events-auto mt-2 flex flex-wrap gap-1.5">
-                                <span className="text-[10px] font-medium text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}>
-                                    #{current.category}
+                            {/* Hashtags - Modern Pills */}
+                            <div className="pointer-events-auto mt-3 flex flex-wrap gap-2">
+                                <span className="rounded-lg bg-black/30 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white ring-1 ring-white/10">
+                                    #{current.category.toLowerCase()}
                                 </span>
-                                <span className="text-[10px] font-medium text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}>
+                                <span className="rounded-lg bg-black/30 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white ring-1 ring-white/10">
                                     #gündem
                                 </span>
-                                <span className="text-[10px] font-medium text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}>
+                                <span className="rounded-lg bg-black/30 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white ring-1 ring-white/10">
                                     #haber
                                 </span>
                             </div>
                         </div>
 
-                        {/* Navigation Hints - Improved */}
-                        <div className="pointer-events-none absolute inset-x-0 top-1/3 flex justify-center opacity-0 transition-opacity hover:opacity-100">
-                            <div className="rounded-2xl bg-black/70 px-5 py-2.5 backdrop-blur-md">
-                                <p className="flex items-center gap-2 text-sm font-medium text-white">
-                                    <span className="text-lg">↑</span> Kaydır veya yukarı ok tuşu
+                        {/* Navigation Hints - Modern Minimal */}
+                        <div className="pointer-events-none absolute inset-x-0 top-1/3 flex justify-center opacity-0 transition-all duration-300 hover:opacity-100">
+                            <div className="rounded-xl bg-black/40 backdrop-blur-lg px-4 py-2 ring-1 ring-white/10 shadow-xl">
+                                <p className="flex items-center gap-2 text-xs font-semibold text-white">
+                                    <span className="text-base">↑</span> Önceki
                                 </p>
                             </div>
                         </div>
-                        <div className="pointer-events-none absolute inset-x-0 bottom-1/3 flex justify-center opacity-0 transition-opacity hover:opacity-100">
-                            <div className="rounded-2xl bg-black/70 px-5 py-2.5 backdrop-blur-md">
-                                <p className="flex items-center gap-2 text-sm font-medium text-white">
-                                    <span className="text-lg">↓</span> Kaydır veya aşağı ok tuşu
+                        <div className="pointer-events-none absolute inset-x-0 bottom-1/3 flex justify-center opacity-0 transition-all duration-300 hover:opacity-100">
+                            <div className="rounded-xl bg-black/40 backdrop-blur-lg px-4 py-2 ring-1 ring-white/10 shadow-xl">
+                                <p className="flex items-center gap-2 text-xs font-semibold text-white">
+                                    <span className="text-base">↓</span> Sonraki
                                 </p>
                             </div>
                         </div>

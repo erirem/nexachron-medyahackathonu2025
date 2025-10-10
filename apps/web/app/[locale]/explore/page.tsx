@@ -155,13 +155,31 @@ function ExploreShell({ locale }: { locale: string }) {
                 style={{ marginLeft: `${sidebarWidth}px` }}
             >
                 {/* Top Category Bar */}
-                <header className="sticky top-0 z-10 border-b border-white/10 bg-gradient-to-r from-[#0a0e1a]/95 via-[#0f1419]/95 to-[#0a0e1a]/95 backdrop-blur-xl">
-                    <div className="px-6 py-4">
-                        <h1 className="mb-3 text-2xl font-bold text-white">Keşfet</h1>
+                <header className="sticky top-0 z-10 border-b border-white/5 bg-gradient-to-br from-[#0a0e1a]/98 via-[#0f1419]/98 to-[#0a0e1a]/98 backdrop-blur-2xl shadow-xl">
+                    <div className="px-6 py-5">
+                        {/* Header with stats */}
+                        <div className="mb-4 flex items-center justify-between">
+                            <div>
+                                <h1 className="mb-1 text-3xl font-bold bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent">
+                                    Keşfet
+                                </h1>
+                                <p className="text-sm text-white/50 font-medium">
+                                    {items.length} reel
+                                </p>
+                            </div>
+
+                            {/* Loading indicator - Top right */}
+                            {(isLoading || isFetchingNextPage) && (
+                                <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs text-white/70 backdrop-blur-sm">
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+                                    <span className="font-medium">{isLoading ? 'Yükleniyor' : 'Daha fazla yükleniyor'}</span>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Horizontal Category Pills */}
                         <div
-                            className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden"
+                            className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {topics.map((topic) => {
@@ -179,9 +197,9 @@ function ExploreShell({ locale }: { locale: string }) {
                                                 setSelectedCategory(topic.id);
                                             }
                                         }}
-                                        className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all ${isActive
-                                            ? 'bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-lg shadow-blue-500/30'
-                                            : 'border border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10 hover:text-white'
+                                        className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${isActive
+                                            ? 'bg-gradient-to-r from-[#0f6acd] to-[#1a8dff] text-white shadow-lg shadow-blue-500/40 scale-105 ring-2 ring-blue-400/50'
+                                            : 'border border-white/10 bg-white/5 text-white/70 hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-white hover:scale-105 hover:shadow-lg'
                                             }`}
                                     >
                                         {getCategoryIcon(topic.id)}
@@ -190,43 +208,58 @@ function ExploreShell({ locale }: { locale: string }) {
                                 );
                             })}
                         </div>
-
-                        {/* Loading indicator */}
-                        {(isLoading || isFetchingNextPage) && (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-white/50">
-                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white"></div>
-                                <span>{isLoading ? 'Yükleniyor...' : 'Daha fazla yükleniyor...'}</span>
-                            </div>
-                        )}
                     </div>
                 </header>
 
                 {/* Grid Content */}
-                <div className="px-6 py-6">
+                <div className="px-6 py-8">
                     <ExploreGrid items={items} locale={locale} />
 
                     {/* Loading indicator at bottom */}
                     {isFetchingNextPage && (
-                        <div className="flex justify-center py-8">
-                            <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white"></div>
+                        <div className="flex justify-center py-12">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="relative">
+                                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-blue-500"></div>
+                                    <div className="absolute inset-0 h-12 w-12 animate-pulse rounded-full border-4 border-blue-500/20"></div>
+                                </div>
+                                <p className="text-sm font-medium text-white/60">Daha fazla yükleniyor...</p>
+                            </div>
                         </div>
                     )}
 
                     {/* No more items */}
                     {!hasNextPage && items.length > 0 && (
-                        <div className="py-8 text-center text-sm text-white/50">
-                            Tüm içerikler yüklendi
+                        <div className="flex flex-col items-center py-12">
+                            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 ring-1 ring-white/10">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" opacity="0.6">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <p className="text-base font-semibold text-white/70">Tüm içerikler yüklendi</p>
+                            <p className="mt-1 text-sm text-white/40">Daha fazla reel için yakında tekrar gel</p>
                         </div>
                     )}
 
                     {/* Empty state */}
                     {!isLoading && items.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-16">
-                            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-                                <PlayCircleIcon />
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <div className="relative mb-6">
+                                {/* Animated background glow */}
+                                <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-r from-blue-500/20 to-purple-600/20 blur-2xl"></div>
+                                {/* Icon container */}
+                                <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 ring-1 ring-white/10">
+                                    <PlayCircleIcon />
+                                </div>
                             </div>
-                            <p className="text-lg font-medium text-white/70">Henüz içerik yok</p>
-                            <p className="mt-2 text-sm text-white/50">Yakında yeni reels eklenecek</p>
+                            <h3 className="text-xl font-bold text-white/80">Henüz içerik yok</h3>
+                            <p className="mt-2 text-sm text-white/50">Bu kategoride yakında yeni reels eklenecek</p>
+                            <button
+                                onClick={() => setSelectedCategory(undefined)}
+                                className="mt-6 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105 hover:shadow-xl"
+                            >
+                                Tüm Reels'leri Gör
+                            </button>
                         </div>
                     )}
                 </div>
