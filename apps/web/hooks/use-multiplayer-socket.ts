@@ -114,8 +114,12 @@ export function useMultiplayerSocket() {
   // Actions
   const actions: MultiplayerSocketActions = {
     joinRoom: (data) => {
+      console.log('🔌 Socket.emit joinRoom:', data);
       if (socket) {
         socket.emit('joinRoom', data);
+        console.log('🔌 joinRoom event emitted successfully');
+      } else {
+        console.error('🔌 Socket is null, cannot emit joinRoom');
       }
     },
     leaveRoom: (data) => {

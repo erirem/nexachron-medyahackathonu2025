@@ -93,6 +93,7 @@ export default function NewsTriviaPage(): JSX.Element {
     showLobby: false,
   });
 
+  const [currentUser, setCurrentUser] = useState<{ id: string; username: string; displayName: string } | null>(null);
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +112,59 @@ export default function NewsTriviaPage(): JSX.Element {
     actions: socketActions 
   } = useMultiplayerSocket();
 
+  // Debug WebSocket connection
+  console.log('🔌 WebSocket Status:', { socket: !!socket, isConnected, socketError });
+  console.log('👤 Current User Status:', { currentUser, hasUser: !!currentUser });
+
+  // Kullanıcı bilgilerini çek
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          console.log('🔍 Fetching user profile for:', session.user.id);
+          // users tablosundan kullanıcı bilgilerini çek
+          const { data: profile, error } = await supabase
+            .from('users')
+            .select('id, username, first_name, last_name')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) {
+            console.error('❌ Error fetching user profile:', error);
+            console.error('❌ Error details:', { code: error.code, message: error.message, details: error.details });
+            
+            // Fallback: session'dan user bilgilerini kullan
+            console.log('🔄 Using fallback user data from session');
+            setCurrentUser({
+              id: session.user.id,
+              username: session.user.email?.split('@')[0] || 'User',
+              displayName: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User'
+            });
+            return;
+          }
+          
+          console.log('✅ User profile fetched:', profile);
+          setCurrentUser({
+            id: profile.id,
+            username: profile.username,
+            displayName: profile.first_name && profile.last_name 
+              ? `${profile.first_name} ${profile.last_name}` 
+              : profile.username || 'User'
+          });
+        } else {
+          console.log('❌ No session or user found');
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
   // WebSocket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -127,10 +181,22 @@ export default function NewsTriviaPage(): JSX.Element {
         hasAnswered: false,
       };
       
-      setMultiplayerState(prev => ({
-        ...prev,
-        players: [...prev.players, player],
-      }));
+      setMultiplayerState(prev => {
+        // Duplicate kontrolü - aynı oyuncu zaten var mı?
+        const existingPlayer = prev.players.find(p => p.id === player.id);
+        if (existingPlayer) {
+          console.log('Player already exists, updating:', player);
+          return {
+            ...prev,
+            players: prev.players.map(p => p.id === player.id ? player : p),
+          };
+        }
+        
+        return {
+          ...prev,
+          players: [...prev.players, player],
+        };
+      });
     };
 
     const handlePlayerLeft = (data: { userId: string; roomDetails: any; timestamp: Date }) => {
@@ -199,9 +265,10 @@ export default function NewsTriviaPage(): JSX.Element {
     };
 
     const handleRoomJoined = (data: { participant: any; roomDetails: any; timestamp: Date }) => {
-      console.log('Room joined:', data);
-      console.log('Participant:', data.participant);
-      console.log('Participant keys:', Object.keys(data.participant || {}));
+      console.log('🔵 Room joined event received:', data);
+      console.log('🔵 Participant object:', data.participant);
+      console.log('🔵 Participant keys:', Object.keys(data.participant || {}));
+      console.log('🔵 Current multiplayerState before update:', multiplayerState);
       
       // Backend participant'ını Frontend Player interface'ine map et
       const player: Player = {
@@ -212,10 +279,17 @@ export default function NewsTriviaPage(): JSX.Element {
         hasAnswered: false,
       };
       
-      setMultiplayerState(prev => ({
-        ...prev,
-        players: [player], // Kendi oyuncuyu ekle
-      }));
+      console.log('🔵 Mapped player object:', player);
+      
+      setMultiplayerState(prev => {
+        console.log('🔵 Previous state:', prev);
+        const newState = {
+          ...prev,
+          players: [player], // Kendi oyuncuyu ekle
+        };
+        console.log('🔵 New state:', newState);
+        return newState;
+      });
     };
 
     const handleError = (data: { message: string }) => {
@@ -224,6 +298,7 @@ export default function NewsTriviaPage(): JSX.Element {
     };
 
     // Add event listeners
+    console.log('🎧 Registering WebSocket event listeners...');
     addEventListener('roomJoined', handleRoomJoined);
     addEventListener('playerJoined', handlePlayerJoined);
     addEventListener('playerLeft', handlePlayerLeft);
@@ -232,6 +307,7 @@ export default function NewsTriviaPage(): JSX.Element {
     addEventListener('nextQuestion', handleNextQuestion);
     addEventListener('gameCompleted', handleGameCompleted);
     addEventListener('error', handleError);
+    console.log('🎧 WebSocket event listeners registered');
 
     // Cleanup
     return () => {
@@ -642,11 +718,18 @@ export default function NewsTriviaPage(): JSX.Element {
               }));
               
               // Join room via WebSocket
-              if (socketActions) {
+              console.log('🚀 Attempting to join room:', { roomId, currentUser, socketActions: !!socketActions });
+              if (socketActions && currentUser) {
+                console.log('🚀 Calling socketActions.joinRoom with:', {
+                  roomId,
+                  playerName: currentUser.displayName || currentUser.username,
+                });
                 socketActions.joinRoom({
                   roomId,
-                  playerName: 'You',
+                  playerName: currentUser.displayName || currentUser.username,
                 });
+              } else {
+                console.error('🚀 Cannot join room:', { socketActions: !!socketActions, currentUser });
               }
             }}
             onRoomCreated={(roomId) => {
@@ -658,11 +741,18 @@ export default function NewsTriviaPage(): JSX.Element {
               }));
               
               // Join room via WebSocket
-              if (socketActions) {
+              console.log('🚀 Attempting to join room:', { roomId, currentUser, socketActions: !!socketActions });
+              if (socketActions && currentUser) {
+                console.log('🚀 Calling socketActions.joinRoom with:', {
+                  roomId,
+                  playerName: currentUser.displayName || currentUser.username,
+                });
                 socketActions.joinRoom({
                   roomId,
-                  playerName: 'You',
+                  playerName: currentUser.displayName || currentUser.username,
                 });
+              } else {
+                console.error('🚀 Cannot join room:', { socketActions: !!socketActions, currentUser });
               }
             }}
           />

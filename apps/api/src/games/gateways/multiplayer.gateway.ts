@@ -89,23 +89,29 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
       }
 
       this.logger.log(`User ${client.userId} joining room ${data.roomId}`);
+      this.logger.log(`Join room data:`, { roomId: data.roomId, playerName: data.playerName, password: data.password });
 
       // Join the room
       await client.join(data.roomId);
       client.roomId = data.roomId;
+      this.logger.log(`Client ${client.id} joined room ${data.roomId}`);
 
       // Add player to game room via service
+      this.logger.log(`Calling multiplayerService.joinGame...`);
       const participant = await this.multiplayerService.joinGame(
         data.roomId,
         client.userId,
         data.playerName,
         data.password,
       );
+      this.logger.log(`Participant created:`, participant);
 
       // Get updated room details
       const roomDetails = await this.multiplayerService.getGameRoomDetails(data.roomId);
+      this.logger.log(`Room details:`, roomDetails);
 
       // Notify all clients in the room
+      this.logger.log(`Emitting playerJoined to room ${data.roomId}`);
       this.server.to(data.roomId).emit('playerJoined', {
         participant,
         roomDetails,
@@ -113,6 +119,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
       });
 
       // Send current room state to the joining client
+      this.logger.log(`Emitting roomJoined to client ${client.id}`);
       client.emit('roomJoined', {
         participant,
         roomDetails,

@@ -99,12 +99,10 @@ export class MultiplayerService {
       }
 
       // Kullanıcı zaten katılmış mı kontrol et
-      if (room.currentPlayers.includes(userId)) {
+      const existingParticipant = await this.getParticipant(gameId, userId);
+      if (existingParticipant) {
         // Kullanıcı zaten odada, mevcut participant'ı getir
-        const existingParticipant = await this.getParticipant(gameId, userId);
-        if (existingParticipant) {
-          return existingParticipant;
-        }
+        return existingParticipant;
       }
 
       // Katılımcı ekle
@@ -350,11 +348,11 @@ export class MultiplayerService {
   }
 
 
-  private async updateRoomPlayers(gameId: string, players: string[]) {
+  private async updateRoomPlayers(roomId: string, players: string[]) {
     const { error } = await this.supabaseService.supabase
       .from('game_rooms')
       .update({ current_players: players })
-      .eq('id', gameId);
+      .eq('id', roomId);
 
     if (error) {
       throw new Error(`Failed to update room players: ${error.message}`);
