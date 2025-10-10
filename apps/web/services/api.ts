@@ -677,3 +677,165 @@ export async function triggerCategoryNewsIngest(
 
   return ensureSuccess(envelope);
 }
+
+// Multiplayer API functions
+export async function getGameRooms(
+  gameType?: string,
+  status?: string,
+  limit = 20,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    rooms: Array<{
+      id: string;
+      name: string;
+      gameType: string;
+      maxPlayers: number;
+      currentPlayers: string[];
+      isPrivate: boolean;
+      status: string;
+      createdAt: string;
+      createdBy: string;
+    }>;
+  }>>(
+    '/api/games/rooms',
+    {
+      query: { gameType, status, limit },
+      headers: authHeaders,
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function createGameRoom(
+  request: {
+    gameType: string;
+    roomName: string;
+    maxPlayers?: number;
+    isPrivate?: boolean;
+    password?: string;
+  },
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    room: {
+      id: string;
+      name: string;
+      gameType: string;
+      maxPlayers: number;
+      currentPlayers: string[];
+      isPrivate: boolean;
+      status: string;
+      createdAt: string;
+      createdBy: string;
+    };
+  }>>(
+    '/api/games/rooms',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function joinGameRoom(
+  roomId: string,
+  request: {
+    playerName: string;
+    password?: string;
+  },
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    participant: {
+      id: string;
+      gameId: string;
+      playerId: string;
+      playerName: string;
+      joinedAt: string;
+      isReady: boolean;
+      currentScore: number;
+    };
+  }>>(
+    `/api/games/rooms/${roomId}/join`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function leaveGameRoom(
+  roomId: string,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    message: string;
+  }>>(
+    `/api/games/rooms/${roomId}/leave`,
+    {
+      method: 'POST',
+      headers: authHeaders,
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function getGameRoomDetails(
+  roomId: string,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    room: {
+      id: string;
+      gameId: string;
+      name: string;
+      gameType: string;
+      maxPlayers: number;
+      currentPlayers: string[];
+      isPrivate: boolean;
+      status: string;
+      createdAt: string;
+      createdBy: string;
+    };
+    participants: Array<{
+      id: string;
+      playerId: string;
+      playerName: string;
+      joinedAt: string;
+      isReady: boolean;
+      currentScore: number;
+    }>;
+  }>>(
+    `/api/games/rooms/${roomId}`,
+    {
+      headers: authHeaders,
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}

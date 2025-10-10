@@ -229,27 +229,111 @@ export class GamesController {
    * Yeni multiplayer oda oluştur
    * POST /api/games/rooms
    */
+  @UseGuards(SupabaseAuthGuard)
   @Post('rooms')
   async createGameRoom(
     @Body() body: {
       gameType: GameType;
       roomName: string;
-      maxPlayers: number;
-      isPrivate: boolean;
+      maxPlayers?: number;
+      isPrivate?: boolean;
       password?: string;
       filter?: QuestionPoolFilter;
     },
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     const userId = req.user?.id;
     if (!userId) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
 
-    return this.multiplayerService.createGameRoom({
-      ...body,
+    const room = await this.multiplayerService.createGameRoom({
+      gameType: body.gameType,
+      roomName: body.roomName,
+      maxPlayers: body.maxPlayers || 8,
+      isPrivate: body.isPrivate || false,
+      password: body.password,
+      filter: body.filter,
       createdBy: userId,
     });
+
+    return {
+      success: true,
+      data: { room },
+    };
+  }
+
+  /**
+   * Oda detaylarını getir
+   * GET /api/games/rooms/:roomId
+   */
+  @UseGuards(SupabaseAuthGuard)
+  @Get('rooms/:roomId')
+  async getGameRoomDetails(
+    @Param('roomId') roomId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    const roomDetails = await this.multiplayerService.getGameRoomDetails(roomId);
+    return {
+      success: true,
+      data: roomDetails,
+    };
+  }
+
+  /**
+   * Odaya katıl
+   * POST /api/games/rooms/:roomId/join
+   */
+  @UseGuards(SupabaseAuthGuard)
+  @Post('rooms/:roomId/join')
+  async joinGameRoom(
+    @Param('roomId') roomId: string,
+    @Body() body: { playerName: string; password?: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    const participant = await this.multiplayerService.joinGame(
+      roomId,
+      userId,
+      body.playerName,
+      body.password,
+    );
+
+    return {
+      success: true,
+      data: { participant },
+    };
+  }
+
+  /**
+   * Odadan ayrıl
+   * POST /api/games/rooms/:roomId/leave
+   */
+  @UseGuards(SupabaseAuthGuard)
+  @Post('rooms/:roomId/leave')
+  async leaveGameRoom(
+    @Param('roomId') roomId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    await this.multiplayerService.leaveGame(roomId, userId);
+    return {
+      success: true,
+      data: { message: 'Successfully left the room' },
+    };
   }
 
   /**
