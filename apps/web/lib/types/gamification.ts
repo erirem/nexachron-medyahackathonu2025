@@ -19,7 +19,8 @@ export enum Badge {
   STREAK_30 = 'STREAK_30',
   TOP_COMMENTER = 'TOP_COMMENTER',
   TRENDING_FOLLOWER = 'TRENDING_FOLLOWER',
-  QUIZ_MASTER = 'QUIZ_MASTER'
+  QUIZ_MASTER = 'QUIZ_MASTER',
+  SPEED_READER = 'SPEED_READER'
 }
 
 export enum BadgeType {
@@ -49,6 +50,82 @@ export interface BadgeInfo {
   totalEarned?: number; // Kaç kişi kazandı (nadir rozetler için)
 }
 
+export interface CategoryReadingStats {
+  categoryId: string;
+  categoryName: string;
+  newsRead: number;
+  totalTimeSpent: number; // dakika cinsinden
+  lastReadDate: Date;
+  favoriteTimeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+}
+
+export interface DailyActivity {
+  date: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface WeeklyActivity {
+  weekStart: Date;
+  weekEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  dailyActivities: DailyActivity[];
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface MonthlyActivity {
+  monthStart: Date;
+  monthEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  weeklyActivities: WeeklyActivity[];
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface PersonalAnalyst {
+  dailyStats: DailyActivity;
+  weeklyStats: WeeklyActivity;
+  monthlyStats: MonthlyActivity;
+  achievements: string[];
+  nextRankProgress: {
+    currentRank: UserRank;
+    nextRank: UserRank;
+    xpToNext: number;
+    progressPercentage: number;
+  };
+  motivationalMessage: string;
+  recommendations: string[];
+  dailyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  weeklyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  monthlyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -68,10 +145,14 @@ export interface UserProfile {
   weeklyXp: number;
   monthlyXp: number;
   seasonXp: number;
+  dailyActivity: DailyActivity;
+  weeklyActivity: WeeklyActivity;
+  monthlyActivity: MonthlyActivity;
+  personalAnalyst?: PersonalAnalyst;
 }
 
 export interface XPAction {
-  type: 'NEWS_READ' | 'COMMENT' | 'QUIZ_COMPLETE' | 'TOPIC_FOLLOW' | 'DAILY_LOGIN' | 'STREAK_BONUS';
+  type: 'NEWS_READ' | 'NEWS_COMPLETE' | 'SPEED_READ' | 'COMMENT' | 'QUIZ_COMPLETE' | 'TOPIC_FOLLOW' | 'DAILY_LOGIN' | 'STREAK_BONUS';
   xpAmount: number;
   timestamp: Date;
   description: string;
@@ -127,6 +208,8 @@ export interface LeaderboardEntry {
 // XP değerleri
 export const XP_VALUES = {
   NEWS_READ: 10,
+  NEWS_COMPLETE: 25,
+  SPEED_READ: 100,
   COMMENT: 20,
   COMMENT_LIKE: 5,
   QUIZ_COMPLETE: 30,
@@ -378,5 +461,18 @@ export const BADGE_INFO: BadgeInfo[] = [
     xpReward: 2000,
     isEarned: false,
     totalEarned: 1
+  },
+  {
+    id: 'speed_reader',
+    name: 'Hızlı Okur',
+    description: '5 dakika içinde zaman sınırlı haberi oku',
+    icon: 'clock',
+    type: BadgeType.RARE,
+    category: BadgeCategory.ACHIEVEMENT,
+    rarity: 'epic',
+    requirement: '5 dakika içinde zaman sınırlı haberi oku',
+    xpReward: 100,
+    isEarned: false,
+    totalEarned: 23
   }
 ];

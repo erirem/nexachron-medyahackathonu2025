@@ -219,3 +219,9 @@ final infiniteNewsProvider =
     NotifierProvider<InfiniteNewsNotifier, InfiniteNewsState>(
       InfiniteNewsNotifier.new,
     );
+
+// Recommendations Provider
+final recommendationsProvider = FutureProvider<List<NewsItem>>((ref) async {
+  final apiService = ref.watch(newsApiServiceProvider);
+  return apiService.fetchRecommendations(limit: 5);
+});

@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { SupabaseService } from '../supabase/supabase.service';
+import { AiCategoryClassificationService } from './services/ai-category-classification.service';
+import { AACategory } from '../news-ingest/dto/news-item.dto';
 
 @Injectable()
 export class NewsCategoryService {
@@ -9,6 +11,7 @@ export class NewsCategoryService {
   constructor(
     private readonly httpService: HttpService,
     private readonly supabaseService: SupabaseService,
+    private readonly aiCategoryService: AiCategoryClassificationService,
   ) {}
 
   /**
@@ -48,31 +51,43 @@ export class NewsCategoryService {
 
       this.logger.log(`Found ${currentNews.length} current news in database`);
 
-      // 4. RSS'te olmayan haberleri bul ve arşivle
-      const newsToArchive = currentNews.filter(dbNewsItem => 
+      // 4. RSS'te olmayan haberleri bul ve AI ile kategori belirle
+      const newsToReclassify = currentNews.filter(dbNewsItem => 
         !rssUrls.includes(dbNewsItem.original_url)
       );
 
-      this.logger.log(`Found ${newsToArchive.length} news items to archive (not in RSS)`);
-      this.logger.log(`Found ${currentNews.length - newsToArchive.length} news items to keep current (in RSS)`);
+      this.logger.log(`Found ${newsToReclassify.length} news items to reclassify (not in RSS)`);
+      this.logger.log(`Found ${currentNews.length - newsToReclassify.length} news items to keep current (in RSS)`);
 
-      let archivedCount = 0;
-      if (newsToArchive.length > 0) {
-        const newsIds = newsToArchive.map(news => news.id);
-        
-        const { data: archiveResult, error: archiveError } = await this.supabaseService.adminSupabase
-          .from('news')
-          .update({ category: 'archived' })
-          .in('id', newsIds)
-          .select('id, category');
+      let reclassifiedCount = 0;
+      if (newsToReclassify.length > 0) {
+        // AI ile kategori belirleme işlemi
+        for (const newsItem of newsToReclassify) {
+          try {
+            const classification = await this.aiCategoryService.classifyCategory({
+              title: newsItem.title,
+              content: '', // Content genellikle bu aşamada mevcut değil
+            });
 
-        if (archiveError) {
-          this.logger.error(`Failed to archive news: ${archiveError.message}`);
-          throw new Error(`Failed to archive news: ${archiveError.message}`);
+            if (classification && classification.category !== AACategory.GUNCEL) {
+              const { error: updateError } = await this.supabaseService.adminSupabase
+                .from('news')
+                .update({ category: classification.category })
+                .eq('id', newsItem.id);
+
+              if (updateError) {
+                this.logger.error(`Failed to update category for news ${newsItem.id}: ${updateError.message}`);
+              } else {
+                reclassifiedCount++;
+                this.logger.log(`Reclassified news ${newsItem.id} to category: ${classification.category} (confidence: ${classification.confidence})`);
+              }
+            }
+          } catch (error) {
+            this.logger.error(`Failed to classify news ${newsItem.id}: ${error.message}`);
+          }
         }
 
-        archivedCount = archiveResult?.length || 0;
-        this.logger.log(`Successfully archived ${archivedCount} news items`);
+        this.logger.log(`Successfully reclassified ${reclassifiedCount} news items with AI`);
       }
 
       // 5. RSS'teki haberleri güncel olarak işaretle
@@ -107,15 +122,15 @@ export class NewsCategoryService {
 
       const result = {
         rssNewsCount: rssNews.length,
-        archivedCount,
+        reclassifiedCount,
         currentCount: updatedCurrentNews.length,
-        archivedNews: currentNews.slice(0, 10).map(news => ({
+        reclassifiedNews: newsToReclassify.slice(0, 10).map(news => ({
           id: news.id,
           title: news.title,
           original_url: news.original_url,
           created_at: news.created_at
         })),
-        message: `Successfully processed ${rssNews.length} RSS news items. Archived ${archivedCount} outdated news items.`
+        message: `Successfully processed ${rssNews.length} RSS news items. Reclassified ${reclassifiedCount} news items with AI.`
       };
 
       this.logger.log(`Category check completed: ${result.message}`);
@@ -348,6 +363,201 @@ export class NewsCategoryService {
 
     } catch (error) {
       this.logger.error(`Failed to restore archived news: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Duplicate haberleri tespit et ve temizle
+   */
+  async cleanupDuplicateNews() {
+    this.logger.log('Starting duplicate news cleanup...');
+
+    try {
+      // 1. Tüm güncel haberleri getir
+      const { data: allNews, error: fetchError } = await this.supabaseService.supabase
+        .from('news')
+        .select('id, title, original_url, created_at')
+        .eq('category', 'guncel')
+        .order('created_at', { ascending: false });
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch news: ${fetchError.message}`);
+      }
+
+      this.logger.log(`Found ${allNews.length} current news items`);
+
+      // 2. URL'lere göre grupla
+      const urlGroups = new Map<string, any[]>();
+      allNews.forEach(news => {
+        if (!urlGroups.has(news.original_url)) {
+          urlGroups.set(news.original_url, []);
+        }
+        urlGroups.get(news.original_url)!.push(news);
+      });
+
+      // 3. Duplicate'leri bul
+      const duplicates = Array.from(urlGroups.entries())
+        .filter(([url, items]) => items.length > 1)
+        .map(([url, items]) => ({
+          url,
+          count: items.length,
+          items: items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        }));
+
+      this.logger.log(`Found ${duplicates.length} duplicate groups`);
+
+      let totalRemoved = 0;
+      const duplicateDetails: Array<{
+        url: string;
+        kept: string;
+        removed: number;
+        removedIds: string[];
+      }> = [];
+
+      // 4. Duplicate'leri temizle (en yenisini bırak, diğerlerini sil)
+      for (const duplicate of duplicates) {
+        const keepItem = duplicate.items[0]; // En yeni
+        const removeItems = duplicate.items.slice(1); // Diğerleri
+
+        const removeIds = removeItems.map(item => item.id);
+        
+        const { error: deleteError } = await this.supabaseService.adminSupabase
+          .from('news')
+          .delete()
+          .in('id', removeIds);
+
+        if (deleteError) {
+          this.logger.error(`Failed to delete duplicates for ${duplicate.url}: ${deleteError.message}`);
+          continue;
+        }
+
+        totalRemoved += removeItems.length;
+        duplicateDetails.push({
+          url: duplicate.url,
+          kept: keepItem.id,
+          removed: removeItems.length,
+          removedIds: removeIds
+        });
+
+        this.logger.log(`Cleaned ${removeItems.length} duplicates for URL: ${duplicate.url}`);
+      }
+
+      const result = {
+        totalNews: allNews.length,
+        duplicateGroups: duplicates.length,
+        totalRemoved,
+        duplicateDetails: duplicateDetails.slice(0, 10), // İlk 10 örnek
+        message: `Successfully cleaned ${totalRemoved} duplicate news items from ${duplicates.length} groups`
+      };
+
+      this.logger.log(`Duplicate cleanup completed: ${result.message}`);
+      return result;
+
+    } catch (error) {
+      this.logger.error(`Failed to cleanup duplicates: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Eski haberleri AI ile kategorilendir
+   */
+  async reclassifyOldNewsWithAI() {
+    this.logger.log('Starting old news reclassification with AI...');
+
+    try {
+      // 1. RSS'ten güncel haberleri çek
+      const rssNews = await this.fetchCurrentRssNews();
+      this.logger.log(`Found ${rssNews.length} current news in RSS feed`);
+
+      if (rssNews.length === 0) {
+        this.logger.warn('No news found in RSS feed');
+        return {
+          rssNewsCount: 0,
+          reclassifiedCount: 0,
+          message: 'No news found in RSS feed'
+        };
+      }
+
+      // 2. RSS'teki haber URL'lerini çıkar
+      const rssUrls = rssNews.map(news => news.link);
+
+      // 3. DB'deki güncel haberleri getir
+      const { data: currentNews, error: fetchError } = await this.supabaseService.supabase
+        .from('news')
+        .select('id, title, original_url, category, created_at')
+        .eq('category', 'guncel');
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch current news: ${fetchError.message}`);
+      }
+
+      this.logger.log(`Found ${currentNews.length} current news in database`);
+
+      // 4. RSS'te olmayan haberleri bul
+      const newsToReclassify = currentNews.filter(dbNewsItem => 
+        !rssUrls.includes(dbNewsItem.original_url)
+      );
+
+      this.logger.log(`Found ${newsToReclassify.length} news items to reclassify (not in RSS)`);
+
+      let reclassifiedCount = 0;
+      const reclassifiedDetails: Array<{
+        id: string;
+        title: string;
+        oldCategory: string;
+        newCategory: AACategory;
+        confidence: number;
+      }> = [];
+
+      // 5. AI ile kategori belirleme işlemi
+      for (const newsItem of newsToReclassify) {
+        try {
+          const classification = await this.aiCategoryService.classifyCategory({
+            title: newsItem.title,
+            content: '', // Content genellikle bu aşamada mevcut değil
+          });
+
+          if (classification && classification.category !== AACategory.GUNCEL) {
+            const { error: updateError } = await this.supabaseService.adminSupabase
+              .from('news')
+              .update({ category: classification.category })
+              .eq('id', newsItem.id);
+
+            if (updateError) {
+              this.logger.error(`Failed to update category for news ${newsItem.id}: ${updateError.message}`);
+            } else {
+              reclassifiedCount++;
+              reclassifiedDetails.push({
+                id: newsItem.id,
+                title: newsItem.title,
+                oldCategory: 'guncel',
+                newCategory: classification.category,
+                confidence: classification.confidence
+              });
+              this.logger.log(`Reclassified news ${newsItem.id} to category: ${classification.category} (confidence: ${classification.confidence})`);
+            }
+          }
+        } catch (error) {
+          this.logger.error(`Failed to classify news ${newsItem.id}: ${error.message}`);
+        }
+      }
+
+      const result = {
+        rssNewsCount: rssNews.length,
+        totalCurrentNews: currentNews.length,
+        newsToReclassify: newsToReclassify.length,
+        reclassifiedCount,
+        reclassifiedDetails: reclassifiedDetails.slice(0, 10), // İlk 10 örnek
+        message: `Successfully reclassified ${reclassifiedCount} news items with AI`
+      };
+
+      this.logger.log(`Old news reclassification completed: ${result.message}`);
+      return result;
+
+    } catch (error) {
+      this.logger.error(`Failed to reclassify old news: ${error.message}`);
       throw error;
     }
   }

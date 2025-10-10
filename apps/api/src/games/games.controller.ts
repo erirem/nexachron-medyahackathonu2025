@@ -15,6 +15,7 @@ import {
 import { GamesService } from './games.service';
 import { QuizGameService } from './services/quiz-game.service';
 import { MultiplayerService } from './services/multiplayer.service';
+import { QuestionGenerationService } from './services/question-generation.service';
 import { SupabaseAuthGuard, type AuthenticatedRequest } from '../auth/supabase-auth.guard';
 import type {
   StartGameRequest,
@@ -30,6 +31,7 @@ export class GamesController {
     private readonly gamesService: GamesService,
     private readonly quizGameService: QuizGameService,
     private readonly multiplayerService: MultiplayerService,
+    private readonly questionGenerationService: QuestionGenerationService,
   ) {}
 
   /**
@@ -266,5 +268,46 @@ export class GamesController {
   @Post('questions/refresh')
   async refreshQuestionPool() {
     return this.gamesService.refreshQuestionPool();
+  }
+
+  /**
+   * Manuel olarak günlük haber trivia soruları oluştur (cron job tetikleme)
+   * POST /api/games/trigger-daily-questions
+   */
+  @Post('trigger-daily-questions')
+  async triggerDailyNewsTriviaQuestions() {
+    try {
+      await this.questionGenerationService.generateDailyNewsTriviaQuestions();
+      return {
+        success: true,
+        message: 'Daily news trivia questions generation triggered successfully'
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to trigger daily questions: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * Tüm quiz sorularını komple sıfırla (tüm soruları ve cevapları sil)
+   * POST /api/games/reset-all-questions
+   */
+  @Post('reset-all-questions')
+  async resetAllQuestions() {
+    try {
+      const result = await this.questionGenerationService.resetAllQuestions();
+      return {
+        success: true,
+        message: 'All quiz questions and answers have been reset successfully',
+        data: result
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to reset all questions: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 }

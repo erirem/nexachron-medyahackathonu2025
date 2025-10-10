@@ -9,6 +9,59 @@ import { fetchReelById, fetchExploreFeed } from '../../../../services/api';
 
 export default function ReelPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
     const { locale, id } = use(params);
+import ReelPlayer from '../../../../components/reels/ReelPlayer';
+import { useReelPlayer } from '../../../../components/reels/useReelPlayer';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuthState } from '@/contexts/auth-context';
+
+export default function ReelPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
+    const { id } = use(params);
+    const { user, loading, onboardingStatusLoading, hasCompletedOnboarding } = useAuthState();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    useEffect(() => {
+        // Wait for auth to finish loading
+        if (loading || onboardingStatusLoading || hasCompletedOnboarding === null) {
+            return;
+        }
+
+        // If user is not logged in, redirect to login
+        if (!user) {
+            const currentLocale = pathname?.split('/')[1] || 'tr';
+            router.push(`/${currentLocale}/login`);
+            return;
+        }
+
+        // If user is logged in but hasn't completed onboarding, redirect to onboarding
+        if (user && !hasCompletedOnboarding) {
+            const currentLocale = pathname?.split('/')[1] || 'tr';
+            router.push(`/${currentLocale}/onboarding`);
+            return;
+        }
+    }, [user, loading, onboardingStatusLoading, hasCompletedOnboarding, router, pathname]);
+
+    // Show loading state while checking auth
+    if (loading || onboardingStatusLoading || hasCompletedOnboarding === null) {
+        return (
+            <div className="fixed inset-0 bg-black flex items-center justify-center">
+                <div className="text-center">
+                    <div className="relative">
+                        <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-white mx-auto mb-6"></div>
+                        <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-gray-400 border-t-gray-600 mx-auto animate-spin-slow"></div>
+                    </div>
+                    <p className="text-lg font-medium text-white mb-2">Yükleniyor</p>
+                    <p className="text-sm text-gray-400">Reel hazırlanıyor...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // If user is not logged in, don't show reel page (will redirect)
+    if (!user) {
+        return null;
+    }
+
     const clientRef = useRef<QueryClient | null>(null);
     if (!clientRef.current) clientRef.current = new QueryClient();
 
@@ -419,5 +472,4 @@ function PlayerShell({ locale, initial, from }: { locale: string; initial: ReelP
         </div>
     );
 }
-
 

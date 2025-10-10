@@ -1,18 +1,27 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, type JSX } from 'react';
+import { useGamification } from '@/contexts/gamification-context';
+import { XP_VALUES } from '@/lib/types/gamification';
+import { SpeedReadTimer } from '../../../dashboard/_components/speed-read-timer';
 
 interface ReadingProgressProps {
   readonly articleTitle: string;
   readonly articleUrl: string;
+  readonly newsId?: string;
+  readonly isTimeLimited?: boolean;
 }
 
-export function ReadingProgress({ articleTitle, articleUrl }: ReadingProgressProps): JSX.Element {
+export function ReadingProgress({ articleTitle, articleUrl, newsId, isTimeLimited }: ReadingProgressProps): JSX.Element {
   const [progress, setProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [showFloatingActions, setShowFloatingActions] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
+  const [showXPAnimation, setShowXPAnimation] = useState(false);
+  const [speedReadCompleted, setSpeedReadCompleted] = useState(false);
   const scrollContainerRef = useRef<HTMLElement | null>(null);
+  const { completeNews, completeSpeedRead } = useGamification();
 
   const updateProgress = useCallback(() => {
     const container = scrollContainerRef.current;
@@ -21,9 +30,32 @@ export function ReadingProgress({ articleTitle, articleUrl }: ReadingProgressPro
       const docHeight = container.scrollHeight - container.clientHeight;
       const progressPercentage = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
 
-      setProgress(Math.min(100, Math.max(0, progressPercentage)));
+      const newProgress = Math.min(100, Math.max(0, progressPercentage));
+      setProgress(newProgress);
       setIsVisible(scrollTop > 100);
       setShowFloatingActions(scrollTop > 300);
+      
+      // Check for 100% completion
+      if (newProgress >= 100 && !hasCompleted && newsId) {
+        setHasCompleted(true);
+        
+        // Check if this is a speed read completion
+        if (isTimeLimited && !speedReadCompleted) {
+          setSpeedReadCompleted(true);
+          completeSpeedRead(newsId);
+          setShowXPAnimation(true);
+          setTimeout(() => setShowXPAnimation(false), 3000);
+        } else {
+          completeNews(newsId);
+          setShowXPAnimation(true);
+          setTimeout(() => setShowXPAnimation(false), 3000);
+        }
+        
+        // Emit event for speed read timer
+        window.dispatchEvent(new CustomEvent('news-complete', {
+          detail: { newsId }
+        }));
+      }
       return;
     }
 
@@ -31,10 +63,33 @@ export function ReadingProgress({ articleTitle, articleUrl }: ReadingProgressPro
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const progressPercentage = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
     
-    setProgress(Math.min(100, Math.max(0, progressPercentage)));
+    const newProgress = Math.min(100, Math.max(0, progressPercentage));
+    setProgress(newProgress);
     setIsVisible(scrollTop > 100);
     setShowFloatingActions(scrollTop > 300);
-  }, []);
+    
+    // Check for 100% completion
+    if (newProgress >= 100 && !hasCompleted && newsId) {
+      setHasCompleted(true);
+      
+      // Check if this is a speed read completion
+      if (isTimeLimited && !speedReadCompleted) {
+        setSpeedReadCompleted(true);
+        completeSpeedRead(newsId);
+        setShowXPAnimation(true);
+        setTimeout(() => setShowXPAnimation(false), 3000);
+      } else {
+        completeNews(newsId);
+        setShowXPAnimation(true);
+        setTimeout(() => setShowXPAnimation(false), 3000);
+      }
+      
+      // Emit event for speed read timer
+      window.dispatchEvent(new CustomEvent('news-complete', {
+        detail: { newsId }
+      }));
+    }
+  }, [hasCompleted, newsId, completeNews, completeSpeedRead, isTimeLimited, speedReadCompleted]);
 
   useEffect(() => {
     const container = document.getElementById('article-scroll-container');
@@ -209,6 +264,38 @@ export function ReadingProgress({ articleTitle, articleUrl }: ReadingProgressPro
           </svg>
         </button>
       </div>
+
+      {/* Speed Read Timer */}
+      {isTimeLimited && (
+        <SpeedReadTimer 
+          newsId={newsId || ''}
+          onTimeExpired={() => {
+            // Timer expired - no special action needed
+          }}
+          onSpeedReadComplete={() => {
+            // Speed read completed - XP and badge already awarded
+          }}
+        />
+      )}
+
+      {/* XP Animation */}
+      {showXPAnimation && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none">
+          <div className={`text-white px-6 py-3 rounded-full font-bold shadow-2xl animate-bounce ${
+            speedReadCompleted 
+              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+              : 'bg-gradient-to-r from-yellow-500 to-orange-500'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{speedReadCompleted ? '🏆' : '🎉'}</span>
+              <span>+{speedReadCompleted ? XP_VALUES.SPEED_READ : XP_VALUES.NEWS_COMPLETE} XP</span>
+              <span className="text-sm">
+                {speedReadCompleted ? 'Hızlı Okuma Tamamlandı!' : 'Haber Tamamlandı!'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

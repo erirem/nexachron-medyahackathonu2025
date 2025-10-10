@@ -27,6 +27,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdnuploads.aa.com.tr",
       },
+      {
+        protocol: "https",
+        hostname: "www.youtube.com",
+      },
+      {
+        protocol: "https",
+        hostname: "youtube.com",
+      },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+      },
     ],
   },
 };

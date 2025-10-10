@@ -5,6 +5,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { NewsIngestService } from '../../news-ingest/news-ingest.service';
 import { AACategory } from '../../news-ingest/dto/news-item.dto';
+import { AiCategoryClassificationService } from '../../news/services/ai-category-classification.service';
 import {
   Question,
   QuestionType,
@@ -48,6 +49,7 @@ export class QuestionGenerationService {
     private readonly configService: ConfigService,
     private readonly supabaseService: SupabaseService,
     private readonly newsIngestService: NewsIngestService,
+    private readonly aiCategoryService: AiCategoryClassificationService,
   ) {
     this.openaiApiKey = this.configService.get<string>('OPENAI_API_KEY') || '';
     this.openaiApiUrl = this.configService.get<string>('OPENAI_API_URL', 'https://api.openai.com/v1');
@@ -143,17 +145,22 @@ export class QuestionGenerationService {
           .lte('created_at', filter.dateRange.end.toISOString());
       }
 
-      query = query
-        .order('created_at', { ascending: false })
-        .limit(filter.limit);
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw new Error(`Failed to fetch questions: ${error.message}`);
+      // Önce tüm soruları getir, sonra rastgele seç
+      const { data: allQuestions, error: allError } = await query;
+      
+      if (allError) {
+        throw new Error(`Failed to fetch questions: ${allError.message}`);
       }
-
-      return data.map(this.mapDatabaseQuestionToQuestion);
+      
+      if (allQuestions.length === 0) {
+        return [];
+      }
+      
+      // Rastgele karıştır ve limit kadar al
+      const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+      const selectedQuestions = shuffled.slice(0, filter.limit);
+      
+      return selectedQuestions.map(this.mapDatabaseQuestionToQuestion);
     } catch (error) {
       this.logger.error(`Failed to get questions: ${error.message}`);
       throw error;
@@ -219,6 +226,51 @@ export class QuestionGenerationService {
     // Bu metod manuel quiz soruları için kullanılacak
     // Şimdilik boş döndürüyoruz, gelecekte genel bilgi soruları eklenebilir
     return [];
+  }
+
+  /**
+   * Tüm quiz sorularını ve cevaplarını komple sıfırla
+   */
+  async resetAllQuestions() {
+    try {
+      this.logger.log('Starting complete quiz questions reset...');
+      
+      // Önce tüm cevapları sil
+      this.logger.log('Deleting all game answers...');
+      const { error: answersError } = await this.supabaseService.supabase
+        .from('game_answers')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Tüm cevapları sil
+      
+      if (answersError) {
+        this.logger.error(`Failed to delete game answers: ${answersError.message}`);
+        throw new Error(`Failed to delete game answers: ${answersError.message}`);
+      }
+      
+      // Sonra tüm soruları sil
+      this.logger.log('Deleting all quiz questions...');
+      const { error: questionsError } = await this.supabaseService.supabase
+        .from('quiz_questions')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Tüm soruları sil
+      
+      if (questionsError) {
+        this.logger.error(`Failed to delete quiz questions: ${questionsError.message}`);
+        throw new Error(`Failed to delete quiz questions: ${questionsError.message}`);
+      }
+      
+      this.logger.log('All quiz questions and answers have been reset successfully');
+      
+      return {
+        success: true,
+        message: 'All quiz questions and answers have been reset',
+        deletedAnswers: 'All game answers deleted',
+        deletedQuestions: 'All quiz questions deleted'
+      };
+    } catch (error) {
+      this.logger.error(`Failed to reset all questions: ${error.message}`);
+      throw error;
+    }
   }
 
   /**
@@ -382,38 +434,80 @@ export class QuestionGenerationService {
       }
       
       // RSS'te olmayan haberleri bul
-      const newsToArchive = dbNews.filter(dbNewsItem => 
+      const newsToReclassify = dbNews.filter(dbNewsItem => 
         !currentRssUrls.includes(dbNewsItem.original_url)
       );
       
-      this.logger.log(`Found ${newsToArchive.length} news items to archive`);
+      // ÖNCE eski quiz sorularını sil (bugün oluşturulanları koru)
+      this.logger.log('Cleaning up old quiz questions...');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Bugünün başlangıcı
       
-      if (newsToArchive.length > 0) {
-        // RSS'te olmayan haberleri arşivle
-        const newsIds = newsToArchive.map(news => news.id);
+      // Önce eski sorulara ait cevapları sil
+      const { data: oldQuestions } = await this.supabaseService.supabase
+        .from('quiz_questions')
+        .select('id')
+        .lt('created_at', today.toISOString());
+      
+      if (oldQuestions && oldQuestions.length > 0) {
+        const questionIds = oldQuestions.map(q => q.id);
         
-        const { error: archiveError } = await this.supabaseService.supabase
-          .from('news')
-          .update({ category: 'archived' })
-          .in('id', newsIds);
+        // Eski sorulara ait cevapları sil
+        const { error: answersError } = await this.supabaseService.supabase
+          .from('game_answers')
+          .delete()
+          .in('question_id', questionIds);
         
-        if (archiveError) {
-          this.logger.error(`Failed to archive news: ${archiveError.message}`);
-          return;
+        if (answersError) {
+          this.logger.error(`Failed to cleanup old answers: ${answersError.message}`);
+        } else {
+          this.logger.log(`Cleaned up answers for ${questionIds.length} old questions`);
         }
         
-        this.logger.log(`Archived ${newsToArchive.length} news items that are no longer in RSS`);
+        // Şimdi eski soruları sil
+        const { error: questionsError } = await this.supabaseService.supabase
+          .from('quiz_questions')
+          .delete()
+          .lt('created_at', today.toISOString());
+        
+        if (questionsError) {
+          this.logger.error(`Failed to cleanup quiz questions: ${questionsError.message}`);
+        } else {
+          this.logger.log(`Successfully cleaned up ${oldQuestions.length} old quiz questions`);
+        }
+      } else {
+        this.logger.log('No old questions found to cleanup');
       }
       
-      // Tüm haber trivia sorularını sil (günlük yenileme)
-      const { error: questionsError } = await this.supabaseService.supabase
-        .from('quiz_questions')
-        .delete()
-        .eq('game_type', 'news_trivia');
+      this.logger.log(`Found ${newsToReclassify.length} news items to reclassify`);
       
-      if (questionsError) {
-        this.logger.error(`Failed to cleanup news trivia questions: ${questionsError.message}`);
-        return;
+      if (newsToReclassify.length > 0) {
+        // AI ile kategori belirleme işlemi
+        for (const newsItem of newsToReclassify) {
+          try {
+            const classification = await this.aiCategoryService.classifyCategory({
+              title: newsItem.title,
+              content: '', // Content genellikle bu aşamada mevcut değil
+            });
+
+            if (classification && classification.category !== AACategory.GUNCEL) {
+              const { error: updateError } = await this.supabaseService.supabase
+                .from('news')
+                .update({ category: classification.category })
+                .eq('id', newsItem.id);
+
+              if (updateError) {
+                this.logger.error(`Failed to update category for news ${newsItem.id}: ${updateError.message}`);
+              } else {
+                this.logger.log(`Reclassified news ${newsItem.id} to category: ${classification.category} (confidence: ${classification.confidence})`);
+              }
+            }
+          } catch (error) {
+            this.logger.error(`Failed to classify news ${newsItem.id}: ${error.message}`);
+          }
+        }
+        
+        this.logger.log(`Reclassified ${newsToReclassify.length} news items with AI`);
       }
       
       this.logger.log('News archiving and trivia questions refresh completed successfully');

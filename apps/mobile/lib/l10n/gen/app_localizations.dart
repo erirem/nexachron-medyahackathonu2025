@@ -357,7 +357,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginBadge.
   ///
   /// In tr, this message translates to:
-  /// **'Anadolu Ajansı ile güçlendirildi'**
+  /// **'Kişiselleştirilmiş haberler ve oyunlar '**
   String get loginBadge;
 
   /// No description provided for @loginHeading.

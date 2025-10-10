@@ -11,6 +11,8 @@ import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { GamesModule } from './games/games.module';
 import { TTSModule } from './tts/tts.module';
 import { ReelsModule } from './reels/reels.module';
+import { UserDataModule } from './user-data/user-data.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { ReelsModule } from './reels/reels.module';
     GamesModule,
     TTSModule,
     ReelsModule,
+    UserDataModule,
+    RecommendationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, type JSX } from 'react';
 import Image from 'next/image';
 import type { DashboardNewsItem, NewsImage } from './types';
 import { useGamification } from '@/contexts/gamification-context';
+import { useNewsTracking } from '@/contexts/news-tracking-context';
 import { RANK_INFO, Comment, XP_VALUES, UserRank } from '@/lib/types/gamification';
 
 interface EnhancedNewsModalProps {
@@ -65,7 +66,8 @@ export function EnhancedNewsModal({
   const [newComment, setNewComment] = useState('');
   const [hasReadArticle, setHasReadArticle] = useState(false);
   
-  const { userProfile, addXP, followTopic, unfollowTopic } = useGamification();
+  const { userProfile, addXP, followTopic, unfollowTopic, trackActivity } = useGamification();
+  const { markNewsAsRead } = useNewsTracking();
 
   const allImages: NewsImage[] = [
     { url: item.imageUrl, alt: item.title, caption: item.title },
@@ -86,6 +88,8 @@ export function EnhancedNewsModal({
       const timer = setTimeout(() => {
         addXP('NEWS_READ');
         setHasReadArticle(true);
+        markNewsAsRead(item.id); // Track as read for trivia popup
+        trackActivity('news_read'); // Track for personal analyst
         
         // Trend haber ise ekstra XP
         if (item.tags.includes('trending') || item.impact === 'Yüksek') {
@@ -95,7 +99,7 @@ export function EnhancedNewsModal({
       
       return () => clearTimeout(timer);
     }
-  }, [isOpen, hasReadArticle, activeTab, addXP, item.tags, item.impact]);
+  }, [isOpen, hasReadArticle, activeTab, addXP, item.tags, item.impact, markNewsAsRead, item.id, trackActivity]);
 
   const handleLike = useCallback(() => {
     setIsLiked(!isLiked);

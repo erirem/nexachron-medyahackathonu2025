@@ -287,7 +287,7 @@ class NewsDetailPage extends ConsumerWidget {
 
                       const SizedBox(height: 24),
 
-                      // Summary
+                      // Summary with AI badge
                       if (news.summary.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -298,23 +298,61 @@ class NewsDetailPage extends ConsumerWidget {
                               color: Colors.white.withOpacity(0.1),
                             ),
                           ),
-                          child: Text(
-                            news.summary,
-                            textAlign: TextAlign.start,
-                            strutStyle: const StrutStyle(
-                              forceStrutHeight: true,
-                              height: 1.6,
-                              leading: 0.2,
-                              fontSize: 17,
-                            ),
-                            style: TextStyle(
-                              fontSize: 17,
-                              color: Colors.white.withOpacity(0.94),
-                              height: 1.6,
-                              letterSpacing: 0.1,
-                              wordSpacing: 0.4,
-                              fontWeight: FontWeight.w500,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.12),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.auto_awesome,
+                                      size: 14,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'AI ile derlendi',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                news.summary,
+                                textAlign: TextAlign.start,
+                                strutStyle: const StrutStyle(
+                                  forceStrutHeight: true,
+                                  height: 1.6,
+                                  leading: 0.2,
+                                  fontSize: 17,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  color: Colors.white.withOpacity(0.94),
+                                  height: 1.6,
+                                  letterSpacing: 0.1,
+                                  wordSpacing: 0.4,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 

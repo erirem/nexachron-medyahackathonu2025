@@ -14,6 +14,30 @@ interface InlineMediaProps {
   readonly onVisible?: () => void;
 }
 
+// Helper function to detect if URL is a YouTube video
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+// Helper function to convert YouTube URL to embed format
+const getYouTubeEmbedUrl = (url: string): string => {
+  if (url.includes('youtube.com/embed/')) {
+    return url;
+  }
+  
+  // Extract video ID from various YouTube URL formats
+  let videoId = '';
+  if (url.includes('youtube.com/watch?v=')) {
+    videoId = url.split('v=')[1]?.split('&')[0] || '';
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
+  } else if (url.includes('youtube.com/embed/')) {
+    videoId = url.split('embed/')[1]?.split('?')[0] || '';
+  }
+  
+  return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0` : url;
+};
+
 export function InlineMedia({ 
   type, 
   src, 
@@ -32,6 +56,42 @@ export function InlineMedia({
     setIsVisible(true);
     onVisible?.();
   }, [onVisible]);
+
+  // If src is a YouTube URL, treat it as video regardless of type
+  if (src && isYouTubeUrl(src)) {
+    const embedUrl = getYouTubeEmbedUrl(src);
+    
+    return (
+      <div 
+        className={`my-8 transition-all duration-700 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
+      >
+        <div className="relative rounded-2xl overflow-hidden bg-slate-800/30 border border-slate-600/30">
+          <div className="relative aspect-video">
+            <iframe
+              src={embedUrl}
+              title={alt || 'YouTube video'}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+          {(caption || credit) && (
+            <div className="p-4 bg-slate-800/50 backdrop-blur-sm">
+              {caption && (
+                <p className="text-slate-200 text-sm leading-relaxed">{caption}</p>
+              )}
+              {credit && (
+                <p className="text-slate-400 text-xs mt-1">Video: {credit}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (type === 'image') {
     if (!src || hasError) {

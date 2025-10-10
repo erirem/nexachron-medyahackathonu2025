@@ -140,7 +140,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get loginSubmit => 'Giriş yap';
 
   @override
-  String get loginBadge => 'Anadolu Ajansı ile güçlendirildi';
+  String get loginBadge => 'Kişiselleştirilmiş haberler ve oyunlar ';
 
   @override
   String get loginHeading => 'Nexachron\'a Giriş';
