@@ -63,8 +63,16 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
       return;
     }
 
-    if ((hasCompletedOnboarding === false || isFirstTimeUser === true) && !isOnboardingPage && !isAuthRoute) {
+    // Onboarding kontrolü - sadece kesin olarak false ise onboarding'e yönlendir
+    if (hasCompletedOnboarding === false && !isOnboardingPage && !isAuthRoute) {
       router.replace(`/${locale}/onboarding`);
+      return;
+    }
+    
+    // Eğer onboarding durumu null ise (API'den veri gelmiyorsa) ve dashboard'a gitmeye çalışıyorsa, dashboard'a izin ver
+    if (hasCompletedOnboarding === null && !isOnboardingPage && !isAuthRoute && needsAuth) {
+      // Dashboard'a gitmeye çalışıyor ve onboarding durumu bilinmiyor - dashboard'a izin ver
+      return;
     }
   }, [
     authReady,

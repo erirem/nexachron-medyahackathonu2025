@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, type JSX } from "react";
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
-import { useProfile, useAuthState } from '@/contexts/auth-context';
+import { useAuthState } from '@/contexts/auth-context';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
 import { NewsCard } from "./news-card";
@@ -96,7 +96,7 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
 
 export function Dashboard({ initialNews, topics, categoriesOverview, initialPopularNews }: DashboardProps): JSX.Element {
   const router = useRouter();
-  const profile = useProfile();
+  const { profile, user, loading } = useAuthState();
   const [sidebarWidth, setSidebarWidth] = useState(80);
   const [activeCategory, setActiveCategory] = useState('forYou');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -1019,8 +1019,7 @@ function MobileLibrary({ topics }: MobileLibraryProps): JSX.Element {
 }
 
 function DashboardHeader({ onOpenLiveTracking }: { onOpenLiveTracking: () => void }): JSX.Element {
-  const profile = useProfile();
-  const { user } = useAuthState();
+  const { profile, user } = useAuthState();
   const displayName =
     profile?.full_name ||
     // @ts-ignore – metadata tipleri opsiyonel olabilir
