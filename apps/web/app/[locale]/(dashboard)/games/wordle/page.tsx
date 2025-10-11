@@ -3,6 +3,7 @@
 import { useState, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGamification } from '@/contexts/gamification-context';
+import { SocialShareModal } from '@/components/social-share-modal';
 import { WordleGame } from '../_components/wordle-game';
 
 export default function WordlePage(): JSX.Element {
@@ -479,6 +480,15 @@ export default function WordlePage(): JSX.Element {
             dailyMode={dailyMode}
           />
         )}
+
+        {/* Social Share Modal */}
+        <SocialShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          gameType="wordle"
+          word={lastGameResult?.word || ''}
+          attempts={lastGameResult?.attempts || 0}
+        />
       </div>
     </div>
   );

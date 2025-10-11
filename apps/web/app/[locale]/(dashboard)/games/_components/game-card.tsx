@@ -110,7 +110,7 @@ export function GameCard({ game, onSelect }: GameCardProps): JSX.Element {
               </div>
             ) : (
               <div className={`text-4xl ${isDisabled ? 'opacity-50' : colors.accent}`}>
-                {game.icon}
+                {typeof game.icon === 'string' ? game.icon : game.icon}
               </div>
             )}
             <div>
