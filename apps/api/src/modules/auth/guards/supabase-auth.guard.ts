@@ -8,7 +8,7 @@ import type { Request } from 'express';
 
 import type { User } from '@supabase/supabase-js';
 
-import { SupabaseService } from '../supabase/supabase.service';
+import { SupabaseService } from '../../../supabase/supabase.service';
 
 export interface AuthenticatedRequest extends Request {
   user?: User;

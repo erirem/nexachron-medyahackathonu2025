@@ -18,7 +18,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
-import { SupabaseAuthGuard } from '../../../auth/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../auth/guards/supabase-auth.guard';
 import {
   CreateUserDto,
   UpdateUserDto,
@@ -28,7 +28,7 @@ import {
   UserBasicInfoDto,
 } from '../../../shared/dto/user.dto';
 import { createSuccessResponse, createErrorResponse } from '../../../shared/dto/response.dto';
-import type { AuthenticatedRequest } from '../../../auth/supabase-auth.guard';
+import type { AuthenticatedRequest } from '../../auth/guards/supabase-auth.guard';
 
 @Controller('users')
 export class UserController {

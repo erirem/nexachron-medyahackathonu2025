@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
-import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../modules/auth/guards/supabase-auth.guard';
 import { UserDataService } from './user-data.service';
 
 @Controller('v1/user-data')

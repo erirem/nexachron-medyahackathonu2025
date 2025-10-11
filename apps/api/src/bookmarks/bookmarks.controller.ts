@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
-import { SupabaseAuthGuard, type AuthenticatedRequest } from '../auth/supabase-auth.guard';
+import { SupabaseAuthGuard, type AuthenticatedRequest } from '../modules/auth/guards/supabase-auth.guard';
 import { BookmarksService } from './bookmarks.service';
 
 @UseGuards(SupabaseAuthGuard)

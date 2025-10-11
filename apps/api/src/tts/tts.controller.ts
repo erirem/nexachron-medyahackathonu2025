@@ -13,7 +13,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { TTSService } from './tts.service';
-import { SupabaseAuthGuard, type AuthenticatedRequest } from '../auth/supabase-auth.guard';
+import { SupabaseAuthGuard, type AuthenticatedRequest } from '../modules/auth/guards/supabase-auth.guard';
 import type {
   GenerateTTSRequest,
   TTSAudioResponse,

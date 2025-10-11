@@ -9,7 +9,7 @@ import {
 import {
   SupabaseAuthGuard,
   type AuthenticatedRequest,
-} from '../auth/supabase-auth.guard';
+} from '../modules/auth/guards/supabase-auth.guard';
 import { resolveLocale, translate } from '../i18n/i18n';
 import { UsersService, type ProfileWithStats } from './users.service';
 

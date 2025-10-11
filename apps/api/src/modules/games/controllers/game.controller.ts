@@ -15,7 +15,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { GameService } from '../services/game.service';
-import { SupabaseAuthGuard } from '../../../auth/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../auth/guards/supabase-auth.guard';
 import {
   CreateGameDto,
   UpdateGameDto,
@@ -28,7 +28,7 @@ import {
 } from '../../../shared/dto/game.dto';
 import { createSuccessResponse } from '../../../shared/dto/response.dto';
 import { resolveLocale, translate } from '../../../i18n/i18n';
-import type { AuthenticatedRequest } from '../../../auth/supabase-auth.guard';
+import type { AuthenticatedRequest } from '../../auth/guards/supabase-auth.guard';
 
 @Controller('games')
 @UseGuards(SupabaseAuthGuard)
