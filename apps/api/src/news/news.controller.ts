@@ -76,6 +76,7 @@ export class NewsController {
     @Query('pageSize') pageSize?: string,
     @Query('limit') limit?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('categoryIds') categoryIds?: string, // Çoklu kategori desteği
     @Query('city') city?: string,
     @Query('isPopular') isPopular?: string,
     @Headers('accept-language') acceptLanguage?: string,
@@ -94,12 +95,21 @@ export class NewsController {
       : this.parsePositiveNumber(limit ?? '', undefined);
     const isPopularValue = this.parseBoolean(isPopular);
 
+    // Parse categoryIds from comma-separated string
+    const categoryIdsArray = categoryIds
+      ? categoryIds
+          .split(',')
+          .map((id) => id.trim())
+          .filter((id) => id.length > 0)
+      : undefined;
+
     try {
       const result = await this.newsService.findAll({
         page: pageValue,
         pageSize: pageSizeValue,
         limit: limitValue,
         categoryId: categoryId ?? undefined,
+        categoryIds: categoryIdsArray,
         city: city ?? undefined,
         isPopular: isPopularValue,
         includeCount: hasPagination,
@@ -307,7 +317,8 @@ export class NewsController {
     const locale = resolveLocale(acceptLanguage);
 
     // UUID doğrulaması: Supabase tarafında tip uyuşmazlığı 500 yerine 400 dönsün
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       throw new BadRequestException(translate(locale, 'errors.invalidId'));
     }

@@ -19,7 +19,8 @@ export enum Badge {
   STREAK_30 = 'STREAK_30',
   TOP_COMMENTER = 'TOP_COMMENTER',
   TRENDING_FOLLOWER = 'TRENDING_FOLLOWER',
-  QUIZ_MASTER = 'QUIZ_MASTER'
+  QUIZ_MASTER = 'QUIZ_MASTER',
+  SPEED_READER = 'SPEED_READER'
 }
 
 export enum BadgeType {
@@ -49,6 +50,82 @@ export interface BadgeInfo {
   totalEarned?: number; // Kaç kişi kazandı (nadir rozetler için)
 }
 
+export interface CategoryReadingStats {
+  categoryId: string;
+  categoryName: string;
+  newsRead: number;
+  totalTimeSpent: number; // dakika cinsinden
+  lastReadDate: Date;
+  favoriteTimeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+}
+
+export interface DailyActivity {
+  date: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface WeeklyActivity {
+  weekStart: Date;
+  weekEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  dailyActivities: DailyActivity[];
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface MonthlyActivity {
+  monthStart: Date;
+  monthEnd: Date;
+  newsRead: number;
+  commentsMade: number;
+  quizzesCompleted: number;
+  xpEarned: number;
+  topicsFollowed: number;
+  streakDays: number;
+  weeklyActivities: WeeklyActivity[];
+  categoryStats: CategoryReadingStats[];
+}
+
+export interface PersonalAnalyst {
+  dailyStats: DailyActivity;
+  weeklyStats: WeeklyActivity;
+  monthlyStats: MonthlyActivity;
+  achievements: string[];
+  nextRankProgress: {
+    currentRank: UserRank;
+    nextRank: UserRank;
+    xpToNext: number;
+    progressPercentage: number;
+  };
+  motivationalMessage: string;
+  recommendations: string[];
+  dailyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  weeklyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+  monthlyGoal: {
+    target: number;
+    current: number;
+    percentage: number;
+  };
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -68,10 +145,14 @@ export interface UserProfile {
   weeklyXp: number;
   monthlyXp: number;
   seasonXp: number;
+  dailyActivity: DailyActivity;
+  weeklyActivity: WeeklyActivity;
+  monthlyActivity: MonthlyActivity;
+  personalAnalyst?: PersonalAnalyst;
 }
 
 export interface XPAction {
-  type: 'NEWS_READ' | 'COMMENT' | 'QUIZ_COMPLETE' | 'TOPIC_FOLLOW' | 'DAILY_LOGIN' | 'STREAK_BONUS';
+  type: 'NEWS_READ' | 'NEWS_COMPLETE' | 'SPEED_READ' | 'COMMENT' | 'QUIZ_COMPLETE' | 'TOPIC_FOLLOW' | 'DAILY_LOGIN' | 'STREAK_BONUS';
   xpAmount: number;
   timestamp: Date;
   description: string;
@@ -127,6 +208,8 @@ export interface LeaderboardEntry {
 // XP değerleri
 export const XP_VALUES = {
   NEWS_READ: 10,
+  NEWS_COMPLETE: 25,
+  SPEED_READ: 100,
   COMMENT: 20,
   COMMENT_LIKE: 5,
   QUIZ_COMPLETE: 30,
@@ -151,35 +234,35 @@ export const RANK_THRESHOLDS = {
 export const RANK_INFO = {
   [UserRank.NEW_MEMBER]: {
     name: 'Yeni Katılımcı',
-    emoji: '🟢',
+    icon: 'circle',
     color: 'text-green-400',
     bgColor: 'bg-green-400/20',
     borderColor: 'border-green-400/30'
   },
   [UserRank.ACTIVE_READER]: {
     name: 'Aktif Okur',
-    emoji: '🔵',
+    icon: 'circle',
     color: 'text-blue-400',
     bgColor: 'bg-blue-400/20',
     borderColor: 'border-blue-400/30'
   },
   [UserRank.KNOWLEDGE_SHARER]: {
     name: 'Bilgi Paylaşımcısı',
-    emoji: '🟡',
+    icon: 'circle',
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-400/20',
     borderColor: 'border-yellow-400/30'
   },
   [UserRank.EXPERT_COMMENTER]: {
     name: 'Uzman Yorumcu',
-    emoji: '🔴',
+    icon: 'circle',
     color: 'text-red-400',
     bgColor: 'bg-red-400/20',
     borderColor: 'border-red-400/30'
   },
   [UserRank.COMMUNITY_LEADER]: {
     name: 'Topluluk Lideri',
-    emoji: '🟣',
+    icon: 'circle',
     color: 'text-purple-400',
     bgColor: 'bg-purple-400/20',
     borderColor: 'border-purple-400/30'
@@ -190,28 +273,28 @@ export const RANK_INFO = {
 export const LEAGUE_INFO = {
   [League.BRONZE]: {
     name: 'Bronz',
-    emoji: '🥉',
+    icon: 'award',
     color: 'text-orange-600',
     bgColor: 'bg-orange-600/20',
     borderColor: 'border-orange-600/30'
   },
   [League.SILVER]: {
     name: 'Gümüş',
-    emoji: '🥈',
+    icon: 'award',
     color: 'text-gray-400',
     bgColor: 'bg-gray-400/20',
     borderColor: 'border-gray-400/30'
   },
   [League.GOLD]: {
     name: 'Altın',
-    emoji: '🥇',
+    icon: 'award',
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-400/20',
     borderColor: 'border-yellow-400/30'
   },
   [League.DIAMOND]: {
     name: 'Elmas',
-    emoji: '💎',
+    icon: 'award',
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-400/20',
     borderColor: 'border-cyan-400/30'
@@ -378,5 +461,18 @@ export const BADGE_INFO: BadgeInfo[] = [
     xpReward: 2000,
     isEarned: false,
     totalEarned: 1
+  },
+  {
+    id: 'speed_reader',
+    name: 'Hızlı Okur',
+    description: '5 dakika içinde zaman sınırlı haberi oku',
+    icon: 'clock',
+    type: BadgeType.RARE,
+    category: BadgeCategory.ACHIEVEMENT,
+    rarity: 'epic',
+    requirement: '5 dakika içinde zaman sınırlı haberi oku',
+    xpReward: 100,
+    isEarned: false,
+    totalEarned: 23
   }
 ];

@@ -66,7 +66,8 @@ type ApiFetchOptions = RequestInit & {
   readonly signal?: AbortSignal;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+// Geliştirme ortamında .env tanımlı değilse API'yi localhost:4000'a sabitle
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(/\/$/, '');
 
 function assertApiUrl(): string {
   if (!API_BASE_URL) {
@@ -156,6 +157,7 @@ type GetNewsListParams = {
   readonly pageSize?: number;
   readonly limit?: number;
   readonly categoryId?: string;
+  readonly categoryIds?: string[]; // Çoklu kategori desteği
   readonly city?: string;
   readonly isPopular?: boolean;
 };
@@ -184,6 +186,7 @@ export async function fetchNewsList(
     pageSize: params.pageSize,
     limit: params.limit,
     categoryId: params.categoryId,
+    categoryIds: params.categoryIds?.join(','), // Çoklu kategoriyi virgülle ayırarak gönder
     city: params.city,
     isPopular:
       typeof params.isPopular === 'boolean' ? String(params.isPopular) : undefined,

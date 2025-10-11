@@ -51,8 +51,8 @@ class ProfileService {
         ProfileErrorCode.apiError,
         details: error.statusCode,
       );
-    } catch (_) {
-      throw const ProfileException(ProfileErrorCode.unknown);
+    } catch (error) {
+      throw ProfileException(ProfileErrorCode.unknown, details: error);
     }
   }
 

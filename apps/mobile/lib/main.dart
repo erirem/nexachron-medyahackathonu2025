@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile/l10n/gen/app_localizations.dart';
 
 import 'core/config/app_config.dart';
@@ -13,10 +14,20 @@ import 'core/services/locale_controller.dart';
 import 'core/services/locale_scope.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/pages/landing_page.dart';
+import 'features/auth/presentation/pages/onboarding_page.dart';
+import 'features/auth/domain/services/onboarding_status_service.dart';
 import 'features/news/presentation/pages/main_navigation.dart';
 import 'features/games/presentation/pages/quizzes_page.dart';
 import 'features/games/presentation/pages/wordle_page.dart';
 import 'features/games/presentation/pages/news_guessr_page.dart';
+import 'features/games/presentation/pages/memory_game_page.dart';
+import 'features/games/presentation/pages/word_puzzle_page.dart';
+import 'features/games/presentation/pages/timeline_game_page.dart';
+import 'features/games/presentation/pages/spot_difference_page.dart';
+import 'features/games/presentation/pages/flappy_bird_page.dart';
+import 'features/games/presentation/pages/news_trivia_page.dart';
+import 'features/games/presentation/pages/multiplayer_lobby_page.dart';
+import 'features/games/presentation/providers/game_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,13 +35,22 @@ Future<void> main() async {
   final localeController = LocaleController();
   await localeController.loadSavedLocale();
 
+  // Initialize SharedPreferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
 
   runApp(
-    ProviderScope(child: NexachronApp(localeController: localeController)),
+    ProviderScope(
+      overrides: [
+        // Override SharedPreferences provider
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: NexachronApp(localeController: localeController),
+    ),
   );
 }
 
@@ -77,6 +97,13 @@ class NexachronApp extends StatelessWidget {
               '/quizzes': (context) => const QuizzesPage(),
               '/wordle': (context) => const WordlePage(),
               '/news-guessr': (context) => const NewsGuessrPage(),
+              '/memory-game': (context) => const MemoryGamePage(),
+              '/word-puzzle': (context) => const WordPuzzlePage(),
+              '/timeline-game': (context) => const TimelineGamePage(),
+              '/spot-difference': (context) => const SpotDifferencePage(),
+              '/flappy-bird': (context) => const FlappyBirdPage(),
+              '/news-trivia': (context) => const NewsTriviaPage(),
+              '/multiplayer': (context) => const MultiplayerLobbyPage(),
             },
           ),
         );
@@ -95,16 +122,60 @@ class _AuthRoot extends StatefulWidget {
 class _AuthRootState extends State<_AuthRoot> {
   Session? _session;
   StreamSubscription<AuthState>? _subscription;
+  bool _isCheckingOnboarding = true;
+  bool _hasCompletedOnboarding = false;
+  final OnboardingStatusService _onboardingService = OnboardingStatusService();
 
   @override
   void initState() {
     super.initState();
     final client = Supabase.instance.client;
     _session = client.auth.currentSession;
+
+    // İlk onboarding kontrolü
+    _checkOnboardingStatus();
+
     _subscription = client.auth.onAuthStateChange.listen((event) {
       setState(() {
         _session = event.session;
       });
+
+      // Auth değiştiğinde onboarding'i tekrar kontrol et
+      _checkOnboardingStatus();
+    });
+  }
+
+  Future<void> _checkOnboardingStatus() async {
+    if (_session == null) {
+      setState(() {
+        _isCheckingOnboarding = false;
+        _hasCompletedOnboarding = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isCheckingOnboarding = true;
+    });
+
+    try {
+      final status = await _onboardingService.checkOnboardingStatus();
+      setState(() {
+        _hasCompletedOnboarding = status?.hasCompletedOnboarding ?? false;
+        _isCheckingOnboarding = false;
+      });
+    } catch (error) {
+      // Hata durumunda güvenli tarafta kal, onboarding'i göster
+      setState(() {
+        _hasCompletedOnboarding = false;
+        _isCheckingOnboarding = false;
+      });
+    }
+  }
+
+  void _handleOnboardingComplete() {
+    setState(() {
+      _hasCompletedOnboarding = true;
     });
   }
 
@@ -116,9 +187,33 @@ class _AuthRootState extends State<_AuthRoot> {
 
   @override
   Widget build(BuildContext context) {
+    // Loading state
+    if (_isCheckingOnboarding && _session != null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF030b1a),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF8fb7ff)),
+        ),
+      );
+    }
+
+    // Auth decision tree (Web'deki OnboardingGuard mantığına benzer)
+    Widget page;
+
+    if (_session == null) {
+      // Kullanıcı giriş yapmamış
+      page = const LandingPage();
+    } else if (!_hasCompletedOnboarding) {
+      // Kullanıcı giriş yapmış ama onboarding tamamlanmamış
+      page = OnboardingPage(onComplete: _handleOnboardingComplete);
+    } else {
+      // Kullanıcı giriş yapmış ve onboarding tamamlanmış
+      page = const MainNavigation();
+    }
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
-      child: _session == null ? const LandingPage() : const MainNavigation(),
+      child: page,
     );
   }
 }

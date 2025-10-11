@@ -293,6 +293,11 @@ export class NewsService {
       filteredQuery = filteredQuery.eq('category', options.categoryId);
     }
 
+    // Filter by multiple categoryIds
+    if (options.categoryIds && options.categoryIds.length > 0) {
+      filteredQuery = filteredQuery.in('category', options.categoryIds);
+    }
+
     if (options.city) {
       filteredQuery = filteredQuery.eq('city', options.city);
     }

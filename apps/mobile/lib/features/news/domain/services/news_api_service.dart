@@ -100,7 +100,26 @@ class NewsApiService {
             print('🔍 First item structure: ${json.encode(items.first)}');
           }
 
-          return items.map((item) => NewsItem.fromJson(item)).toList();
+          return items.map((item) {
+            final newsItem = NewsItem.fromJson(item);
+            // İçeriği boş bırak
+            return NewsItem(
+              id: newsItem.id,
+              title: newsItem.title,
+              summary: newsItem.summary,
+              content: '', // İçeriği boş bırak
+              categoryId: newsItem.categoryId,
+              category: newsItem.category,
+              city: newsItem.city,
+              imageUrl: newsItem.imageUrl,
+              images: newsItem.images,
+              isPopular: newsItem.isPopular,
+              createdAt: newsItem.createdAt,
+              publishedAt: newsItem.publishedAt,
+              mediaSummary: newsItem.mediaSummary,
+              media: newsItem.media,
+            );
+          }).toList();
         }
         throw Exception('Invalid response format');
       } else {
@@ -197,6 +216,106 @@ class NewsApiService {
       throw Exception('Invalid response format');
     } else {
       throw Exception('Failed to search news: ${response.statusCode}');
+    }
+  }
+
+  Future<List<NewsItem>> fetchRecommendations({int limit = 5}) async {
+    try {
+      final uri = Uri.parse(
+        '$baseUrl/api/v1/recommendations',
+      ).replace(queryParameters: {'limit': limit.toString()});
+
+      print('📡 Fetching recommendations from: $uri');
+
+      final response = await http
+          .get(uri, headers: _getHeaders())
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
+
+      print('📥 Recommendations response status: ${response.statusCode}');
+      print('📦 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // API response format: { ok: true, items: [...] }
+        if (data['ok'] == true && data['items'] != null) {
+          final items = data['items'] as List<dynamic>;
+          print('✅ Loaded ${items.length} recommendation items');
+          
+          // İçeriği boş bırak ve random sırala
+          final newsItems = items.map((item) {
+            final newsItem = NewsItem.fromJson(item);
+            // İçeriği boş bırak
+            return NewsItem(
+              id: newsItem.id,
+              title: newsItem.title,
+              summary: newsItem.summary,
+              content: '', // İçeriği boş bırak
+              categoryId: newsItem.categoryId,
+              category: newsItem.category,
+              city: newsItem.city,
+              imageUrl: newsItem.imageUrl,
+              images: newsItem.images,
+              isPopular: newsItem.isPopular,
+              createdAt: newsItem.createdAt,
+              publishedAt: newsItem.publishedAt,
+              mediaSummary: newsItem.mediaSummary,
+              media: newsItem.media,
+            );
+          }).toList();
+          
+          // Random sırala
+          newsItems.shuffle();
+          return newsItems;
+        }
+
+        // Fallback: check for success/data format
+        if (data['success'] == true && data['data'] != null) {
+          final items = data['data']['items'] as List<dynamic>;
+          print('✅ Loaded ${items.length} recommendation items');
+          
+          // İçeriği boş bırak ve random sırala
+          final newsItems = items.map((item) {
+            final newsItem = NewsItem.fromJson(item);
+            // İçeriği boş bırak
+            return NewsItem(
+              id: newsItem.id,
+              title: newsItem.title,
+              summary: newsItem.summary,
+              content: '', // İçeriği boş bırak
+              categoryId: newsItem.categoryId,
+              category: newsItem.category,
+              city: newsItem.city,
+              imageUrl: newsItem.imageUrl,
+              images: newsItem.images,
+              isPopular: newsItem.isPopular,
+              createdAt: newsItem.createdAt,
+              publishedAt: newsItem.publishedAt,
+              mediaSummary: newsItem.mediaSummary,
+              media: newsItem.media,
+            );
+          }).toList();
+          
+          // Random sırala
+          newsItems.shuffle();
+          return newsItems;
+        }
+
+        throw Exception('Invalid response format');
+      } else {
+        throw Exception(
+          'Failed to load recommendations: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('❌ Error fetching recommendations: $e');
+      // Fallback: random news if recommendations fail
+      return await fetchNewsList(page: 1, pageSize: limit);
     }
   }
 }

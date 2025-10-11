@@ -16,19 +16,19 @@ import { ReelsService } from './reels.service';
 import type {
   ReelGenerationRequest,
   ReelFeedItem,
-  Reel,
-  ReelStatus
+  Reel
 } from './dto/reel.dto';
 import {
   TTSVoice,
-  ReelTemplate
+  ReelTemplate,
+  ReelStatus
 } from './dto/reel.dto';
 
 @Controller('reels')
 export class ReelsController {
   private readonly logger = new Logger(ReelsController.name);
 
-  constructor(private readonly reelsService: ReelsService) {}
+  constructor(private readonly reelsService: ReelsService) { }
 
   /**
    * Generate reel from news item
@@ -159,7 +159,7 @@ export class ReelsController {
     total_found: number;
   }> {
     const limit = Math.min(parseInt(query.limit || '10'), 50);
-    
+
     try {
       const result = await this.reelsService.findNewsWithVideo(limit);
       return result;
@@ -192,6 +192,7 @@ export class ReelsController {
     limit?: string;
     offset?: string;
     status?: string;
+    category?: string;
   }): Promise<{
     reels: Array<{
       id: string;
@@ -207,16 +208,19 @@ export class ReelsController {
     total: number;
     limit: number;
     offset: number;
+    hasMore: boolean;
   }> {
     try {
       const limit = Math.min(parseInt(query.limit || '20'), 100);
       const offset = parseInt(query.offset || '0');
       const status = query.status as ReelStatus | undefined;
+      const category = query.category;
 
       const result = await this.reelsService.getReelsList({
         limit,
         offset,
-        status
+        status,
+        category
       });
 
       return {
@@ -233,11 +237,155 @@ export class ReelsController {
         })),
         total: result.total,
         limit,
-        offset
+        offset,
+        hasMore: result.total > offset + limit
       };
     } catch (error) {
       this.logger.error('Failed to get reels list', error);
       throw new InternalServerErrorException('Failed to get reels list');
+    }
+  }
+
+  /**
+   * Get explore feed for frontend (personalized)
+   * GET /api/reels/explore
+   */
+  @Get('explore')
+  async getExploreFeed(@Query() query: {
+    limit?: string;
+    cursor?: string;
+    category?: string;
+    userId?: string;
+  }): Promise<{
+    items: Array<{
+      kind: 'reel';
+      id: string;
+      title: string;
+      summary: string;
+      category: string;
+      videoUrl: string;
+      thumbUrl: string;
+      durationSec: number;
+      hrefId: string;
+    }>;
+    nextCursor?: string;
+    hasMore: boolean;
+  }> {
+    try {
+      const limit = Math.min(parseInt(query.limit || '24'), 60);
+      // Parse cursor: handle formats like "24" or "24:1" (take first number)
+      const cursorStr = query.cursor || '0';
+      const cursor = parseInt(cursorStr.split(':')[0]) || 0;
+      const category = query.category;
+      const userId = query.userId;
+
+      this.logger.debug(`Explore feed request: limit=${limit}, cursor=${cursor}, category=${category}`);
+
+      const result = await this.reelsService.getExploreFeed({
+        limit,
+        offset: cursor,
+        category,
+        userId
+      });
+
+      this.logger.debug(`Explore feed result: ${result.reels.length} reels, total=${result.total}`);
+
+      const items = result.reels
+        .filter(reel => {
+          const isValid = reel.status === ReelStatus.COMPLETED && reel.assets?.video_url;
+          if (!isValid) {
+            this.logger.warn(`Filtered out reel ${reel.id}: status=${reel.status}, hasVideo=${!!reel.assets?.video_url}`);
+          }
+          return isValid;
+        })
+        .map(reel => {
+          try {
+            return {
+              kind: 'reel' as const,
+              id: reel.id,
+              title: reel.content?.headline || 'Untitled',
+              summary: reel.content?.summary_sentences?.join(' ') || reel.content?.captions || '',
+              category: reel.category || 'general',
+              videoUrl: reel.assets.video_url!,
+              thumbUrl: reel.assets?.thumbnail_url || reel.assets?.background_image || '',
+              durationSec: reel.duration_seconds || 25,
+              hrefId: reel.news_id || reel.id
+            };
+          } catch (mapError) {
+            this.logger.error(`Failed to map reel ${reel.id}:`, mapError);
+            throw mapError;
+          }
+        });
+
+      const nextCursor = result.total > cursor + limit ? cursor + limit : undefined;
+
+      this.logger.debug(`Returning ${items.length} items, nextCursor=${nextCursor}`);
+
+      return {
+        items,
+        nextCursor: nextCursor?.toString(),
+        hasMore: nextCursor !== undefined
+      };
+    } catch (error) {
+      this.logger.error('Failed to get explore feed', error);
+      if (error instanceof Error) {
+        this.logger.error(`Error details: ${error.message}`, error.stack);
+      }
+      throw new InternalServerErrorException('Failed to get explore feed');
+    }
+  }
+
+  /**
+   * Get next/previous reel for infinite scroll
+   * GET /api/reels/:id/next
+   * IMPORTANT: Must be BEFORE @Get(':id') to avoid route conflict!
+   */
+  @Get(':id/next')
+  async getNextReel(
+    @Param('id') currentId: string,
+    @Query('dir') direction?: 'up' | 'down',
+    @Query('category') category?: string,
+    @Query('userId') userId?: string,
+  ): Promise<{
+    item: {
+      id: string;
+      title: string;
+      summary: string;
+      category: string;
+      videoUrl: string;
+      thumbUrl: string;
+      durationSec: number;
+      hrefId: string;
+    };
+  }> {
+    try {
+      const dir = direction || 'up';
+      const nextReel = await this.reelsService.getNextReel(currentId, {
+        direction: dir,
+        category,
+        userId,
+      });
+
+      if (!nextReel) {
+        this.logger.error(`No reels available for navigation`);
+        throw new NotFoundException('No reels available');
+      }
+
+      return {
+        item: {
+          id: nextReel.id,
+          title: nextReel.content.headline,
+          summary: nextReel.content.summary_sentences?.join(' ') || nextReel.content.captions || '',
+          category: nextReel.category || 'general',
+          videoUrl: nextReel.assets.video_url!,
+          thumbUrl: nextReel.assets.thumbnail_url || nextReel.assets.background_image || '',
+          durationSec: nextReel.duration_seconds,
+          hrefId: nextReel.news_id,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get next reel for: ${currentId}`, error);
+      throw new InternalServerErrorException('Failed to get next reel');
     }
   }
 
@@ -249,7 +397,7 @@ export class ReelsController {
   async getReel(@Param('id') id: string): Promise<Reel> {
     try {
       const reel = await this.reelsService.getReelById(id);
-      
+
       if (!reel) {
         throw new NotFoundException(`Reel not found: ${id}`);
       }
@@ -259,7 +407,7 @@ export class ReelsController {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      
+
       this.logger.error(`Failed to get reel: ${id}`, error);
       throw new InternalServerErrorException('Failed to load reel');
     }
@@ -333,7 +481,7 @@ export class ReelsController {
   }> {
     try {
       const status = await this.reelsService.getReelStatus(id);
-      
+
       if (!status) {
         throw new NotFoundException(`Reel not found: ${id}`);
       }
@@ -343,7 +491,7 @@ export class ReelsController {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      
+
       this.logger.error(`Failed to get reel status: ${id}`, error);
       throw new InternalServerErrorException('Failed to get reel status');
     }
@@ -506,10 +654,10 @@ export class ReelsController {
   }> {
     try {
       const results = await this.reelsService.testReelsPipeline();
-      
+
       const allReady = Object.values(results).every(r => r.success);
       const someReady = Object.values(results).some(r => r.success);
-      
+
       return {
         ...results,
         overall_status: allReady ? 'ready' : someReady ? 'partial' : 'not_ready'

@@ -19,6 +19,8 @@ DROP TABLE IF EXISTS topic_follows CASCADE;
 DROP TABLE IF EXISTS topics CASCADE;
 DROP TABLE IF EXISTS reactions CASCADE;
 DROP TABLE IF EXISTS comments CASCADE;
+DROP TABLE IF EXISTS podcasts CASCADE;
+DROP TABLE IF EXISTS podcast_categories CASCADE;
 DROP TABLE IF EXISTS news CASCADE;
 DROP TABLE IF EXISTS user_stats CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -129,6 +131,35 @@ CREATE TABLE news (
     category TEXT, -- News category (changed from category_id)
     geo GEOMETRY(POINT, 4326), -- PostGIS point for location
     is_popular BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- PODCAST CATEGORIES
+CREATE TABLE podcast_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT,
+    icon TEXT,
+    color TEXT,
+    podcast_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- PODCASTS
+CREATE TABLE podcasts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    subtitle TEXT,
+    description TEXT,
+    image_url TEXT NOT NULL,
+    audio_url TEXT,
+    duration INTEGER NOT NULL, -- Duration in seconds
+    category TEXT NOT NULL,
+    is_featured BOOLEAN DEFAULT FALSE,
+    is_trending BOOLEAN DEFAULT FALSE,
+    play_count INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -262,6 +293,11 @@ CREATE INDEX idx_news_city_created ON news(city, created_at);
 CREATE INDEX idx_news_popular_created ON news(is_popular, created_at);
 CREATE INDEX idx_news_mode_city_created ON news(mode, city, created_at);
 
+CREATE INDEX idx_podcasts_category_created ON podcasts(category, created_at);
+CREATE INDEX idx_podcasts_featured_created ON podcasts(is_featured, created_at);
+CREATE INDEX idx_podcasts_trending_play_count ON podcasts(is_trending, play_count DESC);
+CREATE INDEX idx_podcasts_play_count ON podcasts(play_count DESC);
+
 CREATE INDEX idx_comments_news_created ON comments(news_id, created_at);
 CREATE INDEX idx_comments_news_likes ON comments(news_id, likes DESC, created_at);
 CREATE INDEX idx_comments_user ON comments(user_id);
@@ -296,6 +332,8 @@ ALTER TABLE predictions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_predictions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prediction_outcomes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE xp_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE podcasts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE podcast_categories ENABLE ROW LEVEL SECURITY;
 
 -- RLS POLICIES
 -- Users can read all users (for leaderboards, etc)
@@ -308,6 +346,10 @@ CREATE POLICY "Users can update own stats" ON user_stats FOR UPDATE USING (auth.
 
 -- News - public reading
 CREATE POLICY "Anyone can read news" ON news FOR SELECT USING (true);
+
+-- Podcasts - public reading
+CREATE POLICY "Anyone can read podcasts" ON podcasts FOR SELECT USING (true);
+CREATE POLICY "Anyone can read podcast categories" ON podcast_categories FOR SELECT USING (true);
 
 -- Comments - public reading, authenticated writing
 CREATE POLICY "Anyone can read comments" ON comments FOR SELECT USING (true);
@@ -362,6 +404,8 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECU
 CREATE TRIGGER update_user_stats_updated_at BEFORE UPDATE ON user_stats FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_news_updated_at BEFORE UPDATE ON news FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_podcasts_updated_at BEFORE UPDATE ON podcasts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_podcast_categories_updated_at BEFORE UPDATE ON podcast_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- SUCCESS MESSAGE
 SELECT 'Nexachron advanced schema created successfully! 🚀' as result;

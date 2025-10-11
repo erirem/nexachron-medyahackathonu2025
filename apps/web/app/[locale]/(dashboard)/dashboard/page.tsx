@@ -6,7 +6,7 @@ import type {
   NewsListDataPayload,
 } from "@nexachron/shared-types";
 
-import { fetchCategories, fetchDashboardNews, fetchPopularNews } from "@/services/api";
+import { fetchCategories, fetchDashboardNews, fetchPopularNews, fetchNewsList } from "@/services/api";
 
 import { Dashboard } from "./_components/dashboard";
 import type { DashboardTopic } from "./_components/types";
@@ -97,10 +97,29 @@ export default async function DashboardPage(): Promise<JSX.Element> {
       ? categoriesResult.value
       : undefined;
 
-  const popularNews: DashboardNewsDataPayload =
+  let popularNews: DashboardNewsDataPayload =
     popularResult.status === 'fulfilled'
       ? popularResult.value
       : { items: [], total: 0 };
+
+  // Ensure items array exists
+  if (!popularNews.items) {
+    popularNews.items = [];
+  }
+
+  // If no popular news found, fallback to regular news
+  if (popularNews.items.length === 0) {
+    try {
+      const fallbackNews = await fetchNewsList({ limit: 5 });
+      popularNews = {
+        items: fallbackNews.items,
+        total: fallbackNews.pagination.total,
+      };
+    } catch (error) {
+      console.error('Error fetching fallback news:', error);
+      popularNews = { items: [], total: 0 };
+    }
+  }
 
   // Don't pre-fetch news on the server, instead let the client handle infinite scrolling
   const initialNews = {

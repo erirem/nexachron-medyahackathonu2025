@@ -3,14 +3,24 @@
 import { useState, useRef, useCallback, useEffect, useMemo, type JSX } from "react";
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { useAuthState } from '@/contexts/auth-context';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
+import { NewsCard } from "./news-card";
 import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
+import { LiveTrackingModal } from '@/components/live-tracking/live-tracking-modal';
 import type { DashboardNewsItem, DashboardTopic } from "./types";
 import { useCategories } from "@/hooks/use-categories";
 import { usePopularNews } from "@/hooks/use-popular-news";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useInfiniteNews } from "@/hooks/use-infinite-news";
+import { useNewsTracking } from "@/contexts/news-tracking-context";
+import { TriviaPopup } from "@/components/trivia-popup";
+import { WelcomeScreen } from "@/components/welcome-screen";
+import { StreakPopup } from "@/components/streak-popup";
+import { postRecommendations } from "@/services/api";
+import { LogoutButton } from "@/components/auth/logout-button";
+
 import type {
   CategoriesOverviewResponse,
   NewsCategorySummary,
@@ -57,6 +67,7 @@ const sideRailItems: readonly SideRailItem[] = [
   { id: "saved", label: "Kaydedilenler", icon: <BookmarkFillIcon /> },
   { id: "watch", label: "Takip", icon: <BellIcon /> },
   { id: "games", label: "Oyunlar", icon: <GamepadIcon /> },
+  { id: "analyst", label: "Kişisel Analist", icon: <AnalystIcon /> },
   { id: "profile", label: "Profilim", icon: <UserIcon /> },
   { id: "leaderboard", label: "Liderlik", icon: <TrophyIcon /> },
   { id: "reels", label: "Explore", icon: <PlayIcon /> },
@@ -85,13 +96,19 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
 
 export function Dashboard({ initialNews, topics, categoriesOverview, initialPopularNews }: DashboardProps): JSX.Element {
   const router = useRouter();
-  const [sidebarWidth, setSidebarWidth] = useState(320);
-  const [activeCategory, setActiveCategory] = useState('overview');
+  const { profile, user, loading } = useAuthState();
+  const [sidebarWidth, setSidebarWidth] = useState(80);
+  const [activeCategory, setActiveCategory] = useState('forYou');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [showTriviaPopup, setShowTriviaPopup] = useState(false);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [showLiveTrackingModal, setShowLiveTrackingModal] = useState(false);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const chipsScrollRef = useRef<HTMLDivElement>(null);
   const MIN_WIDTH = 80;
   const MAX_WIDTH = 450;
   const COLLAPSED_THRESHOLD = 160;
@@ -110,8 +127,60 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     error: newsError,
   } = useInfiniteNews({
     categoryId: selectedCategoryIds.length === 1 ? selectedCategoryIds[0] : undefined,
+    categoryIds: selectedCategoryIds.length > 1 ? selectedCategoryIds : undefined,
     filterCategory: selectedCategoryIds.length === 0 ? activeCategory : undefined,
   });
+
+  const { shouldShowTriviaPopup, getReadPercentage } = useNewsTracking();
+
+  // Check if trivia popup should be shown
+  useEffect(() => {
+    const totalNewsCount = apiNewsItems.length;
+    if (totalNewsCount > 0 && shouldShowTriviaPopup(totalNewsCount)) {
+      setShowTriviaPopup(true);
+    }
+  }, [apiNewsItems.length, shouldShowTriviaPopup]);
+
+  // Show welcome screen on first visit
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('nexachron_welcome_seen');
+    if (!hasSeenWelcome) {
+      setShowWelcomeScreen(true);
+      localStorage.setItem('nexachron_welcome_seen', 'true');
+    } else {
+      // If user has seen welcome before, show streak popup directly
+      showStreakPopupIfNeeded();
+    }
+  }, []);
+
+  // Show streak popup when welcome screen closes (for first-time users)
+  useEffect(() => {
+    if (!showWelcomeScreen) {
+      showStreakPopupIfNeeded();
+    }
+  }, [showWelcomeScreen]);
+
+  // Function to show streak popup if needed
+  const showStreakPopupIfNeeded = useCallback(() => {
+    const lastStreakPopup = localStorage.getItem('nexachron_streak_popup_last_shown');
+    const today = new Date().toDateString();
+    
+    console.log('[Streak Popup] Checking streak popup:', {
+      lastStreakPopup,
+      today,
+      shouldShow: lastStreakPopup !== today
+    });
+    
+    if (lastStreakPopup !== today) {
+      const timer = setTimeout(() => {
+        console.log('[Streak Popup] Showing streak popup');
+        setShowStreakPopup(true);
+        localStorage.setItem('nexachron_streak_popup_last_shown', today);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Infinite scroll effect
   const isNextPageLoadingRef = useRef(false);
@@ -177,21 +246,51 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     [apiNewsItems],
   );
 
+  // Recommendations state with lazy loading
+  const [recs, setRecs] = useState<any[]>([]);
+  const [recLimit, setRecLimit] = useState(8);
+  const [isLoadingRecs, setIsLoadingRecs] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    setIsLoadingRecs(true);
+    postRecommendations(recLimit)
+      .then((res) => {
+        if (!mounted) return;
+        if (res?.ok && Array.isArray(res.items)) {
+          setRecs(res.items);
+        }
+      })
+      .finally(() => {
+        if (mounted) setIsLoadingRecs(false);
+      });
+    return () => { mounted = false; };
+  }, [recLimit]);
+
   // Bookmarks
   const { bookmarkedIds, isLoading: isBookmarksLoading } = useBookmarks();
 
-  // Filter news by selected categories
+  // Filter news by selected categories - API'den gelen veriler zaten filtrelenmiş
   const filteredNews = useMemo(() => {
+    // API'den gelen veriler zaten seçili kategorilere göre filtrelenmiş
+    // Sadece client-side filtreleme gereken durumlar için ek filtreleme yap
     if (selectedCategoryIds.length === 0) {
       if (activeCategory === 'saved') {
         return mappedNews.filter((n) => bookmarkedIds.has(n.id));
       }
-      return mappedNews;
+      if (activeCategory === 'breaking') {
+        // breaking = güncelden geriye doğru; mappedNews zaten order bilgisi yakın
+        return [...mappedNews].sort((a, b) => {
+          const da = new Date(a.createdAt ?? a.publishedAt ?? Date.now()).getTime();
+          const db = new Date(b.createdAt ?? b.publishedAt ?? Date.now()).getTime();
+          return db - da;
+        });
+      }
+      // Apply local, semantic filters for tabs like audio/reports/briefs/watch/overview
+      return applyLocalFilters(mappedNews, activeCategory);
     }
 
-    return mappedNews.filter((newsItem) => {
-      return newsItem.categoryId && selectedCategoryIds.includes(newsItem.categoryId);
-    });
+    // API'den gelen veriler zaten filtrelenmiş, direkt kullan
+    return mappedNews;
   }, [mappedNews, selectedCategoryIds, activeCategory, bookmarkedIds]);
 
   const categoryInfo = useMemo(() => {
@@ -253,16 +352,22 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
         categoryId === 'profile' ||
         categoryId === 'leaderboard' ||
         categoryId === 'quizzes' ||
-        categoryId === 'games'
+        categoryId === 'games' ||
+        categoryId === 'analyst'
       ) {
-        const destination = categoryId === 'quizzes' ? 'quizzes' : categoryId;
-        router.push(`/${locale}/${destination}`);
+        router.push(`/${locale}/${categoryId}`);
         return;
       }
 
       // Explore (reels) ayrı bir sayfaya gider
       if (categoryId === 'reels') {
         router.push(`/${locale}/explore`);
+        return;
+      }
+
+      // Audio (podcast) ayrı bir sayfaya gider
+      if (categoryId === 'audio') {
+        router.push(`/${locale}/podcast`);
         return;
       }
 
@@ -308,7 +413,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     });
   }, []);
 
-  // Show/hide scroll to top button based on scroll position
+  // Show/hide scroll to top button based on scroll position & lazy load for 'forYou'
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -325,6 +430,22 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Intersection observer for recommendations lazy load
+  useEffect(() => {
+    if (activeCategory !== 'forYou') return;
+    const el = loadMoreTriggerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !isLoadingRecs) {
+        setRecLimit((prev) => Math.min(prev + 8, 64));
+      }
+    }, { threshold: 0.1, rootMargin: '120px' });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeCategory, isLoadingRecs]);
 
   return (
     <div className="relative flex min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] text-[#f6f7fb]">
@@ -350,22 +471,57 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#20324a_0%,rgba(25,37,58,0.94)_60%,#141b29_100%)]" aria-hidden />
             <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_top,#365982_0%,rgba(20,28,45,0.82)_70%,transparent_95%)] blur-[80px] opacity-80" aria-hidden />
 
-            <div className="relative z-10 flex flex-col gap-10 px-6 pb-16 pt-10 sm:px-8 lg:px-12">
+            <div className="relative z-10 flex flex-col gap-8 px-6 pb-16 pt-6 sm:px-8 lg:px-12">
               <MobileLibrary topics={topics} />
-              <DashboardHeader />
+              <DashboardHeader onOpenLiveTracking={() => setShowLiveTrackingModal(true)} />
 
               <section className="space-y-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  <SearchBox />
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* "Tümü" butonu */}
+                {/* For You as main grid reusing news layout below */}
+                <div className="flex flex-col gap-2">
+                  {/* Mobilde header altı arama */}
+                  <div className="md:hidden">
+                    <SearchBox />
+                  </div>
+                  <div className="relative -mx-2">
+                    {/* left arrow */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = chipsScrollRef.current; if (!el) return; el.scrollBy({ left: -240, behavior: 'smooth' });
+                      }}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/20 text-white shadow backdrop-blur-sm hover:bg-white/20"
+                      aria-label="Sola kaydır"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                    {/* scrollable chips */}
+                    <div ref={chipsScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hidden px-10 py-1 whitespace-nowrap">
+
+                    {/* Sizin için */}
                     <FilterChip
-                      label="Tümü"
+                      label="Sizin için"
                       icon={<AllIcon />}
-                      active={selectedCategoryIds.length === 0 && activeCategory === 'overview'}
+                      active={activeCategory === 'forYou'}
+                      count={recs.length > 0 ? recs.length : undefined}
                       onClick={() => {
                         setSelectedCategoryIds([]);
-                        handleCategoryChange('overview');
+                        handleCategoryChange('forYou');
+                        if (recs.length === 0) {
+                          postRecommendations(8).then((res) => {
+                            if (res?.ok && Array.isArray(res.items)) setRecs(res.items);
+                          }).catch(() => {});
+                        }
+                      }}
+                    />
+
+                    {/* Son Dakika */}
+                    <FilterChip
+                      label="Son Dakika"
+                      icon={<LightningIcon />}
+                      active={activeCategory === 'breaking'}
+                      onClick={() => {
+                        setSelectedCategoryIds([]);
+                        handleCategoryChange('breaking');
                       }}
                     />
 
@@ -380,6 +536,18 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                         onClick={() => handleCategoryChipSelect(category.id)}
                       />
                     ))}
+                    </div>
+                    {/* right arrow */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = chipsScrollRef.current; if (!el) return; el.scrollBy({ left: 240, behavior: 'smooth' });
+                      }}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/20 text-white shadow backdrop-blur-sm hover:bg-white/20"
+                      aria-label="Sağa kaydır"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
                   </div>
                   {isNewsFetching && (
                     <span className="text-xs font-semibold text-white/60">Güncelleniyor...</span>
@@ -429,20 +597,67 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                     />
                   ) : apiNewsItems.length > 0 ? (
                     <>
-                      <DashboardNewsGrid
-                        key={apiNewsItems.length} // Key prop to force re-render when new items are added
-                        items={filteredNews}
-                        title={categoryInfo.title}
-                        subtitle={categoryInfo.subtitle}
-                        showAll={true}
-                      />
+                      {activeCategory === 'forYou' ? (
+                        <div className="space-y-4">
+                          {/* Öneri kartları */}
+                          <DashboardNewsGrid
+                            key={`recs-${recs.length}`}
+                            items={recs.map((n: any) => ({
+                              id: n.id,
+                              category: n.category ?? 'Gündem',
+                              categoryId: n.category ?? 'gundem',
+                              title: n.title,
+                              summary: (n.content ?? '').slice(0, 160),
+                              detail: (n.content ?? '').slice(0, 160),
+                              fullContent: n.content ?? '',
+                              timestamp: new Date(n.created_at ?? Date.now()).toLocaleDateString('tr-TR'),
+                              publishedAt: n.created_at ?? new Date().toISOString(),
+                              storyDate: n.created_at ?? new Date().toISOString(),
+                              readingTime: '2 dk okuma',
+                              dateline: 'Türkiye',
+                              tags: [n.category?.toLowerCase() ?? 'gundem'],
+                              imageUrl: n.image_url || 'https://images.unsplash.com/photo-1521133573890-3b093187b0e7?auto=format&fit=crop&w=960&q=60',
+                              images: [],
+                              sentiment: 'positive' as const,
+                              impact: 'Yüksek' as const,
+                              viewCount: undefined,
+                              likeCount: undefined,
+                              shareCount: undefined,
+                              relatedIds: undefined,
+                              storyId: undefined,
+                              timelineOrder: undefined,
+                              storyTitle: undefined,
+                              author: undefined,
+                              isPopular: true,
+                              city: null,
+                              createdAt: n.created_at,
+                              subtitle: undefined,
+                              isRecommended: true, // Öneri kartı işareti
+                            }))}
+                            title=""
+                            subtitle=""
+                            showAll={true}
+                          />
+                          
+                          {/* Lazy trigger */}
+                          <div ref={loadMoreTriggerRef} className="h-16" />
+                        </div>
+                      ) : (
+                        <DashboardNewsGrid
+                          key={apiNewsItems.length}
+                          items={filteredNews}
+                          title={categoryInfo.title}
+                          subtitle={categoryInfo.subtitle}
+                          showAll={true}
+                        />
+                      )}
                       {(isFetchingNextPage || isLoadingMore) && (
                         <NewsLoadingPlaceholders />
                       )}
                       {/* Load more trigger */}
                       {hasNextPage && (
-                        <div 
-                          ref={loadMoreTriggerRef} 
+                        <div
+                          ref={loadMoreTriggerRef}
                           className="h-20 flex items-center justify-center"
                         >
                           {!(isFetchingNextPage || isLoadingMore) && (
@@ -476,6 +691,32 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
           </button>
         )}
       </main>
+
+      {/* Welcome Screen */}
+      <WelcomeScreen
+        isVisible={showWelcomeScreen}
+        onClose={() => setShowWelcomeScreen(false)}
+      />
+
+      {/* Trivia Popup */}
+      <TriviaPopup
+        isVisible={showTriviaPopup}
+        onClose={() => setShowTriviaPopup(false)}
+        readPercentage={getReadPercentage(apiNewsItems.length)}
+        totalNewsCount={apiNewsItems.length}
+      />
+
+      {/* Streak Popup */}
+      <StreakPopup
+        isVisible={showStreakPopup}
+        onClose={() => setShowStreakPopup(false)}
+      />
+
+      {/* Live Tracking Modal */}
+      <LiveTrackingModal
+        isOpen={showLiveTrackingModal}
+        onClose={() => setShowLiveTrackingModal(false)}
+      />
     </div>
   );
 }
@@ -496,6 +737,9 @@ export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed,
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
+  const hoverTimerRef = useRef<number | null>(null);
+  const hasManualResizeRef = useRef(false);
+  const lastExpandedWidthRef = useRef(Math.max(320, minWidth + 40));
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -504,6 +748,7 @@ export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed,
     startWidthRef.current = width;
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
+    hasManualResizeRef.current = true;
   }, [width]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -512,6 +757,9 @@ export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed,
     const deltaX = e.clientX - startXRef.current;
     const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + deltaX));
     onWidthChange(newWidth);
+    if (newWidth > minWidth + 10) {
+      lastExpandedWidthRef.current = newWidth;
+    }
   }, [minWidth, maxWidth, onWidthChange]);
 
   const handleMouseUp = useCallback(() => {
@@ -538,17 +786,41 @@ export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed,
     }
   };
 
+  const handleMouseEnter = useCallback(() => {
+    if (hoverTimerRef.current) {
+      window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    // Sadece kapalıyken aç; manuel genişlik varsa onu kullan
+    if (width <= minWidth + 1) {
+      onWidthChange(Math.min(Math.max(lastExpandedWidthRef.current, minWidth + 40), maxWidth));
+    }
+  }, [onWidthChange, width, minWidth, maxWidth]);
+
+  const handleMouseLeave = useCallback(() => {
+    // Manuel olarak genişletilmişse kullanıcı tercihine saygı: kapanma yok
+    if (hasManualResizeRef.current && width > minWidth + 1) {
+      return;
+    }
+    hoverTimerRef.current = window.setTimeout(() => {
+      onWidthChange(minWidth);
+      hoverTimerRef.current = null;
+    }, 180);
+  }, [onWidthChange, width, minWidth]);
+
   return (
     <aside
       ref={sidebarRef}
       className="fixed left-0 top-0 z-40 h-screen overflow-hidden rounded-r-[36px] bg-gradient-to-br from-[#111f34] via-[#172d4c] to-[#0c1524] shadow-[0_32px_120px_rgba(5,16,32,0.65)] backdrop-blur-2xl transition-all duration-200 ease-out"
       style={{ width: `${width}px` }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      <div className="relative flex h-full flex-col overflow-hidden">
-        <div className="absolute inset-0 bg-white/5" aria-hidden />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(58,109,177,0.35),transparent_68%)]" aria-hidden />
+        <div className="relative flex h-full flex-col overflow-hidden">
+          <div className="absolute inset-0 bg-white/5" aria-hidden />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(58,109,177,0.35),transparent_68%)]" aria-hidden />
 
-        <div className="relative flex h-full flex-col">
+          <div className="relative flex h-full flex-col min-h-0">
           <div className={`flex items-center justify-between ${isCollapsed ? 'px-4 pt-6' : 'px-6 pt-7 pb-2'}`}>
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#0f6acd] to-[#1a8dff] text-sm font-semibold text-white shadow-[0_14px_40px_rgba(15,106,205,0.35)]">
@@ -565,10 +837,11 @@ export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed,
               {!isCollapsed && (
                 <button
                   type="button"
+                  onClick={() => onWidthChange(80)}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[0_10px_28px_rgba(12,36,63,0.35)] transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
-                  aria-label="Yeni liste oluştur"
+                  aria-label="Sidebar'ı küçült"
                 >
-                  <PlusIcon />
+                  <CloseIcon />
                 </button>
               )}
             </div>
@@ -629,7 +902,7 @@ export function Sidebar({ width, onWidthChange, minWidth, maxWidth, isCollapsed,
                 </div>
               </div>
 
-              <nav className="flex-1 overflow-y-auto px-6 pb-8 pt-4 scrollbar-hidden">
+              <nav className="flex-1 overflow-y-auto px-6 pb-8 pt-4 min-h-0">
                 <ul className="space-y-2">
                   {topics.map((topic) => (
                     <SidebarTopicItem key={topic.id} topic={topic} />
@@ -750,24 +1023,34 @@ function MobileLibrary({ topics }: MobileLibraryProps): JSX.Element {
   );
 }
 
-function DashboardHeader(): JSX.Element {
+function DashboardHeader({ onOpenLiveTracking }: { onOpenLiveTracking: () => void }): JSX.Element {
+  const { profile, user } = useAuthState();
+  const displayName =
+    profile?.full_name ||
+    // @ts-ignore – metadata tipleri opsiyonel olabilir
+    user?.user_metadata?.first_name ||
+    'Kullanıcı';
+  
   return (
-    <header className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.42em] text-white/60">AA panoraması</p>
-          <h1 className="text-[2rem] font-semibold leading-[1.15] text-white">Günün Akışına Anında Erişim</h1>
-          <p className="mt-2 max-w-xl text-sm text-white/70">
-            Modern akış deneyimini Anadolu Ajansı tonlarıyla buluşturan panoda gündem, piyasa ve saha haberlerini tek
-            ekrandan yönetin.
-          </p>
+    <header className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-[auto_1fr_auto]">
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.36em] text-white/60">AA panoraması</p>
+          <h1 className="truncate text-[1.6rem] font-semibold leading-tight text-white">{`Hoş geldiniz, ${displayName}`}</h1>
+          <p className="mt-1 max-w-xl text-[13px] text-white/70">{`Merhaba ${displayName}! Kişiselleştirilmiş haber akışınız hazır.`}</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <LivePill />
+        {/* Header içi arama - geniş ekranlarda */}
+        <div className="hidden md:block">
+          <SearchBox />
+        </div>
+
+        <div className="flex items-center justify-end gap-2.5">
+          <LivePill onOpen={onOpenLiveTracking} />
+          <LogoutButton className="rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60" />
           <button
             type="button"
-            className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+            className="rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
           >
             Bildirimleri yönet
           </button>
@@ -777,11 +1060,12 @@ function DashboardHeader(): JSX.Element {
   );
 }
 
-function LivePill(): JSX.Element {
+function LivePill({ onOpen }: { onOpen: () => void }): JSX.Element {
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-2 rounded-full bg-[#0f6acd] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(9,100,177,0.3)] transition hover:bg-[#1173cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+      onClick={onOpen}
+      className="inline-flex items-center gap-2 rounded-full bg-[#0f6acd] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(9,100,177,0.3)] transition hover:bg-[#1173cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 cursor-pointer"
     >
       <span className="relative flex h-2.5 w-2.5">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white bg-opacity-60" aria-hidden />
@@ -798,8 +1082,8 @@ function SearchBox(): JSX.Element {
 
   return (
     <div className={`relative flex min-w-[280px] flex-1 items-center rounded-full border transition-all duration-300 ${isFocused
-        ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]'
-        : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
+      ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]'
+      : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
       }`}>
       <div className="pl-5 pr-3">
         <SearchIcon />
@@ -945,8 +1229,8 @@ function CategoryChip({ category, isActive, onSelect }: CategoryChipProps): JSX.
       type="button"
       onClick={() => onSelect(category.id)}
       className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${isActive
-          ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
-          : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
+        ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
+        : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
         }`}
     >
       <span>{category.label}</span>
@@ -1064,9 +1348,9 @@ const FALLBACK_IMAGE_URL =
 const CATEGORY_FILTERS: Record<string, (item: DashboardNewsItem) => boolean> = {
   saved: (item) => item.isPopular ?? false,
   audio: (item) => item.tags.some((tag) => tag.includes('ses')),
-  reports: (item) => (item.categoryId ?? '').includes('finans'),
-  briefs: (item) => (item.categoryId ?? '').includes('gundem'),
-  watch: (item) => (item.categoryId ?? '').includes('savunma'),
+  reports: (item) => (item.category ?? '').includes('finans'),
+  briefs: (item) => (item.category ?? '').includes('gundem'),
+  watch: (item) => (item.category ?? '').includes('savunma'),
 };
 
 function applyLocalFilters(
@@ -1087,7 +1371,7 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   const summary = item.summary && item.summary.trim().length > 0
     ? item.summary.trim()
     : truncateText(item.content, 220);
-  const categoryLabel = deriveCategoryLabel(item.categoryId);
+  const categoryLabel = deriveCategoryLabel(item.category);
   const readingTime = estimateReadingTime(item.content);
 
   // Parse media_summary if it exists and is a string
@@ -1149,7 +1433,7 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   return {
     id: item.id,
     category: categoryLabel,
-    categoryId: item.categoryId ?? null,
+    categoryId: item.category ?? null,
     title: item.title,
     summary,
     detail: summary,
@@ -1492,6 +1776,16 @@ function EconomyIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  );
+}
+
+function AnalystIcon(): JSX.Element {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h18z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 12v4c0 .552.448 1 1 1h12c.552 0 1-.448 1-1v-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
