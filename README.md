@@ -145,7 +145,8 @@ sequenceDiagram
     W->>U: Live notifications
     M->>U: Push notifications
 ```
-
+##  DB ilişkisel şema
+![WhatsApp Görsel 2025-10-11 saat 07 21 58_fa6ca6cd](https://github.com/user-attachments/assets/0653a671-03dc-4093-888a-1b7739189f04)
 
 
 ##  Teknoloji Stack'i
