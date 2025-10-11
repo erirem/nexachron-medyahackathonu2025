@@ -78,7 +78,8 @@ interface MultiplayerState {
   gameId: string | null;
 }
 
-const GAME_DURATION = 300; // 5 minutes in seconds
+const GAME_DURATION = 300; // 5 minutes in seconds (for single player)
+const QUESTION_DURATION = 10; // 10 seconds per question (for multiplayer)
 const XP_REWARD = 35;
 
 export default function NewsTriviaPage(): JSX.Element {
@@ -122,7 +123,7 @@ export default function NewsTriviaPage(): JSX.Element {
   // Lobby state
   const [roomIdInput, setRoomIdInput] = useState('');
   const [availableRooms, setAvailableRooms] = useState([
-    { id: 'room-123', name: 'Haber Trivia Odası', players: 1, maxPlayers: 2, isPrivate: false }
+    { id: 'room-abs2sjds5cks', name: 'Haber Trivia Odası', players: 1, maxPlayers: 2, isPrivate: false }
   ]);
 
   // WebSocket connection
@@ -399,12 +400,36 @@ export default function NewsTriviaPage(): JSX.Element {
       timerRef.current = setInterval(() => {
         setGameState(prev => {
           if (prev.timeLeft <= 1) {
-            return {
-              ...prev,
-              timeLeft: 0,
-              isGameActive: false,
-              isGameComplete: true,
-            };
+            // Time's up - handle differently for single vs multiplayer
+            if (gameMode === 'multiplayer') {
+              // In multiplayer, just move to next question or end game
+              if (prev.currentQuestion < (game?.questions.length || 0) - 1) {
+                // Move to next question
+                return {
+                  ...prev,
+                  currentQuestion: prev.currentQuestion + 1,
+                  timeLeft: QUESTION_DURATION, // Reset to 10 seconds for next question
+                  selectedAnswer: null,
+                  showResult: false,
+                };
+              } else {
+                // Game complete
+                return {
+                  ...prev,
+                  timeLeft: 0,
+                  isGameActive: false,
+                  isGameComplete: true,
+                };
+              }
+            } else {
+              // Single player mode - end game
+              return {
+                ...prev,
+                timeLeft: 0,
+                isGameActive: false,
+                isGameComplete: true,
+              };
+            }
           }
           return {
             ...prev,
@@ -420,7 +445,7 @@ export default function NewsTriviaPage(): JSX.Element {
         timerRef.current = null;
       }
     };
-  }, [shouldStartTimer]);
+  }, [shouldStartTimer, gameMode, game]);
 
   // Cleanup timer when game ends
   useEffect(() => {
@@ -564,6 +589,9 @@ export default function NewsTriviaPage(): JSX.Element {
       const userCorrect = userAnswer === currentQ.correctAnswer;
       const aliCabbarCorrect = aliCabbarAnswer === currentQ.correctAnswer;
 
+      // Check if time ran out - if so, no points for anyone
+      const timeRanOut = gameState.timeLeft <= 0;
+
       // Update game state to show results
       setGameState(prev => ({
             ...prev,
@@ -582,7 +610,12 @@ export default function NewsTriviaPage(): JSX.Element {
         let team2ScoreChange = 0;
 
         // Calculate rope movement based on both answers
-        if (userCorrect && aliCabbarCorrect) {
+        if (timeRanOut) {
+          // Time ran out - no points for anyone
+          ropeMovement = 0;
+          team1ScoreChange = 0;
+          team2ScoreChange = 0;
+        } else if (userCorrect && aliCabbarCorrect) {
           // Both correct - no rope movement
           ropeMovement = 0;
         } else if (userCorrect && !aliCabbarCorrect) {
@@ -611,15 +644,15 @@ export default function NewsTriviaPage(): JSX.Element {
             if (p.id === clientIdRef.current) {
               return { 
                 ...p, 
-                score: p.score + (userCorrect ? 1 : 0),
-                isCorrect: userCorrect,
+                score: p.score + (timeRanOut ? 0 : (userCorrect ? 1 : 0)),
+                isCorrect: timeRanOut ? false : userCorrect,
                 ropePosition: Math.max(0, Math.min(100, p.ropePosition + (userIsTeam1 ? ropeMovement : -ropeMovement)))
               };
             } else if (p.id === 'ai-player-1') {
               return { 
                 ...p, 
-                score: p.score + (aliCabbarCorrect ? 1 : 0),
-                isCorrect: aliCabbarCorrect,
+                score: p.score + (timeRanOut ? 0 : (aliCabbarCorrect ? 1 : 0)),
+                isCorrect: timeRanOut ? false : aliCabbarCorrect,
                 ropePosition: Math.max(0, Math.min(100, p.ropePosition + (aliCabbarIsTeam1 ? ropeMovement : -ropeMovement)))
               };
             }
@@ -713,6 +746,7 @@ export default function NewsTriviaPage(): JSX.Element {
           currentQuestion: prev.currentQuestion + 1,
           selectedAnswer: null,
           showResult: false,
+          timeLeft: QUESTION_DURATION, // Reset to 10 seconds for next question
         }));
         
         // Reset player answered states for new question
@@ -981,11 +1015,18 @@ export default function NewsTriviaPage(): JSX.Element {
     };
 
     const handleCreateRoom = () => {
-      const newRoomId = `room-${Date.now()}`;
-              setMultiplayerState(prev => ({
-                ...prev,
+      // Generate complex room name
+      const adjectives = ['Epic', 'Mystic', 'Quantum', 'Cosmic', 'Digital', 'Neon', 'Cyber', 'Virtual', 'Hyper', 'Ultra'];
+      const nouns = ['Dragon', 'Phoenix', 'Titan', 'Warrior', 'Mage', 'Ninja', 'Samurai', 'Knight', 'Wizard', 'Assassin'];
+      const numbers = Math.floor(Math.random() * 9999) + 1000;
+      const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+      const newRoomId = `${randomAdjective}${randomNoun}${numbers}`;
+      
+      setMultiplayerState(prev => ({
+        ...prev,
         roomId: newRoomId,
-                isHost: true,
+        isHost: true,
         players: [
           {
             id: clientIdRef.current || 'player-1',
@@ -1213,7 +1254,7 @@ export default function NewsTriviaPage(): JSX.Element {
                           gameId: game.id,
                           totalQuestions: game.questions.length,
                           currentQuestion: 0,
-                          timeLeft: GAME_DURATION,
+                          timeLeft: QUESTION_DURATION,
                           ropePosition: 50,
                           team1Score: 0,
                           team2Score: 0,
@@ -1234,7 +1275,7 @@ export default function NewsTriviaPage(): JSX.Element {
                           isGameActive: true,
                           currentQuestion: 0,
                           score: 0,
-                          timeLeft: GAME_DURATION,
+                          timeLeft: QUESTION_DURATION,
                           selectedAnswer: null,
                           showResult: false,
                           isGameComplete: false,
@@ -1288,7 +1329,7 @@ export default function NewsTriviaPage(): JSX.Element {
                           gameId: game.id,
                           totalQuestions: game.questions.length,
                           currentQuestion: 0,
-                          timeLeft: GAME_DURATION,
+                          timeLeft: QUESTION_DURATION,
                           ropePosition: 50,
                           team1Score: 0,
                           team2Score: 0,
@@ -1309,7 +1350,7 @@ export default function NewsTriviaPage(): JSX.Element {
                           isGameActive: true,
                           currentQuestion: 0,
                           score: 0,
-                          timeLeft: GAME_DURATION,
+                          timeLeft: QUESTION_DURATION,
                           selectedAnswer: null,
                           showResult: false,
                           isGameComplete: false,
