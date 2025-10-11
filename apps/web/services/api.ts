@@ -9,8 +9,19 @@ import type {
   NewsWithMediaDto,
 } from '@nexachron/shared-types';
 
+/**
+ * Unified API client
+ * - Combines News, Bookmarks, Ingest, Games (single & multiplayer), Reels/Explore, Recommendations, and TTS endpoints
+ * - Deduplicates helpers and types
+ * - Provides resilient `apiFetch` that tolerates empty responses and non-JSON error bodies
+ */
+
+// =========================
+// Shared types & utilities
+// =========================
+
 // Games API types
-interface GameQuestion {
+export interface GameQuestion {
   id: string;
   question: string;
   type: 'multiple_choice' | 'true_false';
@@ -25,7 +36,7 @@ interface GameQuestion {
   createdAt: string;
 }
 
-interface Game {
+export interface Game {
   id: string;
   gameType: string;
   mode: 'single' | 'multiplayer';
@@ -39,7 +50,7 @@ interface Game {
   totalQuestions: number;
 }
 
-interface StartGameRequest {
+export interface StartGameRequest {
   gameType: string;
   mode: 'single' | 'multiplayer';
   filter?: {
@@ -51,17 +62,16 @@ interface StartGameRequest {
   };
 }
 
-interface AnswerQuestionRequest {
+export interface AnswerQuestionRequest {
   questionId: string;
   answer: string;
   timeSpent: number;
 }
 
-type QueryValue = string | number | boolean | undefined | null;
+export type QueryValue = string | number | boolean | undefined | null;
+export type QueryRecord = Record<string, QueryValue>;
 
-type QueryRecord = Record<string, QueryValue>;
-
-type ApiFetchOptions = RequestInit & {
+export type ApiFetchOptions = RequestInit & {
   readonly query?: QueryRecord;
   readonly signal?: AbortSignal;
 };
@@ -116,7 +126,7 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
         try {
           const json = JSON.parse(text);
           // Try common error shapes
-          details = json?.error ?? json?.message ?? text;
+          details = (json as any)?.error ?? (json as any)?.message ?? text;
         } catch {
           details = text;
         }
@@ -132,13 +142,14 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
   // Boş response'ları handle et
   const text = await response.text();
   if (!text) {
-    console.warn('Empty response from server');
+    // Empty success response
     return {} as T;
   }
-  
+
   try {
     return JSON.parse(text) as T;
-  } catch (error) {
+  } catch (error: any) {
+    // Useful for debugging unexpected HTML/text bodies
     console.error('Failed to parse JSON response:', text);
     throw new Error(`Invalid JSON response: ${error.message}`);
   }
@@ -152,7 +163,15 @@ function ensureSuccess<T>(envelope: ApiResponseEnvelope<T>): T {
   return envelope.data;
 }
 
-type GetNewsListParams = {
+export type RequestConfig = {
+  readonly signal?: AbortSignal;
+};
+
+// =========================
+// News API
+// =========================
+
+export type GetNewsListParams = {
   readonly page?: number;
   readonly pageSize?: number;
   readonly limit?: number;
@@ -162,19 +181,15 @@ type GetNewsListParams = {
   readonly isPopular?: boolean;
 };
 
-type GetCategoryNewsParams = {
+export type GetCategoryNewsParams = {
   readonly categoryId?: string;
   readonly page?: number;
   readonly pageSize?: number;
 };
 
-type SearchNewsParams = {
+export type SearchNewsParams = {
   readonly query: string;
   readonly limit?: number;
-};
-
-type RequestConfig = {
-  readonly signal?: AbortSignal;
 };
 
 export async function fetchNewsList(
@@ -308,7 +323,10 @@ export async function fetchNewsById(
   return ensureSuccess(envelope);
 }
 
+// =========================
 // Bookmarks API
+// =========================
+
 export async function fetchBookmarks(config: RequestConfig = {}) {
   const envelope = await apiFetch<
     ApiResponseEnvelope<
@@ -370,6 +388,10 @@ async function buildAuthHeader(): Promise<Record<string, string>> {
   }
 }
 
+// =========================
+// News interactions
+// =========================
+
 export async function addCommentToNews(
   id: string,
   userId: string,
@@ -411,6 +433,10 @@ export async function addReactionToNews(
 
   return ensureSuccess(envelope);
 }
+
+// =========================
+// Ingest & Admin stats
+// =========================
 
 export async function fetchNewsIngestStats(
   config: RequestConfig = {},
@@ -564,9 +590,33 @@ export async function triggerManualNewsIngest(
   return ensureSuccess(envelope);
 }
 
-// Games API functions
+export async function triggerCategoryNewsIngest(
+  category: string,
+  config: RequestConfig = {},
+) {
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    message: string;
+    category: string;
+    processed: number;
+    items: unknown[];
+  }>>(
+    `/api/news-ingest/category/${category}`,
+    {
+      method: 'POST',
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+// =========================
+// Games API (single-player)
+// =========================
+
 export async function getAvailableGames(config: RequestConfig = {}) {
-  const envelope = await apiFetch<{
+  // This endpoint returns a plain object, not ApiResponseEnvelope
+  const res = await apiFetch<{
     games: Array<{
       id: string;
       name: string;
@@ -580,7 +630,7 @@ export async function getAvailableGames(config: RequestConfig = {}) {
     }>;
   }>('/api/games', { signal: config.signal });
 
-  return envelope;
+  return res;
 }
 
 export async function startGame(
@@ -673,27 +723,10 @@ export async function generateNewsTriviaQuestions(config: RequestConfig = {}) {
   return ensureSuccess(envelope);
 }
 
-export async function triggerCategoryNewsIngest(
-  category: string,
-  config: RequestConfig = {},
-) {
-  const envelope = await apiFetch<ApiResponseEnvelope<{
-    message: string;
-    category: string;
-    processed: number;
-    items: unknown[];
-  }>>(
-    `/api/news-ingest/category/${category}`,
-    {
-      method: 'POST',
-      signal: config.signal,
-    },
-  );
+// =========================
+// Multiplayer API
+// =========================
 
-  return ensureSuccess(envelope);
-}
-
-// Multiplayer API functions
 export async function getGameRooms(
   gameType?: string,
   status?: string,
@@ -853,4 +886,245 @@ export async function getGameRoomDetails(
   );
 
   return ensureSuccess(envelope);
+}
+
+// =========================
+// Reels / Explore API
+// =========================
+
+export interface ExploreItem {
+  kind: 'reel';
+  id: string;
+  title: string;
+  summary: string;
+  category: string;
+  videoUrl: string;
+  thumbUrl: string;
+  durationSec: number;
+  hrefId: string;
+}
+
+export interface ExploreFeedResponse {
+  items: ExploreItem[];
+  nextCursor?: string;
+  hasMore: boolean;
+}
+
+export async function fetchExploreFeed(
+  params: {
+    limit?: number;
+    cursor?: string;
+    category?: string;
+    userId?: string;
+  } = {},
+  config: RequestConfig = {},
+): Promise<ExploreFeedResponse> {
+  const response = await apiFetch<ExploreFeedResponse>(
+    '/api/reels/explore',
+    {
+      query: {
+        limit: params.limit || 24,
+        cursor: params.cursor,
+        category: params.category,
+        userId: params.userId,
+      },
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
+
+export interface ReelListItem {
+  id: string;
+  title: string;
+  description: string;
+  video_url?: string;
+  thumbnail_url?: string;
+  duration_seconds: number;
+  category: string;
+  created_at: string;
+  status: string;
+}
+
+export interface ReelListResponse {
+  reels: ReelListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+export async function fetchReelsList(
+  params: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    category?: string;
+  } = {},
+  config: RequestConfig = {},
+): Promise<ReelListResponse> {
+  const response = await apiFetch<ReelListResponse>(
+    '/api/reels/list',
+    {
+      query: {
+        limit: params.limit || 20,
+        offset: params.offset || 0,
+        status: params.status,
+        category: params.category,
+      },
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
+
+export interface ReelDetail {
+  id: string;
+  content: {
+    headline: string;
+    summary_sentences?: string[];
+    captions?: string;
+    hashtags?: string[];
+  };
+  assets: {
+    video_url?: string;
+    thumbnail_url?: string;
+    background_image?: string;
+  };
+  duration_seconds: number;
+  category: string;
+  engagement_score: number;
+  published_at: string;
+  created_at: string;
+  news_id: string;
+  status: string;
+}
+
+export async function fetchReelById(
+  id: string,
+  config: RequestConfig = {},
+): Promise<ReelDetail> {
+  const response = await apiFetch<ReelDetail>(
+    `/api/reels/${id}`,
+    {
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
+
+export interface NextReelResponse {
+  item: {
+    id: string;
+    title: string;
+    summary: string;
+    category: string;
+    videoUrl: string;
+    thumbUrl: string;
+    durationSec: number;
+    hrefId: string;
+  };
+}
+
+export async function fetchNextReel(
+  currentId: string,
+  params: {
+    dir?: 'up' | 'down';
+    category?: string;
+    userId?: string;
+  } = {},
+  config: RequestConfig = {},
+): Promise<NextReelResponse> {
+  const response = await apiFetch<NextReelResponse>(
+    `/api/reels/${currentId}/next`,
+    {
+      query: {
+        dir: params.dir || 'up',
+        category: params.category,
+        userId: params.userId,
+      },
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
+
+// =========================
+// Recommendations API
+// =========================
+
+export async function postRecommendations(limit = 20, config: RequestConfig = {}) {
+  const data = await apiFetch<{ ok: boolean; items: any[] }>(
+    '/api/v1/recommendations',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type: 'news', limit }),
+      signal: config.signal,
+    },
+  );
+  return data;
+}
+
+// =========================
+// TTS API
+// =========================
+
+export interface TTSGenerateRequest {
+  newsId: string;
+  contentType: 'summary' | 'full';
+  voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  speed: number;
+}
+
+export interface TTSAudioResponse {
+  id: string;
+  newsId: string;
+  contentType: string;
+  voice: string;
+  speed: number;
+  audioUrl: string;
+  fileSizeBytes: number;
+  durationSeconds: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function generateTTS(
+  request: TTSGenerateRequest,
+  config: RequestConfig = {},
+): Promise<TTSAudioResponse> {
+  const envelope = await apiFetch<TTSAudioResponse>(
+    '/api/tts/generate',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return envelope;
+}
+
+export async function getTTSAudio(
+  id: string,
+  config: RequestConfig = {},
+): Promise<TTSAudioResponse> {
+  const envelope = await apiFetch<TTSAudioResponse>(
+    `/api/tts/${id}`,
+    { signal: config.signal },
+  );
+
+  return envelope;
 }
