@@ -20,6 +20,7 @@ interface Pipe {
   bottomY: number;
   width: number;
   gap: number;
+  id: number; // Add unique ID for each pipe
 }
 
 export function FlappyAABirdGame({ onComplete, onClose }: FlappyAABirdGameProps): JSX.Element {
@@ -32,18 +33,20 @@ export function FlappyAABirdGame({ onComplete, onClose }: FlappyAABirdGameProps)
     x: 200,
     y: 350,
     velocity: 0,
-    size: 50,
+    size: 40, // Reduced from 50 to 40 (smaller bird)
   });
   const [pipes, setPipes] = useState<Pipe[]>([]);
-  const [gameSpeed, setGameSpeed] = useState(2);
+  const [gameSpeed, setGameSpeed] = useState(1.5); // Reduced initial speed from 2 to 1.5
   const [particles, setParticles] = useState<Array<{x: number, y: number, vx: number, vy: number, life: number}>>([]);
   const [mascotImage, setMascotImage] = useState<HTMLImageElement | null>(null);
+  const [scoredPipes, setScoredPipes] = useState<Set<number>>(new Set()); // Track which pipes have been scored
+  const pipeIdCounter = useRef(0); // Counter for unique pipe IDs
 
-  const GRAVITY = 0.5;
-  const JUMP_FORCE = -8;
-  const PIPE_WIDTH = 60;
-  const PIPE_GAP = 150;
-  const PIPE_SPACING = 300;
+  const GRAVITY = 0.2; // Further reduced from 0.3 to 0.2 (much slower falling)
+  const JUMP_FORCE = -6; // Reduced from -8 to -6 (gentler jump)
+  const PIPE_WIDTH = 50; // Reduced from 60 to 50 (narrower pipes)
+  const PIPE_GAP = 180; // Increased from 150 to 180 (bigger gap)
+  const PIPE_SPACING = 350; // Increased from 300 to 350 (more space between pipes)
 
   // Load mascot image
   useEffect(() => {
@@ -58,13 +61,15 @@ export function FlappyAABirdGame({ onComplete, onClose }: FlappyAABirdGameProps)
       x: 200,
       y: 350,
       velocity: 0,
-      size: 50,
+      size: 40, // Reduced from 50 to 40 (smaller bird)
     });
     setPipes([]);
     setScore(0);
     setGameState('waiting');
     setParticles([]);
-    setGameSpeed(2);
+    setGameSpeed(1.5); // Reduced initial speed from 2 to 1.5
+    setScoredPipes(new Set()); // Reset scored pipes
+    pipeIdCounter.current = 0; // Reset pipe ID counter
   }, []);
 
   // Jump function
@@ -131,7 +136,7 @@ export function FlappyAABirdGame({ onComplete, onClose }: FlappyAABirdGameProps)
       return newBird;
     });
 
-    // Move pipes
+    // Move pipes and update score in the same state update
     setPipes(prev => {
       const newPipes = prev
         .map(pipe => ({ ...pipe, x: pipe.x - gameSpeed }))
@@ -141,25 +146,37 @@ export function FlappyAABirdGame({ onComplete, onClose }: FlappyAABirdGameProps)
       const lastPipe = newPipes[newPipes.length - 1];
       if (!lastPipe || lastPipe.x < 800 - PIPE_SPACING) {
         const topHeight = Math.random() * (500 - PIPE_GAP) + 50;
+        pipeIdCounter.current += 1;
         newPipes.push({
           x: 800,
           topHeight,
           bottomY: topHeight + PIPE_GAP,
           width: PIPE_WIDTH,
           gap: PIPE_GAP,
+          id: pipeIdCounter.current, // Add unique ID
         });
       }
 
-      return newPipes;
-    });
-
-    // Update score
-    setPipes(prev => {
-      const newScore = prev.filter(pipe => pipe.x + pipe.width < bird.x).length;
+      // Update score - check each pipe individually using the new pipes array
+      let newScore = score;
+      const newScoredPipes = new Set(scoredPipes);
+      
+      newPipes.forEach((pipe) => {
+        // If pipe has passed the bird and hasn't been scored yet
+        if (pipe.x + pipe.width < bird.x && !newScoredPipes.has(pipe.id)) {
+          newScoredPipes.add(pipe.id);
+          newScore += 1;
+          console.log(`Score increased! New score: ${newScore}, Pipe ID: ${pipe.id}, Pipe X: ${pipe.x}`);
+        }
+      });
+      
+      // Update score if it changed
       if (newScore > score) {
         setScore(newScore);
+        setScoredPipes(newScoredPipes);
       }
-      return prev;
+
+      return newPipes;
     });
 
     // Update particles
@@ -174,11 +191,11 @@ export function FlappyAABirdGame({ onComplete, onClose }: FlappyAABirdGameProps)
         .filter(particle => particle.life > 0)
     );
 
-    // Increase game speed gradually
-    if (score > 0 && score % 5 === 0) {
-      setGameSpeed(prev => Math.min(prev + 0.1, 4));
+    // Increase game speed gradually (slower progression)
+    if (score > 0 && score % 8 === 0) { // Changed from every 5 points to every 8 points
+      setGameSpeed(prev => Math.min(prev + 0.05, 2.5)); // Reduced speed increase from 0.1 to 0.05 and max speed from 4 to 2.5
     }
-  }, [gameState, pipes, gameSpeed, bird.x, score, checkCollision, highScore]);
+  }, [gameState, pipes, gameSpeed, bird.x, score, checkCollision, highScore, scoredPipes]);
 
   // Handle keyboard input
   useEffect(() => {
@@ -192,6 +209,7 @@ export function FlappyAABirdGame({ onComplete, onClose }: FlappyAABirdGameProps)
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [jump]);
+
 
   // Handle game completion
   useEffect(() => {
