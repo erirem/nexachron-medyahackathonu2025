@@ -111,12 +111,16 @@ class _EnhancedNewsCardState extends State<EnhancedNewsCard>
     return GestureDetector(
       onTap: widget.onTap,
       onLongPressStart: (_) {
-        setState(() => _isHovered = true);
-        _controller.forward();
+        if (mounted) {
+          setState(() => _isHovered = true);
+          _controller.forward();
+        }
       },
       onLongPressEnd: (_) {
-        setState(() => _isHovered = false);
-        _controller.reverse();
+        if (mounted) {
+          setState(() => _isHovered = false);
+          _controller.reverse();
+        }
       },
       child: AnimatedBuilder(
         animation: _controller,

@@ -3,7 +3,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
 export class UserDataService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly supabaseService: SupabaseService) { }
 
   async ingestEvents(body: any, authUserId?: string) {
     const nowIso = new Date().toISOString();
@@ -78,7 +78,9 @@ export class UserDataService {
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
 
-    const hasCompletedOnboarding = !!data?.personalization_opt_in;
+    // Eğer kayıt varsa, kullanıcı onboarding'i tamamlamış demektir
+    // personalization_opt_in değerine bakılmaksızın
+    const hasCompletedOnboarding = data ? true : false;
     const isFirstTimeUser = !data;
 
     return {

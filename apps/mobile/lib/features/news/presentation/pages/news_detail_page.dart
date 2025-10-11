@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/news_provider.dart';
 import '../../domain/entities/news_item.dart';
+import '../../domain/entities/ai_summary.dart';
+import '../widgets/inline_media_widget.dart';
+import '../widgets/interactive_image_viewer.dart';
+import '../widgets/comments_section.dart';
+import '../widgets/ai_summary_button.dart';
+import '../widgets/ai_summary_bottom_sheet.dart';
+import '../../data/sample_comments.dart';
 
 class NewsDetailPage extends ConsumerWidget {
   final String newsId;
@@ -16,7 +23,7 @@ class NewsDetailPage extends ConsumerWidget {
       backgroundColor: const Color(0xFF0F1624),
       body: newsAsync.when(
         data: (news) => _buildContent(context, news),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SizedBox.shrink(),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -48,6 +55,10 @@ class NewsDetailPage extends ConsumerWidget {
 
   Widget _buildContent(BuildContext context, NewsItem news) {
     final scrollController = ScrollController();
+    
+    // Filter images to exclude primary image and get leftover images
+    final inlineImages = _getInlineImages(news);
+    final leftoverImages = _getLeftoverImages(inlineImages, news.content);
 
     return Container(
       decoration: const BoxDecoration(
@@ -361,13 +372,14 @@ class NewsDetailPage extends ConsumerWidget {
                       // Content
                       _ArticleBody(
                         text: news.content,
+                        images: news.images,
                         scrollController: scrollController,
                       ),
 
                       const SizedBox(height: 32),
 
-                      // Additional images
-                      if (news.images.isNotEmpty)
+                      // Additional images gallery (only leftover images)
+                      if (leftoverImages.isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -384,33 +396,57 @@ class NewsDetailPage extends ConsumerWidget {
                               height: 200,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
-                                itemCount: news.images.length,
+                                itemCount: leftoverImages.length,
                                 itemBuilder: (context, index) {
-                                  final image = news.images[index];
+                                  final image = leftoverImages[index];
                                   return Padding(
                                     padding: const EdgeInsets.only(right: 12),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Image.network(
-                                        image.url,
-                                        width: 300,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                              return Container(
-                                                width: 300,
-                                                color: Colors.white.withOpacity(
-                                                  0.1,
+                                    child: GestureDetector(
+                                      onTap: () => _openImageViewer(context, image),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Stack(
+                                          children: [
+                                            Image.network(
+                                              image.url,
+                                              width: 300,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    return Container(
+                                                      width: 300,
+                                                      color: Colors.white.withOpacity(
+                                                        0.1,
+                                                      ),
+                                                      child: const Center(
+                                                        child: Icon(
+                                                          Icons.image_not_supported,
+                                                          color: Colors.white38,
+                                                          size: 32,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                            ),
+                                            // Tap indicator overlay
+                                            Positioned(
+                                              top: 8,
+                                              right: 8,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black.withOpacity(0.6),
+                                                  borderRadius: BorderRadius.circular(12),
                                                 ),
-                                                child: const Center(
-                                                  child: Icon(
-                                                    Icons.image_not_supported,
-                                                    color: Colors.white38,
-                                                    size: 32,
-                                                  ),
+                                                child: const Icon(
+                                                  Icons.zoom_in,
+                                                  color: Colors.white,
+                                                  size: 14,
                                                 ),
-                                              );
-                                            },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );
@@ -421,33 +457,27 @@ class NewsDetailPage extends ConsumerWidget {
                           ],
                         ),
 
-                      // Action buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _ActionButton(
-                              icon: Icons.thumb_up_outlined,
-                              label: 'Beğen',
-                              onTap: () {},
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _ActionButton(
-                              icon: Icons.comment_outlined,
-                              label: 'Yorum Yap',
-                              onTap: () {},
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _ActionButton(
-                              icon: Icons.volume_up_outlined,
-                              label: 'Sesli Dinle',
-                              onTap: () {},
-                            ),
-                          ),
-                        ],
+                      // Comments Section
+                      CommentsSection(
+                        articleId: news.id,
+                        comments: getCommentsForArticle(news.id),
+                        currentUser: currentUser,
+                        onCommentSubmit: (content) {
+                          // Handle comment submission
+                          print('New comment: $content');
+                        },
+                        onReplySubmit: (commentId, content) {
+                          // Handle reply submission
+                          print('New reply to $commentId: $content');
+                        },
+                        onCommentLike: (commentId) {
+                          // Handle comment like
+                          print('Liked comment: $commentId');
+                        },
+                        onReplyLike: (replyId) {
+                          // Handle reply like
+                          print('Liked reply: $replyId');
+                        },
                       ),
 
                       const SizedBox(height: 32),
@@ -458,6 +488,78 @@ class NewsDetailPage extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Helper function to filter inline images (excludes primary image)
+  /// Follows clean code: pure function, single responsibility
+  List<NewsImage> _getInlineImages(NewsItem news) {
+    if (news.images.isEmpty) return [];
+
+    final uniqueImages = <NewsImage>[];
+    final seenUrls = <String>{};
+
+    for (final image in news.images) {
+      // Skip if already seen or if it's the primary image
+      if (seenUrls.contains(image.url) || image.url == news.imageUrl) {
+        continue;
+      }
+
+      seenUrls.add(image.url);
+      uniqueImages.add(image);
+    }
+
+    return uniqueImages;
+  }
+
+  /// Helper function to calculate leftover images
+  /// Images are distributed to paragraphs, extras become leftovers
+  List<NewsImage> _getLeftoverImages(List<NewsImage> images, String content) {
+    if (images.isEmpty) return [];
+
+    // Count paragraphs in content
+    final paragraphCount = _countParagraphs(content);
+
+    // Images beyond paragraph count become leftovers
+    if (images.length <= paragraphCount) {
+      return [];
+    }
+
+    return images.sublist(paragraphCount);
+  }
+
+  /// Helper to count paragraphs in content
+  int _countParagraphs(String content) {
+    final normalized = content.replaceAll('\r\n', '\n').trim();
+    if (normalized.isEmpty) return 0;
+
+    // Use same logic as _ArticleBody
+    if (normalized.contains('\n\n')) {
+      return normalized
+          .split('\n\n')
+          .where((p) => p.trim().isNotEmpty)
+          .length;
+    }
+
+    // Estimate based on sentence grouping
+    final sentences = normalized
+        .split(RegExp(r'(?<=[.!?])\s+(?=[A-ZÇĞIÖŞÜ])'))
+        .where((s) => s.trim().isNotEmpty)
+        .length;
+
+    // Approximate: 3-5 sentences per paragraph
+    return (sentences / 4).ceil();
+  }
+
+  /// Opens the interactive image viewer for gallery images
+  void _openImageViewer(BuildContext context, NewsImage image) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => InteractiveImageViewer(
+          image: image,
+          title: image.caption ?? 'Galeri Resmi',
+        ),
       ),
     );
   }
@@ -506,9 +608,14 @@ class _ActionButton extends StatelessWidget {
 
 class _ArticleBody extends StatefulWidget {
   final String text;
+  final List<NewsImage> images;
   final ScrollController scrollController;
 
-  const _ArticleBody({required this.text, required this.scrollController});
+  const _ArticleBody({
+    required this.text,
+    required this.images,
+    required this.scrollController,
+  });
 
   @override
   State<_ArticleBody> createState() => _ArticleBodyState();
@@ -516,12 +623,20 @@ class _ArticleBody extends StatefulWidget {
 
 class _ArticleBodyState extends State<_ArticleBody> {
   List<String> paragraphs = [];
+  List<NewsImage?> paragraphImages = []; // Image assigned to each paragraph
   int visibleParagraphs = 3; // Başlangıçta 3 paragraf göster
+  
+  // AI Summary Button State
+  bool showAiSummaryButton = false;
+  final double summaryButtonThreshold = 0.3; // %30 scroll threshold (uzun cümlelerin ortası)
+  int summaryButtonPosition = 2; // Show button after 2nd paragraph (daha erken)
+  final int minWordCount = 1000; // Minimum kelime sayısı (uzun haber kontrolü)
 
   @override
   void initState() {
     super.initState();
     _initializeParagraphs();
+    _assignImagesToParagraphs();
     widget.scrollController.addListener(_onScroll);
   }
 
@@ -584,6 +699,7 @@ class _ArticleBodyState extends State<_ArticleBody> {
     // Sayfa sonuna yaklaşınca daha fazla paragraf yükle
     if (!widget.scrollController.hasClients) return;
 
+    // Infinite scroll logic
     if (widget.scrollController.position.pixels >=
         widget.scrollController.position.maxScrollExtent * 0.8) {
       if (visibleParagraphs < paragraphs.length) {
@@ -595,6 +711,74 @@ class _ArticleBodyState extends State<_ArticleBody> {
         });
       }
     }
+
+    // AI Summary Button visibility logic
+    final scrollPosition = widget.scrollController.position.pixels;
+    final maxScrollExtent = widget.scrollController.position.maxScrollExtent;
+    
+    if (maxScrollExtent > 0) {
+      final scrollPercentage = scrollPosition / maxScrollExtent;
+      
+      // Show button when user scrolls past threshold AND content is long enough
+      if (scrollPercentage >= summaryButtonThreshold && 
+          !showAiSummaryButton && 
+          _isContentLongEnough()) {
+        setState(() {
+          showAiSummaryButton = true;
+        });
+      }
+    }
+  }
+
+  /// Assign images to paragraphs following web app's strategy
+  /// Clean code: pure logic, testable, single responsibility
+  void _assignImagesToParagraphs() {
+    // Filter out primary image and duplicates
+    final inlineImages = _filterInlineImages();
+    
+    // Assign one image per paragraph (up to paragraph count)
+    paragraphImages = List.generate(
+      paragraphs.length,
+      (index) => index < inlineImages.length ? inlineImages[index] : null,
+    );
+  }
+
+  /// Filter inline images (exclude primary image and duplicates)
+  List<NewsImage> _filterInlineImages() {
+    if (widget.images.isEmpty) return [];
+
+    final uniqueImages = <NewsImage>[];
+    final seenUrls = <String>{};
+
+    for (final image in widget.images) {
+      // Skip duplicates
+      if (seenUrls.contains(image.url)) continue;
+
+      seenUrls.add(image.url);
+      uniqueImages.add(image);
+    }
+
+    return uniqueImages;
+  }
+
+  /// Check if content is long enough to show AI summary button
+  bool _isContentLongEnough() {
+    // Kelime sayısını hesapla (boşluklarla ayrılmış kelimeler)
+    final words = widget.text.trim().split(RegExp(r'\s+'));
+    final wordCount = words.where((word) => word.isNotEmpty).length;
+    return wordCount >= minWordCount;
+  }
+
+  /// Show AI Summary Bottom Sheet
+  void _showAiSummaryBottomSheet(BuildContext context) {
+    AiSummaryBottomSheet.show(
+      context: context,
+      summary: AiSummary.beta(),
+      onClose: () {
+        // Optional: Track user interaction
+        print('AI Summary bottom sheet closed');
+      },
+    );
   }
 
   @override
@@ -607,6 +791,7 @@ class _ArticleBodyState extends State<_ArticleBody> {
           i < visibleParagraphs.clamp(0, paragraphs.length);
           i++
         ) ...[
+          // Paragraph text
           AnimatedOpacity(
             duration: const Duration(milliseconds: 250),
             opacity: 1.0,
@@ -628,22 +813,22 @@ class _ArticleBodyState extends State<_ArticleBody> {
               ),
             ),
           ),
+          
+          // Spacing after paragraph
           if (i != paragraphs.length - 1) const SizedBox(height: 18),
+          
+          // Inline image for this paragraph (if assigned)
+          if (i < paragraphImages.length && paragraphImages[i] != null)
+            InlineMediaWidget(image: paragraphImages[i]!),
+          
+          // AI Summary Button - Show after specified paragraph position
+          if (i == summaryButtonPosition - 1 && showAiSummaryButton && _isContentLongEnough())
+            AiSummaryButton(
+              onTap: () => _showAiSummaryBottomSheet(context),
+              isVisible: showAiSummaryButton,
+            ),
         ],
         if (visibleParagraphs < paragraphs.length) ...[
-          const SizedBox(height: 24),
-          Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Colors.white.withOpacity(0.5),
-                ),
-              ),
-            ),
-          ),
           const SizedBox(height: 24),
         ],
       ],

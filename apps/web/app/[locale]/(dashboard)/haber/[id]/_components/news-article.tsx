@@ -14,6 +14,7 @@ import { InlineMedia } from './inline-media';
 import { useNewsTracking } from '@/contexts/news-tracking-context';
 import { useGamification } from '@/contexts/gamification-context';
 import ReadingHistoryBreadcrumbs from './reading-history-breadcrumbs';
+import { HypeButton } from '@/components/hype/hype-button';
 
 interface NewsArticleProps {
   readonly article: DashboardNewsItem;
@@ -411,6 +412,12 @@ export function NewsArticle({ article, relatedNews = [], allNews = [] }: NewsArt
             </div>
           </div>
         </div>
+
+        {/* Hype Section */}
+        <HypeButton 
+          articleId={article.id}
+          articleTitle={article.title}
+        />
       </div>
 
       {/* News Timeline */}

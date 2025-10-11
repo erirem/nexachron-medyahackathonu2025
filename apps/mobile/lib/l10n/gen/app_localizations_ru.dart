@@ -280,6 +280,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'An unexpected error occurred during registration.';
 
   @override
+  String get bookmarksTitle => 'Kaydedilenler';
+
+  @override
   String get profileAppBarTitle => 'Profile';
 
   @override
@@ -330,6 +333,69 @@ class AppLocalizationsRu extends AppLocalizations {
   String profileLastSeen(Object date, Object time) {
     return 'Last sign-in: $date • $time';
   }
+
+  @override
+  String get gamificationRankNewMember => 'Yeni Katılımcı';
+
+  @override
+  String get gamificationRankActiveReader => 'Aktif Okur';
+
+  @override
+  String get gamificationRankKnowledgeSharer => 'Bilgi Paylaşımcısı';
+
+  @override
+  String get gamificationRankExpertCommenter => 'Uzman Yorumcu';
+
+  @override
+  String get gamificationRankCommunityLeader => 'Topluluk Lideri';
+
+  @override
+  String get gamificationLeagueBronze => 'Bronz';
+
+  @override
+  String get gamificationLeagueSilver => 'Gümüş';
+
+  @override
+  String get gamificationLeagueGold => 'Altın';
+
+  @override
+  String get gamificationLeaguePlatinum => 'Platin';
+
+  @override
+  String get gamificationLeagueDiamond => 'Elmas';
+
+  @override
+  String get gamificationXPProgress => 'XP İlerlemesi';
+
+  @override
+  String get gamificationStreak => 'Streak';
+
+  @override
+  String get gamificationSeasonXP => 'Sezon XP';
+
+  @override
+  String get gamificationWeekly => 'Haftalık';
+
+  @override
+  String get gamificationMonthly => 'Aylık';
+
+  @override
+  String get gamificationFollowing => 'Takip';
+
+  @override
+  String get gamificationBadges => 'Rozetler';
+
+  @override
+  String get gamificationStreakProtection => 'Streak Koruması';
+
+  @override
+  String get gamificationDays => 'gün';
+
+  @override
+  String get gamificationPoints => 'puan';
+
+  @override
+  String get gamificationItems => 'adet';
 
   @override
   String get landingHeroTitle =>

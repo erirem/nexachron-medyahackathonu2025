@@ -1,30 +1,82 @@
 'use client';
 
 import { useState, useEffect, useCallback, type JSX } from 'react';
-import type { WordleGame, WordleAttempt, WordleLetterResult } from '../_types/game-types';
+import type { WordleGame, WordleAttempt, WordleLetterResult, WordleStats } from '../_types/game-types';
 
-// Türkçe 5 harfli kelimeler listesi (normalize edilmiş hali)
+// Genişletilmiş Türkçe kelime havuzu (normalize edilmiş hali)
 const WORDS = [
+  // Temel kelimeler
   'KALEM', 'KITAP', 'MASAL', 'GUNES', 'AYDIN', 'BILGI', 'HAYAT', 'SEVIN', 'MUTLU', 'GUZEL',
   'BUYUK', 'KUCUK', 'SICAK', 'SOGUK', 'HIZLI', 'YAVAS', 'GUCLU', 'ZAYIF', 'TEMIZ', 'KIRLI',
   'SESSIZ', 'ACIK', 'KAPALI', 'ICERI', 'DISARI', 'YUKARI', 'ASAGI', 'ILERI', 'GERI', 'SAGA',
-  'SOLA', 'ONCE', 'SONRA', 'BASAR', 'CIRKIN', 'APTAL', 'BUYUK', 'KUCUK', 'SICAK', 'SOGUK',
-  'HIZLI', 'YAVAS', 'GUCLU', 'ZAYIF', 'TEMIZ', 'KIRLI', 'SESSIZ', 'ACIK', 'KAPALI', 'ICERI'
+  'SOLA', 'ONCE', 'SONRA', 'BASAR', 'CIRKIN', 'APTAL', 'AKILLI', 'GENC', 'YASLI', 'SAGLIK',
+  
+  // Doğa ve çevre
+  'AGAC', 'CICEK', 'BULUT', 'YAGMUR', 'KAR', 'RUZGAR', 'DENIZ', 'DAG', 'VADI', 'ORMAN',
+  'NEHIR', 'GOL', 'GOK', 'YILDIZ', 'AY', 'GUNES', 'TOPRAK', 'TAS', 'KUM', 'CIMEN',
+  
+  // Hayvanlar
+  'KEDI', 'KOPEK', 'KUS', 'BALIK', 'AT', 'INEK', 'KOYUN', 'KEÇI', 'TAVUK', 'HOROZ',
+  'KURT', 'AYI', 'KAPLAN', 'ASLAN', 'FIL', 'ZURAFA', 'MAYMUN', 'YILAN', 'KURBAĞA', 'KELEBEK',
+  
+  // Yiyecekler
+  'EKMEK', 'SU', 'SUT', 'ET', 'BAL', 'PEYNIR', 'YUMURTA', 'SEBZE', 'MEYVE', 'CICEK',
+  'PILAV', 'CORBA', 'SALATA', 'KAHVE', 'CAY', 'MEYVE', 'ELMA', 'ARMUT', 'MUZ', 'PORTAKAL',
+  
+  // Renkler
+  'BEYAZ', 'SIYAH', 'KIRMIZI', 'MAVI', 'YESIL', 'SARI', 'MOR', 'TURUNCU', 'PEMBE', 'GRI',
+  
+  // Meslekler
+  'DOKTOR', 'OGRETMEN', 'MUHENDIS', 'AVUKAT', 'POLIS', 'ASKER', 'SANATCI', 'YAZAR', 'SAIR', 'MUZIK',
+  
+  // Spor ve oyunlar
+  'FUTBOL', 'BASKET', 'VOLEYBOL', 'TENIS', 'YUZME', 'KOSU', 'ATLAMA', 'DANS', 'OYUN', 'MASA',
+  
+  // Teknoloji
+  'BILGISAYAR', 'TELEFON', 'INTERNET', 'YAZILIM', 'DONANIM', 'EKRAN', 'KLAVYE', 'FARE', 'KAMERA', 'MIKROFON',
+  
+  // Duygular ve karakter
+  'MUTLU', 'UZGUN', 'KIZGIN', 'KORKU', 'SASIRMA', 'MERAK', 'SEVGI', 'NEFRET', 'UMUT', 'KAYGI',
+  
+  // Zaman ve tarih
+  'SABAH', 'OGLE', 'AKSAM', 'GECE', 'HAFTA', 'AY', 'YIL', 'GECMIS', 'GELECEK', 'SIMDI',
+  
+  // Ev ve aile
+  'EV', 'ODA', 'MUTFAK', 'YATAK', 'MASA', 'SANDALYE', 'PENCERE', 'KAPI', 'BANYO', 'SALON',
+  'ANNE', 'BABA', 'KARDES', 'COCUK', 'BEBEK', 'DEDE', 'NINE', 'AMCA', 'TEYZE', 'KUZEN'
 ];
 
+// Günlük kelime için hash fonksiyonu
+const getDailyWord = (): string => {
+  const today = new Date();
+  const dateString = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+  
+  // Basit hash fonksiyonu
+  let hash = 0;
+  for (let i = 0; i < dateString.length; i++) {
+    const char = dateString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 32-bit integer'a çevir
+  }
+  
+  const index = Math.abs(hash) % WORDS.length;
+  return WORDS[index];
+};
+
 interface WordleGameProps {
-  onComplete: (isWon: boolean, attempts: number, word: string) => void;
+  onComplete: (isWon: boolean, attempts: number, stats: WordleStats) => void;
   onClose: () => void;
-  onShare?: () => void;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  dailyMode?: boolean;
 }
 
-export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): JSX.Element {
+export function WordleGame({ onComplete, onClose, difficulty = 'medium', dailyMode = true }: WordleGameProps): JSX.Element {
   const [game, setGame] = useState<WordleGame>(() => {
-    const randomWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+    const word = dailyMode ? getDailyWord() : WORDS[Math.floor(Math.random() * WORDS.length)];
     return {
       id: Date.now().toString(),
-      word: randomWord,
-      maxAttempts: 6,
+      word: word,
+      maxAttempts: difficulty === 'easy' ? 8 : difficulty === 'hard' ? 5 : 6,
       currentAttempt: 0,
       attempts: [],
       isCompleted: false,
@@ -35,6 +87,19 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
 
   const [currentGuess, setCurrentGuess] = useState('');
   const [message, setMessage] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [keyboardState, setKeyboardState] = useState<Record<string, 'correct' | 'present' | 'absent' | 'unused'>>({});
+  const [stats, setStats] = useState<WordleStats>(() => {
+    const saved = localStorage.getItem('wordle-stats');
+    return saved ? JSON.parse(saved) : {
+      gamesPlayed: 0,
+      gamesWon: 0,
+      currentStreak: 0,
+      maxStreak: 0,
+      guessDistribution: [0, 0, 0, 0, 0, 0],
+      averageGuesses: 0
+    };
+  });
 
   // Türkçe karakterleri normalize et
   const normalizeTurkish = (str: string): string => {
@@ -84,6 +149,44 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
     return result;
   }, [game.word]);
 
+  // İstatistikleri güncelle
+  const updateStats = useCallback((isWon: boolean, attempts: number) => {
+    const newStats = { ...stats };
+    newStats.gamesPlayed++;
+    
+    if (isWon) {
+      newStats.gamesWon++;
+      newStats.currentStreak++;
+      newStats.maxStreak = Math.max(newStats.maxStreak, newStats.currentStreak);
+      newStats.guessDistribution[attempts - 1]++;
+    } else {
+      newStats.currentStreak = 0;
+    }
+    
+    newStats.averageGuesses = newStats.gamesWon > 0 
+      ? newStats.guessDistribution.reduce((sum, count, index) => sum + (count * (index + 1)), 0) / newStats.gamesWon
+      : 0;
+    
+    setStats(newStats);
+    localStorage.setItem('wordle-stats', JSON.stringify(newStats));
+  }, [stats]);
+
+  // Klavye durumunu güncelle
+  const updateKeyboardState = useCallback((result: WordleLetterResult[]) => {
+    const newKeyboardState = { ...keyboardState };
+    
+    result.forEach(letter => {
+      const currentState = newKeyboardState[letter.letter];
+      if (!currentState || currentState === 'unused') {
+        newKeyboardState[letter.letter] = letter.status;
+      } else if (currentState === 'present' && letter.status === 'correct') {
+        newKeyboardState[letter.letter] = 'correct';
+      }
+    });
+    
+    setKeyboardState(newKeyboardState);
+  }, [keyboardState]);
+
   // Tahmin gönder
   const submitGuess = useCallback(() => {
     if (currentGuess.length !== 5) {
@@ -97,40 +200,48 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
       return;
     }
 
-    const result = checkWord(normalizedGuess);
-    const newAttempt: WordleAttempt = {
-      word: normalizedGuess,
-      result,
-      isComplete: true
-    };
-
-    const isWon = result.every(letter => letter.status === 'correct');
-    const newAttempts = [...game.attempts, newAttempt];
-    const newCurrentAttempt = game.currentAttempt + 1;
-    const isCompleted = isWon || newCurrentAttempt >= game.maxAttempts;
-
-    setGame(prev => ({
-      ...prev,
-      attempts: newAttempts,
-      currentAttempt: newCurrentAttempt,
-      isCompleted,
-      isWon,
-      endTime: isCompleted ? new Date() : prev.endTime
-    }));
-
-    setCurrentGuess('');
+    setIsAnimating(true);
     setMessage('');
 
-    if (isCompleted) {
-      setTimeout(() => {
-        onComplete(isWon, newCurrentAttempt, game.word);
-      }, 1000);
-    }
-  }, [currentGuess, game.attempts, game.currentAttempt, game.maxAttempts, checkWord, onComplete]);
+    // Animasyon için kısa gecikme
+    setTimeout(() => {
+      const result = checkWord(normalizedGuess);
+      const newAttempt: WordleAttempt = {
+        word: normalizedGuess,
+        result,
+        isComplete: true
+      };
+
+      const isWon = result.every(letter => letter.status === 'correct');
+      const newAttempts = [...game.attempts, newAttempt];
+      const newCurrentAttempt = game.currentAttempt + 1;
+      const isCompleted = isWon || newCurrentAttempt >= game.maxAttempts;
+
+      setGame(prev => ({
+        ...prev,
+        attempts: newAttempts,
+        currentAttempt: newCurrentAttempt,
+        isCompleted,
+        isWon,
+        endTime: isCompleted ? new Date() : prev.endTime
+      }));
+
+      updateKeyboardState(result);
+      setCurrentGuess('');
+      setIsAnimating(false);
+
+      if (isCompleted) {
+        updateStats(isWon, newCurrentAttempt);
+        setTimeout(() => {
+          onComplete(isWon, newCurrentAttempt, stats);
+        }, 1500);
+      }
+    }, 500);
+  }, [currentGuess, game.attempts, game.currentAttempt, game.maxAttempts, checkWord, onComplete, updateKeyboardState, updateStats, stats]);
 
   // Klavye girişi
   const handleKeyPress = useCallback((key: string) => {
-    if (game.isCompleted) return;
+    if (game.isCompleted || isAnimating) return;
 
     if (key === 'ENTER') {
       submitGuess();
@@ -141,7 +252,7 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
         setCurrentGuess(prev => prev + key.toUpperCase());
       }
     }
-  }, [currentGuess, game.isCompleted, submitGuess]);
+  }, [currentGuess, game.isCompleted, isAnimating, submitGuess]);
 
   // Klavye event listener
   useEffect(() => {
@@ -162,15 +273,33 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyPress]);
 
-  // Harf rengi
+  // Harf rengi ve animasyon
   const getLetterColor = (status: 'correct' | 'present' | 'absent') => {
     switch (status) {
+      case 'correct': return 'bg-green-500 text-white border-green-500';
+      case 'present': return 'bg-yellow-500 text-white border-yellow-500';
+      case 'absent': return 'bg-gray-600 text-white border-gray-600';
+      default: return 'bg-gray-700 text-white border-gray-700';
+    }
+  };
+
+  // Klavye tuşu rengi
+  const getKeyColor = (key: string) => {
+    const state = keyboardState[key];
+    switch (state) {
       case 'correct': return 'bg-green-500 text-white';
       case 'present': return 'bg-yellow-500 text-white';
       case 'absent': return 'bg-gray-600 text-white';
-      default: return 'bg-gray-700 text-white';
+      default: return 'bg-gray-700 text-white hover:bg-gray-600';
     }
   };
+
+  // Türkçe klavye düzeni
+  const keyboardRows = [
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ğ', 'Ü'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ş', 'İ'],
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Ö', 'Ç']
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -212,6 +341,24 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
 
         {/* Game Board */}
         <div className="p-6">
+          {/* Difficulty and Mode Info */}
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-4 text-sm text-white/60">
+              <span className={`px-3 py-1 rounded-full ${
+                difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+                difficulty === 'hard' ? 'bg-red-500/20 text-red-400' :
+                'bg-blue-500/20 text-blue-400'
+              }`}>
+                {difficulty === 'easy' ? 'Kolay' : difficulty === 'hard' ? 'Zor' : 'Orta'}
+              </span>
+              <span className={`px-3 py-1 rounded-full ${
+                dailyMode ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-500/20 text-gray-400'
+              }`}>
+                {dailyMode ? 'Günlük Kelime' : 'Rastgele Kelime'}
+              </span>
+            </div>
+          </div>
+
           {/* Attempts */}
           <div className="space-y-2 mb-6">
             {Array.from({ length: game.maxAttempts }).map((_, attemptIndex) => {
@@ -219,7 +366,7 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
               const isCurrentAttempt = attemptIndex === game.currentAttempt && !game.isCompleted;
               
               return (
-                <div key={attemptIndex} className="flex gap-2">
+                <div key={attemptIndex} className="flex gap-2 justify-center">
                   {Array.from({ length: 5 }).map((_, letterIndex) => {
                     const letter = attempt?.word[letterIndex] || '';
                     const result = attempt?.result[letterIndex];
@@ -228,13 +375,16 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
                     return (
                       <div
                         key={letterIndex}
-                        className={`w-12 h-12 flex items-center justify-center text-xl font-bold rounded-lg border-2 transition-all duration-300 ${
+                        className={`w-14 h-14 flex items-center justify-center text-2xl font-bold rounded-lg border-2 transition-all duration-500 ${
                           result
-                            ? `${getLetterColor(result.status)} border-transparent`
+                            ? `${getLetterColor(result.status)} border-transparent animate-pulse`
                             : isCurrentLetter
-                            ? 'bg-white/20 border-blue-400 text-white'
+                            ? 'bg-white/20 border-blue-400 text-white animate-pulse'
                             : 'bg-white/5 border-white/20 text-white/50'
                         }`}
+                        style={{
+                          animationDelay: result ? `${letterIndex * 100}ms` : '0ms'
+                        }}
                       >
                         {letter}
                       </div>
@@ -295,16 +445,52 @@ export function WordleGame({ onComplete, onClose, onShare }: WordleGameProps): J
             </div>
           )}
 
+          {/* Virtual Keyboard */}
+          <div className="mb-6">
+            <div className="space-y-2">
+              {keyboardRows.map((row, rowIndex) => (
+                <div key={rowIndex} className="flex gap-1 justify-center">
+                  {row.map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => handleKeyPress(key)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${getKeyColor(key)}`}
+                      disabled={game.isCompleted || isAnimating}
+                    >
+                      {key}
+                    </button>
+                  ))}
+                </div>
+              ))}
+              <div className="flex gap-1 justify-center">
+                <button
+                  onClick={() => handleKeyPress('ENTER')}
+                  className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                  disabled={game.isCompleted || isAnimating}
+                >
+                  ENTER
+                </button>
+                <button
+                  onClick={() => handleKeyPress('BACKSPACE')}
+                  className="px-4 py-2 text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
+                  disabled={game.isCompleted || isAnimating}
+                >
+                  ←
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Controls */}
           <div className="flex gap-3 justify-center">
             {!game.isCompleted ? (
               <>
                 <button
                   onClick={submitGuess}
-                  disabled={currentGuess.length !== 5}
+                  disabled={currentGuess.length !== 5 || isAnimating}
                   className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-medium transition-colors"
                 >
-                  Tahmin Et
+                  {isAnimating ? 'Kontrol Ediliyor...' : 'Tahmin Et'}
                 </button>
                 <button
                   onClick={() => setCurrentGuess('')}

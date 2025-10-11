@@ -1,12 +1,12 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { 
-  UserProfile, 
-  UserRank, 
-  League, 
-  Badge, 
-  XPAction, 
+import {
+  UserProfile,
+  UserRank,
+  League,
+  Badge,
+  XPAction,
   StreakInfo,
   DailyActivity,
   WeeklyActivity,
@@ -26,13 +26,14 @@ interface GamificationContextType {
   useStreakProtection: () => boolean;
   getStreakInfo: () => StreakInfo;
   completeQuiz: (quizId: string, score: number, totalQuestions: number) => void;
-  trackActivity: (type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow') => void;
+  trackActivity: (type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow' | 'hype') => void;
   getDailyActivity: () => DailyActivity;
   getWeeklyActivity: () => WeeklyActivity;
   getMonthlyActivity: () => MonthlyActivity;
   completeNews: (newsId: string) => void;
   completeSpeedRead: (newsId: string) => void;
-  useHint: () => boolean; // Returns true if hint was used successfully, false if not enough XP
+  giveHype: (newsId: string, hypePower: number) => void;
+  calculateHypePower: (rank: UserRank) => number;
 }
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
@@ -188,13 +189,13 @@ const MOCK_USER_PROFILE: UserProfile = {
 
 export function GamificationProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(MOCK_USER_PROFILE);
-  const [xpAnimations, setXpAnimations] = useState<Array<{id: string, xp: number, timestamp: number}>>([]);
+  const [xpAnimations, setXpAnimations] = useState<Array<{ id: string, xp: number, timestamp: number }>>([]);
 
   // XP ekleme animasyonu için
   const showXPAnimation = useCallback((xp: number) => {
     const id = Date.now().toString();
     setXpAnimations(prev => [...prev, { id, xp, timestamp: Date.now() }]);
-    
+
     setTimeout(() => {
       setXpAnimations(prev => prev.filter(anim => anim.id !== id));
     }, 3000);
@@ -403,7 +404,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     if (!userProfile) return;
 
     const correctRatio = score / totalQuestions;
-    
+
     // Minimum %50 doğru cevap gerekli
     if (correctRatio < 0.5) {
       console.log('Quiz başarısız: %50\'den az doğru cevap');
@@ -413,7 +414,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     // XP hesaplama - doğru cevap oranına göre
     const baseXP = XP_VALUES.QUIZ_COMPLETE;
     const xpEarned = Math.floor(baseXP * correctRatio);
-    
+
     // Bonus XP - mükemmel skor için
     let bonusXP = 0;
     if (correctRatio === 1) {
@@ -432,7 +433,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
 
       const newBadges = [...prev.badges];
-      
+
       // Quiz ustası rozeti için 10 quiz tamamlama gerekli
       // Bu gerçek uygulamada veritabanından kontrol edilecek
       const completedQuizzes = 5; // Mock data - gerçekte veritabanından gelecek
@@ -450,27 +451,59 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     trackActivity('quiz_complete');
   }, [userProfile, addXP]);
 
+  // Hype gücü hesaplama
+  const calculateHypePower = useCallback((rank: UserRank): number => {
+    switch (rank) {
+      case UserRank.NEW_MEMBER:
+        return 1;
+      case UserRank.ACTIVE_READER:
+        return 2;
+      case UserRank.KNOWLEDGE_SHARER:
+        return 3;
+      case UserRank.EXPERT_COMMENTER:
+        return 4;
+      case UserRank.COMMUNITY_LEADER:
+        return 5;
+      default:
+        return 1;
+    }
+  }, []);
+
+  // Hype verme
+  const giveHype = useCallback((newsId: string, hypePower: number) => {
+    if (!userProfile) return;
+
+    // Hype verme için küçük XP bonusu
+    addXP('COMMENT', 5);
+
+    // Analytics tracking
+    console.log(`Hype verildi: ${newsId}, Hype gücü: ${hypePower}, Kullanıcı rank: ${userProfile.currentRank}`);
+    
+    // Gerçek uygulamada burada API çağrısı yapılacak
+    // await hypeNews(newsId, hypePower);
+  }, [userProfile, addXP]);
+
   // Aktivite takibi
-  const trackActivity = useCallback((type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow') => {
+  const trackActivity = useCallback((type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow' | 'hype') => {
     setUserProfile(prev => {
       if (!prev) return prev;
-      
+
       const now = new Date();
       const today = new Date(now);
       today.setHours(0, 0, 0, 0);
-      
+
       const weekStart = new Date(now);
       weekStart.setDate(now.getDate() - now.getDay());
       weekStart.setHours(0, 0, 0, 0);
-      
+
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
       weekEnd.setHours(23, 59, 59, 999);
-      
+
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       monthEnd.setHours(23, 59, 59, 999);
-      
+
       // Günlük aktiviteyi güncelle
       const updatedDailyActivity = { ...prev.dailyActivity };
       if (updatedDailyActivity.date.getTime() !== today.getTime()) {
@@ -483,7 +516,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         updatedDailyActivity.topicsFollowed = prev.followedTopics.length;
         updatedDailyActivity.streakDays = prev.currentStreak;
       }
-      
+
       // Haftalık aktiviteyi güncelle
       const updatedWeeklyActivity = { ...prev.weeklyActivity };
       if (now > weekEnd) {
@@ -498,7 +531,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         updatedWeeklyActivity.streakDays = prev.currentStreak;
         updatedWeeklyActivity.dailyActivities = [];
       }
-      
+
       // Aylık aktiviteyi güncelle
       const updatedMonthlyActivity = { ...prev.monthlyActivity };
       if (now > monthEnd) {
@@ -513,7 +546,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         updatedMonthlyActivity.streakDays = prev.currentStreak;
         updatedMonthlyActivity.weeklyActivities = [];
       }
-      
+
       // Aktivite tipine göre sayacı artır
       switch (type) {
         case 'news_read':
@@ -536,8 +569,11 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
           updatedWeeklyActivity.topicsFollowed = prev.followedTopics.length;
           updatedMonthlyActivity.topicsFollowed = prev.followedTopics.length;
           break;
+        case 'hype':
+          // Hype verme aktivitesi için özel bir sayaç yok, sadece XP ekleniyor
+          break;
       }
-      
+
       return {
         ...prev,
         dailyActivity: updatedDailyActivity,
@@ -561,7 +597,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         categoryStats: []
       };
     }
-    
+
     return userProfile.dailyActivity;
   }, [userProfile]);
 
@@ -581,7 +617,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         categoryStats: []
       };
     }
-    
+
     return userProfile.weeklyActivity;
   }, [userProfile]);
 
@@ -601,7 +637,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         categoryStats: []
       };
     }
-    
+
     return userProfile.monthlyActivity;
   }, [userProfile]);
   // Haber tamamlama
@@ -616,7 +652,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
 
       const newBadges = [...prev.badges];
-      
+
       // Haber kaşifi rozeti için 100 farklı kategoriden haber okuma gerekli
       // Bu gerçek uygulamada veritabanından kontrol edilecek
       const completedNewsCount = 15; // Mock data - gerçekte veritabanından gelecek
@@ -645,7 +681,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
 
       const newBadges = [...prev.badges];
-      
+
       // Hızlı okur rozeti için zaman sınırlı haber okuma
       if (!newBadges.includes(Badge.SPEED_READER)) {
         newBadges.push(Badge.SPEED_READER);
@@ -710,7 +746,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       getMonthlyActivity,
       completeNews,
       completeSpeedRead,
-      useHint
+      giveHype,
+      calculateHypePower
     }}>
       {children}
       {/* XP Animasyonları */}

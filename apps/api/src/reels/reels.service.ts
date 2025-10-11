@@ -48,7 +48,7 @@ export class ReelsService {
     private readonly reelGeneratorService: ReelGeneratorService,
     private readonly ttsService: TTSService,
     private readonly videoComposerService: VideoComposerService
-  ) {}
+  ) { }
 
   /**
    * Generate reel from news item
@@ -72,7 +72,7 @@ export class ReelsService {
 
       // 3. Generate reel
       const reel = await this.reelGeneratorService.generateReel(newsItem, request, request.news_id);
-      
+
       // 4. Set news_id after generation
       reel.news_id = request.news_id;
 
@@ -103,7 +103,7 @@ export class ReelsService {
     try {
       // Get recent news items
       const newsItems = await this.getRecentNewsForReels(request);
-      
+
       this.logger.log(`Found ${newsItems.length} news items for reel generation`);
 
       // Process each news item
@@ -123,7 +123,7 @@ export class ReelsService {
           });
 
           result.generated.push(reel.id);
-          
+
         } catch (error) {
           this.logger.error(`Failed to generate reel for news: ${newsItem.id}`, error);
           result.failed.push(newsItem.id);
@@ -149,7 +149,7 @@ export class ReelsService {
   async getReelsFeed(request: ReelsFeedRequest): Promise<ReelsFeedResult> {
     try {
       const offset = (request.page - 1) * request.limit;
-      
+
       let query = this.supabaseService.adminSupabase
         .from('reels')
         .select(`
@@ -259,6 +259,98 @@ export class ReelsService {
   }
 
   /**
+   * Get next/previous reel for infinite scroll navigation
+   * Uses index-based navigation for guaranteed sequential order
+   * With wrap-around support (loops back to beginning/end)
+   */
+  async getNextReel(
+    currentId: string,
+    options: {
+      direction: 'up' | 'down';
+      category?: string;
+      userId?: string;
+    },
+  ): Promise<Reel | null> {
+    try {
+      this.logger.debug(`Getting ${options.direction} reel from ${currentId}`);
+
+      // Fetch ALL reel IDs in order (lightweight query - only id and created_at)
+      let query = this.supabaseService.adminSupabase
+        .from('reels')
+        .select('id, created_at')
+        .eq('status', ReelStatus.COMPLETED)
+        .not('assets->video_url', 'is', null);
+
+      if (options.category) {
+        query = query.eq('category', options.category);
+      }
+
+      // Order by created_at + id for deterministic, sequential results
+      query = query
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true });
+
+      const { data: allReels, error } = await query;
+
+      if (error) {
+        this.logger.error('Failed to fetch reels list', error);
+        return null;
+      }
+
+      if (!allReels || allReels.length === 0) {
+        this.logger.warn('No reels available');
+        return null;
+      }
+
+      this.logger.debug(`Total reels available: ${allReels.length}`);
+
+      // Find current reel index in the ordered list
+      const currentIndex = allReels.findIndex(r => r.id === currentId);
+
+      if (currentIndex === -1) {
+        this.logger.warn(`Current reel ${currentId} not found in ordered list, starting from beginning`);
+        // If current not found, start from beginning
+        const firstReel = await this.getReelById(allReels[0].id);
+        return firstReel;
+      }
+
+      // Calculate target index based on direction
+      let targetIndex: number;
+      if (options.direction === 'up') {
+        targetIndex = currentIndex + 1; // Next reel
+        // Wrap around: if at end, go to beginning
+        if (targetIndex >= allReels.length) {
+          targetIndex = 0;
+          this.logger.debug(`Reached end of list, wrapping to beginning`);
+        }
+      } else {
+        targetIndex = currentIndex - 1; // Previous reel
+        // Wrap around: if at beginning, go to end
+        if (targetIndex < 0) {
+          targetIndex = allReels.length - 1;
+          this.logger.debug(`Reached beginning of list, wrapping to end`);
+        }
+      }
+
+      const targetReelId = allReels[targetIndex].id;
+      this.logger.debug(`Moving from index ${currentIndex}/${allReels.length} to ${targetIndex}, reel ${targetReelId}`);
+
+      // Fetch full reel data for the target
+      const targetReel = await this.getReelById(targetReelId);
+
+      if (!targetReel) {
+        this.logger.error(`Target reel ${targetReelId} not found`);
+        return null;
+      }
+
+      return targetReel;
+    } catch (error) {
+      this.logger.error('Error getting next reel', error);
+      return null;
+    }
+  }
+
+  /**
    * Update reel engagement
    */
   async updateEngagement(reelId: string, engagement: {
@@ -296,7 +388,7 @@ export class ReelsService {
   async deleteReel(id: string): Promise<void> {
     try {
       // TODO: Also delete associated files from storage
-      
+
       const { error } = await this.supabaseService.adminSupabase
         .from('reels')
         .delete()
@@ -357,8 +449,9 @@ export class ReelsService {
     limit: number;
     offset: number;
     status?: ReelStatus;
+    category?: string;
   }): Promise<{
-    reels: any[];
+    reels: Reel[];
     total: number;
   }> {
     try {
@@ -372,6 +465,10 @@ export class ReelsService {
         query = query.eq('status', options.status);
       }
 
+      if (options.category) {
+        query = query.eq('category', options.category);
+      }
+
       const { data: reels, error, count } = await query;
 
       if (error) {
@@ -379,12 +476,149 @@ export class ReelsService {
         throw new Error(`Failed to fetch reels: ${error.message}`);
       }
 
+      // Transform database records to Reel type
+      const transformedReels = (reels || []).map(reel => this.transformDatabaseToReel(reel));
+
       return {
-        reels: reels || [],
+        reels: transformedReels,
         total: count || 0
       };
     } catch (error) {
       this.logger.error('Error fetching reels list', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get explore feed (personalized for user)
+   */
+  async getExploreFeed(options: {
+    limit: number;
+    offset: number;
+    category?: string;
+    userId?: string;
+  }): Promise<{
+    reels: Reel[];
+    total: number;
+  }> {
+    try {
+      this.logger.debug(`getExploreFeed: limit=${options.limit}, offset=${options.offset}, category=${options.category}`);
+
+      // First, get total count
+      let countQuery = this.supabaseService.adminSupabase
+        .from('reels')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', ReelStatus.COMPLETED)
+        .not('assets->video_url', 'is', null);
+
+      if (options.category) {
+        countQuery = countQuery.eq('category', options.category);
+      }
+
+      const { count: totalAvailable, error: countError } = await countQuery;
+
+      if (countError) {
+        this.logger.error('Failed to count reels', countError);
+        throw new Error(`Failed to count reels: ${countError.message}`);
+      }
+
+      this.logger.debug(`Total available reels: ${totalAvailable}`);
+
+      if (!totalAvailable || totalAvailable === 0) {
+        return { reels: [], total: 0 };
+      }
+
+      // If offset exceeds available reels, wrap around (infinite scroll loop)
+      const adjustedOffset = options.offset % totalAvailable;
+
+      this.logger.debug(`Adjusted offset: ${adjustedOffset} (original: ${options.offset})`);
+
+      // Base query: only completed reels with video
+      let query = this.supabaseService.adminSupabase
+        .from('reels')
+        .select('*')
+        .eq('status', ReelStatus.COMPLETED)
+        .not('assets->video_url', 'is', null);
+
+      // Filter by category if provided
+      if (options.category) {
+        query = query.eq('category', options.category);
+      }
+
+      // Personalization: if userId provided, order by engagement and recency
+      // For now, simple algorithm: mix trending and recent
+      if (options.userId) {
+        query = query.order('engagement_score', { ascending: false });
+      } else {
+        // Default: recent first (use created_at as fallback)
+        query = query.order('created_at', { ascending: false });
+      }
+
+      // Apply pagination
+      query = query.range(adjustedOffset, adjustedOffset + options.limit - 1);
+
+      const { data: reels, error } = await query;
+
+      if (error) {
+        this.logger.error('Failed to fetch explore feed', error);
+        throw new Error(`Failed to fetch explore feed: ${error.message}`);
+      }
+
+      let resultReels = reels || [];
+      this.logger.debug(`Fetched ${resultReels.length} reels from database`);
+
+      // If we got fewer reels than requested (edge case at end of list), loop from beginning
+      if (resultReels.length < options.limit && totalAvailable > 0) {
+        this.logger.debug(`Need more reels: got ${resultReels.length}, need ${options.limit}`);
+
+        // Fetch additional reels from the beginning
+        const needed = options.limit - resultReels.length;
+        let additionalQuery = this.supabaseService.adminSupabase
+          .from('reels')
+          .select('*')
+          .eq('status', ReelStatus.COMPLETED)
+          .not('assets->video_url', 'is', null);
+
+        if (options.category) {
+          additionalQuery = additionalQuery.eq('category', options.category);
+        }
+
+        if (options.userId) {
+          additionalQuery = additionalQuery.order('engagement_score', { ascending: false });
+        } else {
+          additionalQuery = additionalQuery.order('created_at', { ascending: false });
+        }
+
+        additionalQuery = additionalQuery.range(0, needed - 1);
+
+        const { data: additionalReels, error: additionalError } = await additionalQuery;
+
+        if (additionalError) {
+          this.logger.error('Failed to fetch additional reels', additionalError);
+        } else if (additionalReels && additionalReels.length > 0) {
+          resultReels = [...resultReels, ...additionalReels];
+          this.logger.debug(`Added ${additionalReels.length} more reels from beginning`);
+        }
+      }
+
+      // Transform database records to Reel type
+      const transformedReels = resultReels.map((reel, index) => {
+        try {
+          return this.transformDatabaseToReel(reel);
+        } catch (error) {
+          this.logger.error(`Failed to transform reel at index ${index}:`, error);
+          throw error;
+        }
+      });
+
+      this.logger.debug(`Returning ${transformedReels.length} transformed reels`);
+
+      return {
+        reels: transformedReels,
+        total: Math.max(totalAvailable, 100) // Show as if we have many for infinite scroll demo
+      };
+    } catch (error) {
+      this.logger.error('Error fetching explore feed', error);
       throw error;
     }
   }
@@ -395,7 +629,7 @@ export class ReelsService {
   async getReelsStats(options: { period: string; category?: string }): Promise<any> {
     try {
       const startDate = this.getStartDateForPeriod(options.period);
-      
+
       let baseQuery = this.supabaseService.adminSupabase
         .from('reels')
         .select('*')
@@ -676,7 +910,7 @@ export class ReelsService {
 
       const videos = mediaData?.filter(item => item.media_type === 'VIDEO') || [];
       const images = mediaData?.filter(item => item.media_type === 'IMAGE') || [];
-      
+
       return {
         videos,
         images,
@@ -752,12 +986,26 @@ export class ReelsService {
   }
 
   private transformDatabaseToReel(data: any): Reel {
-    return {
-      ...data,
-      created_at: new Date(data.created_at),
-      updated_at: new Date(data.updated_at),
-      published_at: data.published_at ? new Date(data.published_at) : undefined
-    };
+    try {
+      // Parse JSONB fields if they're strings
+      const content = typeof data.content === 'string' ? JSON.parse(data.content) : data.content;
+      const assets = typeof data.assets === 'string' ? JSON.parse(data.assets) : data.assets;
+      const processing_log = typeof data.processing_log === 'string' ? JSON.parse(data.processing_log) : data.processing_log;
+
+      return {
+        ...data,
+        content: content || {},
+        assets: assets || {},
+        processing_log: processing_log || [],
+        created_at: new Date(data.created_at),
+        updated_at: new Date(data.updated_at),
+        published_at: data.published_at ? new Date(data.published_at) : undefined
+      };
+    } catch (error) {
+      this.logger.error(`Failed to transform reel ${data.id}:`, error);
+      this.logger.error(`Raw data:`, JSON.stringify(data, null, 2));
+      throw error;
+    }
   }
 
   private transformDatabaseToNews(data: any): ProcessedNewsItem {
@@ -831,7 +1079,7 @@ export class ReelsService {
       if (!categoryStats.has(category)) {
         categoryStats.set(category, { count: 0, totalEngagement: 0 });
       }
-      
+
       const stats = categoryStats.get(category);
       stats.count++;
       stats.totalEngagement += reel.engagement_score || 0;
@@ -884,7 +1132,7 @@ export class ReelsService {
 
       // Get media data
       const mediaData = await this.reelGeneratorService.getNewsMedia(newsId);
-      
+
       return {
         newsId,
         newsTitle: newsItem.title,

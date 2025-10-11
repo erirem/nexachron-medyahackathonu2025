@@ -3,11 +3,12 @@
 import { useState, useRef, useCallback, useEffect, useMemo, type JSX } from "react";
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
-import { useProfile, useAuthState } from '@/contexts/auth-context';
+import { useAuthState } from '@/contexts/auth-context';
 
 import { DashboardNewsGrid } from "./dashboard-news-grid";
 import { NewsCard } from "./news-card";
 import { MiniProfileWidget } from "@/components/user-profile/mini-profile-widget";
+import { LiveTrackingModal } from '@/components/live-tracking/live-tracking-modal';
 import type { DashboardNewsItem, DashboardTopic } from "./types";
 import { useCategories } from "@/hooks/use-categories";
 import { usePopularNews } from "@/hooks/use-popular-news";
@@ -95,7 +96,7 @@ const topicPalette: Record<DashboardTopic["sentiment"], { readonly bubble: strin
 
 export function Dashboard({ initialNews, topics, categoriesOverview, initialPopularNews }: DashboardProps): JSX.Element {
   const router = useRouter();
-  const profile = useProfile();
+  const { profile, user, loading } = useAuthState();
   const [sidebarWidth, setSidebarWidth] = useState(80);
   const [activeCategory, setActiveCategory] = useState('forYou');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -104,6 +105,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
   const [showTriviaPopup, setShowTriviaPopup] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [showLiveTrackingModal, setShowLiveTrackingModal] = useState(false);
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const chipsScrollRef = useRef<HTMLDivElement>(null);
@@ -125,6 +127,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
     error: newsError,
   } = useInfiniteNews({
     categoryId: selectedCategoryIds.length === 1 ? selectedCategoryIds[0] : undefined,
+    categoryIds: selectedCategoryIds.length > 1 ? selectedCategoryIds : undefined,
     filterCategory: selectedCategoryIds.length === 0 ? activeCategory : undefined,
   });
 
@@ -266,9 +269,10 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
   // Bookmarks
   const { bookmarkedIds, isLoading: isBookmarksLoading } = useBookmarks();
 
-  // Filter news by selected categories
+  // Filter news by selected categories - API'den gelen veriler zaten filtrelenmiş
   const filteredNews = useMemo(() => {
-    // No explicit category chips selected: rely on activeCategory filters
+    // API'den gelen veriler zaten seçili kategorilere göre filtrelenmiş
+    // Sadece client-side filtreleme gereken durumlar için ek filtreleme yap
     if (selectedCategoryIds.length === 0) {
       if (activeCategory === 'saved') {
         return mappedNews.filter((n) => bookmarkedIds.has(n.id));
@@ -285,10 +289,8 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
       return applyLocalFilters(mappedNews, activeCategory);
     }
 
-    // Chip-based filtering: include items whose categoryId matches any selected id
-    return mappedNews.filter((newsItem) => {
-      return newsItem.categoryId && selectedCategoryIds.includes(newsItem.categoryId);
-    });
+    // API'den gelen veriler zaten filtrelenmiş, direkt kullan
+    return mappedNews;
   }, [mappedNews, selectedCategoryIds, activeCategory, bookmarkedIds]);
 
   const categoryInfo = useMemo(() => {
@@ -360,6 +362,12 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
       // Explore (reels) ayrı bir sayfaya gider
       if (categoryId === 'reels') {
         router.push(`/${locale}/explore`);
+        return;
+      }
+
+      // Audio (podcast) ayrı bir sayfaya gider
+      if (categoryId === 'audio') {
+        router.push(`/${locale}/podcast`);
         return;
       }
 
@@ -465,7 +473,7 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
 
             <div className="relative z-10 flex flex-col gap-8 px-6 pb-16 pt-6 sm:px-8 lg:px-12">
               <MobileLibrary topics={topics} />
-              <DashboardHeader />
+              <DashboardHeader onOpenLiveTracking={() => setShowLiveTrackingModal(true)} />
 
               <section className="space-y-6">
                 {/* For You as main grid reusing news layout below */}
@@ -648,8 +656,8 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
                       )}
                       {/* Load more trigger */}
                       {hasNextPage && (
-                        <div 
-                          ref={loadMoreTriggerRef} 
+                        <div
+                          ref={loadMoreTriggerRef}
                           className="h-20 flex items-center justify-center"
                         >
                           {!(isFetchingNextPage || isLoadingMore) && (
@@ -702,6 +710,12 @@ export function Dashboard({ initialNews, topics, categoriesOverview, initialPopu
       <StreakPopup
         isVisible={showStreakPopup}
         onClose={() => setShowStreakPopup(false)}
+      />
+
+      {/* Live Tracking Modal */}
+      <LiveTrackingModal
+        isOpen={showLiveTrackingModal}
+        onClose={() => setShowLiveTrackingModal(false)}
       />
     </div>
   );
@@ -1009,9 +1023,8 @@ function MobileLibrary({ topics }: MobileLibraryProps): JSX.Element {
   );
 }
 
-function DashboardHeader(): JSX.Element {
-  const profile = useProfile();
-  const { user } = useAuthState();
+function DashboardHeader({ onOpenLiveTracking }: { onOpenLiveTracking: () => void }): JSX.Element {
+  const { profile, user } = useAuthState();
   const displayName =
     profile?.full_name ||
     // @ts-ignore – metadata tipleri opsiyonel olabilir
@@ -1033,7 +1046,7 @@ function DashboardHeader(): JSX.Element {
         </div>
 
         <div className="flex items-center justify-end gap-2.5">
-          <LivePill />
+          <LivePill onOpen={onOpenLiveTracking} />
           <LogoutButton className="rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60" />
           <button
             type="button"
@@ -1047,11 +1060,12 @@ function DashboardHeader(): JSX.Element {
   );
 }
 
-function LivePill(): JSX.Element {
+function LivePill({ onOpen }: { onOpen: () => void }): JSX.Element {
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-2 rounded-full bg-[#0f6acd] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(9,100,177,0.3)] transition hover:bg-[#1173cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+      onClick={onOpen}
+      className="inline-flex items-center gap-2 rounded-full bg-[#0f6acd] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_44px_rgba(9,100,177,0.3)] transition hover:bg-[#1173cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 cursor-pointer"
     >
       <span className="relative flex h-2.5 w-2.5">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white bg-opacity-60" aria-hidden />
@@ -1068,8 +1082,8 @@ function SearchBox(): JSX.Element {
 
   return (
     <div className={`relative flex min-w-[280px] flex-1 items-center rounded-full border transition-all duration-300 ${isFocused
-        ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]'
-        : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
+      ? 'border-white/40 bg-white/15 shadow-[0_20px_60px_rgba(21,61,125,0.25)]'
+      : 'border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(21,61,125,0.18)]'
       }`}>
       <div className="pl-5 pr-3">
         <SearchIcon />
@@ -1215,8 +1229,8 @@ function CategoryChip({ category, isActive, onSelect }: CategoryChipProps): JSX.
       type="button"
       onClick={() => onSelect(category.id)}
       className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${isActive
-          ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
-          : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
+        ? 'border-white/50 bg-white/25 text-white shadow-[0_12px_28px_rgba(17,104,205,0.25)]'
+        : 'border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/12 hover:text-white'
         }`}
     >
       <span>{category.label}</span>
@@ -1334,9 +1348,9 @@ const FALLBACK_IMAGE_URL =
 const CATEGORY_FILTERS: Record<string, (item: DashboardNewsItem) => boolean> = {
   saved: (item) => item.isPopular ?? false,
   audio: (item) => item.tags.some((tag) => tag.includes('ses')),
-  reports: (item) => (item.categoryId ?? '').includes('finans'),
-  briefs: (item) => (item.categoryId ?? '').includes('gundem'),
-  watch: (item) => (item.categoryId ?? '').includes('savunma'),
+  reports: (item) => (item.category ?? '').includes('finans'),
+  briefs: (item) => (item.category ?? '').includes('gundem'),
+  watch: (item) => (item.category ?? '').includes('savunma'),
 };
 
 function applyLocalFilters(
@@ -1357,7 +1371,7 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   const summary = item.summary && item.summary.trim().length > 0
     ? item.summary.trim()
     : truncateText(item.content, 220);
-  const categoryLabel = deriveCategoryLabel(item.categoryId);
+  const categoryLabel = deriveCategoryLabel(item.category);
   const readingTime = estimateReadingTime(item.content);
 
   // Parse media_summary if it exists and is a string
@@ -1419,7 +1433,7 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
   return {
     id: item.id,
     category: categoryLabel,
-    categoryId: item.categoryId ?? null,
+    categoryId: item.category ?? null,
     title: item.title,
     summary,
     detail: summary,
