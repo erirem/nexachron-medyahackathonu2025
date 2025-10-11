@@ -118,6 +118,12 @@ export default function NewsTriviaPage(): JSX.Element {
   const [shouldStartTimer, setShouldStartTimer] = useState(false);
   const channelRef = useRef<any>(null);
   const clientIdRef = useRef<string>(Math.random().toString(36).slice(2));
+  
+  // Lobby state
+  const [roomIdInput, setRoomIdInput] = useState('');
+  const [availableRooms, setAvailableRooms] = useState([
+    { id: 'room-123', name: 'Haber Trivia Odası', players: 1, maxPlayers: 2, isPrivate: false }
+  ]);
 
   // WebSocket connection
   const { 
@@ -476,6 +482,45 @@ export default function NewsTriviaPage(): JSX.Element {
   const selectAnswer = async (answer: string) => {
     if (gameState.showResult || gameState.isGameComplete || !gameState.gameId) return;
 
+    // For multiplayer, just mark the answer as selected, don't show result yet
+    if (gameMode === 'multiplayer') {
+      // Check if user has already answered
+      const currentPlayer = multiplayerState.players.find(p => p.id === clientIdRef.current);
+      if (currentPlayer?.hasAnswered) {
+        return; // User already answered, don't allow multiple selections
+      }
+
+      setGameState(prev => ({
+        ...prev,
+        selectedAnswer: answer,
+        showResult: false, // Don't show result until both players answer
+      }));
+
+      // Update multiplayer state to mark player as answered
+      setMultiplayerState(prev => {
+        const updatedPlayers = prev.players.map(p => {
+          if (p.id === clientIdRef.current) {
+            return { 
+              ...p, 
+              hasAnswered: true,
+              currentAnswer: answer
+            };
+          }
+          return p;
+        });
+
+        // Check if both players have answered after state update
+        const bothPlayersAnswered = updatedPlayers.every(p => p.hasAnswered);
+        
+        return {
+          ...prev,
+          players: updatedPlayers
+        };
+      });
+
+      // The useEffect below will handle checking if both players answered
+    } else {
+      // Single player mode - show result immediately
     setGameState(prev => ({
       ...prev,
       selectedAnswer: answer,
@@ -497,76 +542,95 @@ export default function NewsTriviaPage(): JSX.Element {
           ...prev,
           score: prev.score + 1,
         }));
-
-        // Update multiplayer player score with tug-of-war logic
-        if (gameMode === 'multiplayer') {
-          setMultiplayerState(prev => {
-            const currentPlayerIndex = prev.players.findIndex(p => p.id === clientIdRef.current);
-            const isTeam1 = currentPlayerIndex % 2 === 0;
-            
-            // Calculate rope movement (correct answer pulls rope 10 units towards team)
-            const ropeMovement = isTeam1 ? -10 : 10;
-            const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
-            
-            return {
-            ...prev,
-              ropePosition: newRopePosition,
-              team1Score: isTeam1 ? prev.team1Score + 1 : prev.team1Score,
-              team2Score: isTeam1 ? prev.team2Score : prev.team2Score + 1,
-              players: prev.players.map((p, idx) => {
-                if (p.id === clientIdRef.current) {
-                  return { 
-                    ...p, 
-                    score: p.score + 1, 
-                    hasAnswered: true,
-                    isCorrect: true,
-                    ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? -10 : 10)))
-                  };
-                }
-                return p;
-              }),
-            };
-          });
         }
-      } else if (gameMode === 'multiplayer') {
-        // Update multiplayer player as answered (incorrect)
-        setMultiplayerState(prev => {
-          const currentPlayerIndex = prev.players.findIndex(p => p.id === clientIdRef.current);
-          const isTeam1 = currentPlayerIndex % 2 === 0;
-          
-          // Incorrect answer: opponent gains ground (5 units)
-          const ropeMovement = isTeam1 ? 5 : -5;
-          const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
-          
-          return {
-          ...prev,
-            ropePosition: newRopePosition,
-            players: prev.players.map((p, idx) => {
-              if (p.id === clientIdRef.current) {
-                return { 
-                  ...p, 
-                  hasAnswered: true,
-                  isCorrect: false,
-                  ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? 5 : -5)))
-                };
-              }
-              return p;
-            }),
-          };
-        });
+      } catch (error) {
+        console.error('Failed to submit answer:', error);
+        setError(error instanceof Error ? error.message : 'Failed to submit answer');
       }
+    }
+  };
 
-      // Send answer via WebSocket for multiplayer
-      if (gameMode === 'multiplayer' && socketActions && multiplayerState.roomId) {
-        socketActions.answerQuestion({
-          roomId: multiplayerState.roomId,
-          questionId: currentQ.id,
-          answer: answer,
-          timeSpent: GAME_DURATION - gameState.timeLeft,
-        });
-      }
+  // Process multiplayer results when both players have answered
+  const processMultiplayerResults = async (userAnswer: string) => {
+    try {
+      const currentQ = game?.questions[gameState.currentQuestion];
+      if (!currentQ) return;
+
+      // Get Ali Cabbar's answer
+      const aliCabbarPlayer = multiplayerState.players.find(p => p.id === 'ai-player-1');
+      const aliCabbarAnswer = aliCabbarPlayer?.currentAnswer;
+
+      // Check if user's answer is correct
+      const userCorrect = userAnswer === currentQ.correctAnswer;
+      const aliCabbarCorrect = aliCabbarAnswer === currentQ.correctAnswer;
+
+      // Update game state to show results
+      setGameState(prev => ({
+            ...prev,
+        showResult: true,
+      }));
+
+      // Update scores and rope position
+      setMultiplayerState(prev => {
+        const userPlayerIndex = prev.players.findIndex(p => p.id === clientIdRef.current);
+        const aliCabbarPlayerIndex = prev.players.findIndex(p => p.id === 'ai-player-1');
+        const userIsTeam1 = userPlayerIndex % 2 === 0;
+        const aliCabbarIsTeam1 = aliCabbarPlayerIndex % 2 === 0;
+
+        let ropeMovement = 0;
+        let team1ScoreChange = 0;
+        let team2ScoreChange = 0;
+
+        // Calculate rope movement based on both answers
+        if (userCorrect && aliCabbarCorrect) {
+          // Both correct - no rope movement
+          ropeMovement = 0;
+        } else if (userCorrect && !aliCabbarCorrect) {
+          // User correct, Ali Cabbar wrong - user's team gains advantage
+          ropeMovement = userIsTeam1 ? -10 : 10;
+          team1ScoreChange = userIsTeam1 ? 1 : 0;
+          team2ScoreChange = userIsTeam1 ? 0 : 1;
+        } else if (!userCorrect && aliCabbarCorrect) {
+          // User wrong, Ali Cabbar correct - Ali Cabbar's team gains advantage
+          ropeMovement = aliCabbarIsTeam1 ? -10 : 10;
+          team1ScoreChange = aliCabbarIsTeam1 ? 1 : 0;
+          team2ScoreChange = aliCabbarIsTeam1 ? 0 : 1;
+        } else {
+          // Both wrong - no rope movement
+          ropeMovement = 0;
+        }
+
+        const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
+
+        return {
+          ...prev,
+          ropePosition: newRopePosition,
+          team1Score: prev.team1Score + team1ScoreChange,
+          team2Score: prev.team2Score + team2ScoreChange,
+          players: prev.players.map((p, idx) => {
+            if (p.id === clientIdRef.current) {
+              return { 
+                ...p, 
+                score: p.score + (userCorrect ? 1 : 0),
+                isCorrect: userCorrect,
+                ropePosition: Math.max(0, Math.min(100, p.ropePosition + (userIsTeam1 ? ropeMovement : -ropeMovement)))
+              };
+            } else if (p.id === 'ai-player-1') {
+              return { 
+                ...p, 
+                score: p.score + (aliCabbarCorrect ? 1 : 0),
+                isCorrect: aliCabbarCorrect,
+                ropePosition: Math.max(0, Math.min(100, p.ropePosition + (aliCabbarIsTeam1 ? ropeMovement : -ropeMovement)))
+              };
+            }
+            return p;
+          }),
+        };
+      });
+
     } catch (error) {
-      console.error('Failed to answer question:', error);
+      console.error('Failed to process multiplayer results:', error);
+      setError(error instanceof Error ? error.message : 'Failed to process results');
     }
   };
 
@@ -578,6 +642,66 @@ export default function NewsTriviaPage(): JSX.Element {
   //     hintUsed: true,
   //   }));
   // };
+
+  // Simulate Ali Cabbar's answer for current question
+  const simulateAliCabbarAnswer = () => {
+    if (gameMode !== 'multiplayer' || !game) return;
+    
+    const currentQ = game.questions[gameState.currentQuestion];
+    if (!currentQ) return;
+    
+    // AI has 70% chance to answer correctly
+    const aiCorrect = Math.random() < 0.7;
+    
+    // AI selects a random option
+    const randomOption = currentQ.options?.[Math.floor(Math.random() * (currentQ.options?.length || 1))];
+    
+    // Just mark Ali Cabbar as answered, don't update scores yet
+    setMultiplayerState(prev => ({
+        ...prev,
+      players: prev.players.map(p => {
+        if (p.id === 'ai-player-1') {
+          return {
+            ...p,
+            hasAnswered: true,
+            currentAnswer: randomOption
+          };
+        }
+        return p;
+      }),
+    }));
+
+    // Check if both players have answered
+    const bothPlayersAnswered = multiplayerState.players.every(p => p.hasAnswered);
+    if (bothPlayersAnswered && randomOption) {
+      // Both players answered, now show results and update scores
+      processMultiplayerResults(randomOption);
+    }
+  };
+
+  // Simulate Ali Cabbar's answer when game starts
+  useEffect(() => {
+    if (gameMode === 'multiplayer' && multiplayerState.gameStarted && game && gameState.currentQuestion === 0) {
+      // Simulate Ali Cabbar's answer after 3-6 seconds
+      setTimeout(() => {
+        simulateAliCabbarAnswer();
+      }, Math.random() * 3000 + 3000); // 3-6 seconds
+    }
+  }, [gameMode, multiplayerState.gameStarted, game, gameState.currentQuestion]);
+
+  // Check if both players have answered in multiplayer mode
+  useEffect(() => {
+    if (gameMode === 'multiplayer' && !gameState.showResult) {
+      const bothPlayersAnswered = multiplayerState.players.every(p => p.hasAnswered);
+      if (bothPlayersAnswered && multiplayerState.players.length >= 2) {
+        // Both players answered, now show results and update scores
+        const userAnswer = gameState.selectedAnswer;
+        if (userAnswer) {
+          processMultiplayerResults(userAnswer);
+        }
+      }
+    }
+  }, [multiplayerState.players, gameMode, gameState.showResult, gameState.selectedAnswer]);
 
   const nextQuestion = () => {
     if (gameMode === 'multiplayer') {
@@ -591,70 +715,19 @@ export default function NewsTriviaPage(): JSX.Element {
           showResult: false,
         }));
         
+        // Reset player answered states for new question
+        setMultiplayerState(prev => ({
+          ...prev,
+          players: prev.players.map(p => ({
+            ...p,
+            hasAnswered: false,
+            currentAnswer: undefined
+          }))
+        }));
+
         // Simulate AI opponent's answer after 2-4 seconds
         setTimeout(() => {
-          const currentQ = game?.questions[gameState.currentQuestion + 1];
-          if (!currentQ) return;
-          
-          // AI has 70% chance to answer correctly
-          const aiCorrect = Math.random() < 0.7;
-          
-          // AI selects a random option
-          const randomOption = currentQ.options?.[Math.floor(Math.random() * (currentQ.options?.length || 1))];
-          
-          setMultiplayerState(prev => {
-            const aiPlayerIndex = prev.players.findIndex(p => p.id === 'ai-player-1');
-            if (aiPlayerIndex === -1) return prev;
-            
-            const isTeam1 = aiPlayerIndex % 2 === 0;
-            
-            if (aiCorrect) {
-              // AI answered correctly
-              const ropeMovement = isTeam1 ? -10 : 10;
-              const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
-              
-              return {
-                ...prev,
-                ropePosition: newRopePosition,
-                team1Score: isTeam1 ? prev.team1Score + 1 : prev.team1Score,
-                team2Score: isTeam1 ? prev.team2Score : prev.team2Score + 1,
-                players: prev.players.map((p, idx) => {
-                  if (p.id === 'ai-player-1') {
-                    return {
-                      ...p,
-                      score: p.score + 1,
-                      hasAnswered: true,
-                      isCorrect: true,
-                      currentAnswer: randomOption,
-                      ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? -10 : 10)))
-                    };
-                  }
-                  return { ...p, hasAnswered: false };
-                }),
-              };
-            } else {
-              // AI answered incorrectly
-              const ropeMovement = isTeam1 ? 5 : -5;
-              const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
-              
-              return {
-                ...prev,
-                ropePosition: newRopePosition,
-                players: prev.players.map((p, idx) => {
-                  if (p.id === 'ai-player-1') {
-                    return {
-                      ...p,
-                      hasAnswered: true,
-                      isCorrect: false,
-                      currentAnswer: randomOption,
-                      ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? 5 : -5)))
-                    };
-                  }
-                  return { ...p, hasAnswered: false };
-                }),
-              };
-            }
-          });
+          simulateAliCabbarAnswer();
         }, Math.random() * 3000 + 3000); // 3-6 seconds
       } else {
         // Game complete
@@ -828,31 +901,7 @@ export default function NewsTriviaPage(): JSX.Element {
             <div 
               onClick={() => {
                 setGameMode('multiplayer');
-                // Add fake players for multiplayer mode
-                const fakeRoomId = `room-${Date.now()}`;
-                setMultiplayerState(prev => ({
-                  ...prev,
-                  roomId: fakeRoomId,
-                  isHost: true,
-                  players: [
-                    {
-                      id: clientIdRef.current || 'player-1',
-                      name: currentUser?.displayName || 'Sen',
-                      score: 0,
-                      isReady: true,
-                      hasAnswered: false,
-                      ropePosition: 50
-                    },
-                    {
-                      id: 'ai-player-1',
-                      name: 'Ali Cabbar',
-                      score: 0,
-                      isReady: true,
-                      hasAnswered: false,
-                      ropePosition: 50
-                    }
-                  ]
-                }));
+                // Don't set roomId here - let user choose room in lobby
               }}
               className="bg-gradient-to-br from-purple-900/20 to-indigo-800/10 border border-purple-500/30 rounded-2xl p-8 text-center cursor-pointer hover:border-purple-400/50 transition-all duration-200 group"
             >
@@ -888,9 +937,105 @@ export default function NewsTriviaPage(): JSX.Element {
 
   // Multiplayer mode - show lobby
   if (gameMode === 'multiplayer' && !multiplayerState.roomId) {
+
+    const handleJoinRoom = (roomId: string) => {
+              setMultiplayerState(prev => ({
+                ...prev,
+                roomId,
+                isHost: false,
+        players: [
+          {
+            id: clientIdRef.current || 'player-1',
+            name: currentUser?.displayName || currentUser?.username || 'Sen',
+            score: 0,
+            isReady: true,
+            hasAnswered: false,
+            ropePosition: 50
+          },
+          {
+            id: 'ai-player-1',
+            name: 'Ali Cabbar',
+            score: 0,
+            isReady: true,
+            hasAnswered: false,
+            ropePosition: 50
+          }
+        ]
+      }));
+      
+      // Join room via WebSocket (optional)
+              console.log('🚀 Attempting to join room:', { roomId, currentUser, socketActions: !!socketActions });
+              if (socketActions && currentUser) {
+                const playerName = currentUser.displayName || currentUser.username || 'User';
+                console.log('🚀 Calling socketActions.joinRoom with:', {
+                  roomId,
+                  playerName,
+                });
+                socketActions.joinRoom({
+                  roomId,
+                  playerName,
+                });
+              } else {
+        console.log('🚀 WebSocket not available, continuing with local state only');
+      }
+    };
+
+    const handleCreateRoom = () => {
+      const newRoomId = `room-${Date.now()}`;
+              setMultiplayerState(prev => ({
+                ...prev,
+        roomId: newRoomId,
+                isHost: true,
+        players: [
+          {
+            id: clientIdRef.current || 'player-1',
+            name: currentUser?.displayName || currentUser?.username || 'Sen',
+            score: 0,
+            isReady: true,
+            hasAnswered: false,
+            ropePosition: 50
+          }
+        ]
+      }));
+      
+      // Join room via WebSocket (optional)
+      console.log('🚀 Attempting to create room:', { roomId: newRoomId, currentUser, socketActions: !!socketActions });
+              if (socketActions && currentUser) {
+                const playerName = currentUser.displayName || currentUser.username || 'User';
+                console.log('🚀 Calling socketActions.joinRoom with:', {
+          roomId: newRoomId,
+                  playerName,
+                });
+                socketActions.joinRoom({
+          roomId: newRoomId,
+                  playerName,
+                });
+              } else {
+        console.log('🚀 WebSocket not available, continuing with local state only');
+      }
+
+      // Add Ali Cabbar after 3-6 seconds
+      setTimeout(() => {
+        setMultiplayerState(prev => ({
+          ...prev,
+          players: [
+            ...prev.players,
+            {
+              id: 'ai-player-1',
+              name: 'Ali Cabbar',
+              score: 0,
+              isReady: true,
+              hasAnswered: false,
+              ropePosition: 50
+            }
+          ]
+        }));
+      }, Math.random() * 3000 + 3000); // 3-6 seconds
+    };
+
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] flex items-center justify-center p-4">
-        <div className="max-w-4xl w-full">
+        <div className="max-w-6xl w-full">
           {/* Back button */}
           <button
             onClick={() => setGameMode('select')}
@@ -902,56 +1047,100 @@ export default function NewsTriviaPage(): JSX.Element {
             Geri
           </button>
 
-          <MultiplayerLobby
-            onRoomJoined={(roomId) => {
-              setMultiplayerState(prev => ({
-                ...prev,
-                roomId,
-                isHost: false,
-                players: [], // Boş başlat, WebSocket join'de eklenecek
-              }));
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Sol Taraf - Oda Listesi */}
+            <div className="bg-gradient-to-br from-purple-900/20 to-indigo-800/10 border border-purple-500/30 rounded-2xl p-6">
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                Açık Odalar
+              </h2>
               
-              // Join room via WebSocket
-              console.log('🚀 Attempting to join room:', { roomId, currentUser, socketActions: !!socketActions });
-              if (socketActions && currentUser) {
-                const playerName = currentUser.displayName || currentUser.username || 'User';
-                console.log('🚀 Calling socketActions.joinRoom with:', {
-                  roomId,
-                  playerName,
-                });
-                socketActions.joinRoom({
-                  roomId,
-                  playerName,
-                });
-              } else {
-                console.error('🚀 Cannot join room:', { socketActions: !!socketActions, currentUser });
-              }
-            }}
-            onRoomCreated={(roomId) => {
-              setMultiplayerState(prev => ({
-                ...prev,
-                roomId,
-                isHost: true,
-                players: [], // Boş başlat, WebSocket join'de eklenecek
-              }));
-              
-              // Join room via WebSocket
-              console.log('🚀 Attempting to join room:', { roomId, currentUser, socketActions: !!socketActions });
-              if (socketActions && currentUser) {
-                const playerName = currentUser.displayName || currentUser.username || 'User';
-                console.log('🚀 Calling socketActions.joinRoom with:', {
-                  roomId,
-                  playerName,
-                });
-                socketActions.joinRoom({
-                  roomId,
-                  playerName,
-                });
-              } else {
-                console.error('🚀 Cannot join room:', { socketActions: !!socketActions, currentUser });
-              }
-            }}
-          />
+              <div className="space-y-4">
+                {availableRooms.map((room) => (
+                  <div
+                    key={room.id}
+                    onClick={() => handleJoinRoom(room.id)}
+                    className="bg-white/5 hover:bg-white/10 border border-white/20 hover:border-purple-500/50 rounded-xl p-4 cursor-pointer transition-all duration-200"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-white">{room.name}</h3>
+                      <span className="text-sm text-white/60">ID: {room.id}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-sm text-white/80">
+                          {room.players}/{room.maxPlayers} oyuncu
+                        </span>
+                      </div>
+                      <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Katıl
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sağ Taraf - Oda ID Girişi ve Oda Oluşturma */}
+            <div className="space-y-6">
+              {/* Oda ID Girişi */}
+              <div className="bg-gradient-to-br from-blue-900/20 to-cyan-800/10 border border-blue-500/30 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  Oda ID ile Katıl
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Oda ID
+                    </label>
+                    <input
+                      type="text"
+                      value={roomIdInput}
+                      onChange={(e) => setRoomIdInput(e.target.value)}
+                      placeholder="Oda ID girin..."
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-blue-500 focus:bg-white/15 transition-colors"
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={() => handleJoinRoom(roomIdInput)}
+                    disabled={!roomIdInput.trim()}
+                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                  >
+                    Odaya Katıl
+                  </button>
+                </div>
+              </div>
+
+              {/* Oda Oluşturma */}
+              <div className="bg-gradient-to-br from-green-900/20 to-emerald-800/10 border border-green-500/30 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                  </svg>
+                  Yeni Oda Oluştur
+                </h3>
+                
+                <p className="text-white/80 mb-4">
+                  Kendi odanızı oluşturun ve arkadaşlarınızı davet edin.
+                </p>
+                
+                <button
+                  onClick={handleCreateRoom}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Oda Oluştur
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -990,15 +1179,15 @@ export default function NewsTriviaPage(): JSX.Element {
                   <div key={player.id} className="flex items-center justify-between bg-white/10 p-3 rounded-lg">
                     <span className="font-medium text-white">{player.name}</span>
                     <span className="text-sm text-white/60">
-                      {player.isReady ? 'Hazır' : 'Hazır Değil'}
+                      {player.name === 'Ali Cabbar' ? 'Hazır' : 'Hazır Değil'}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {multiplayerState.isHost && (
               <div className="text-center">
+              {multiplayerState.isHost ? (
                 <button
                   onClick={async () => {
                     // Start multiplayer game
@@ -1061,13 +1250,95 @@ export default function NewsTriviaPage(): JSX.Element {
                       setIsLoading(false);
                     }
                   }}
-                  disabled={multiplayerState.players.length < 2}
-                  className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 px-6 rounded-lg hover:from-purple-600 hover:to-indigo-600 disabled:opacity-50 transition-colors text-lg font-semibold"
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-6 rounded-lg hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 transition-colors text-lg font-semibold"
                 >
-                  Oyunu Başlat ({multiplayerState.players.length}/2+ oyuncu)
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Oyun Başlatılıyor...
+                    </div>
+                  ) : (
+                    'Oyunu Başlat'
+                  )}
                 </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    // Ready button for non-host players
+                    try {
+                      setIsLoading(true);
+                      
+                      // Start game via API
+                      const game = await startGame({
+                        gameType: 'news_trivia',
+                        mode: 'multiplayer',
+                        filter: {
+                          gameType: 'news_trivia',
+                          limit: 10
+                        }
+                      });
+
+                      if (game) {
+                        
+                        // Update multiplayer state with game data
+                        setMultiplayerState(prev => ({
+                          ...prev,
+                          gameStarted: true,
+                          gameId: game.id,
+                          totalQuestions: game.questions.length,
+                          currentQuestion: 0,
+                          timeLeft: GAME_DURATION,
+                          ropePosition: 50,
+                          team1Score: 0,
+                          team2Score: 0,
+                          players: prev.players.map(player => ({
+                            ...player,
+                            score: 0,
+                            hasAnswered: false,
+                            ropePosition: 50
+                          }))
+                        }));
+
+                        setGame(game);
+                        
+                        // Set game state for multiplayer
+                        setGameState(prev => ({
+                          ...prev,
+                          gameId: game.id,
+                          isGameActive: true,
+                          currentQuestion: 0,
+                          score: 0,
+                          timeLeft: GAME_DURATION,
+                          selectedAnswer: null,
+                          showResult: false,
+                          isGameComplete: false,
+                        }));
+                        
+                        // Start the timer for multiplayer
+                        setShouldStartTimer(true);
+                      }
+                    } catch (error) {
+                      console.error('Failed to start multiplayer game:', error);
+                      setError(error instanceof Error ? error.message : 'Failed to start game');
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-cyan-600 disabled:opacity-50 transition-colors text-lg font-semibold"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Oyun Başlatılıyor...
               </div>
+                  ) : (
+                    'Hazır'
+                  )}
+                </button>
             )}
+            </div>
           </div>
         </div>
       </div>
@@ -1248,24 +1519,24 @@ export default function NewsTriviaPage(): JSX.Element {
 
             {/* Main Game Area */}
             <div className="lg:col-span-3 order-1 lg:order-2">
-              {/* Header */}
-              <div className="flex justify-between items-center mb-6">
-                <button
-                  onClick={() => setGameMode('select')}
-                  className="text-white/70 hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Geri
-                </button>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-white">
-                    {gameState.timeLeft}s
-                  </div>
-                  <div className="text-sm text-white/60">Kalan Süre</div>
-                </div>
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <button
+              onClick={() => setGameMode('select')}
+              className="text-white/70 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Geri
+            </button>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-white">
+                {gameState.timeLeft}s
               </div>
+              <div className="text-sm text-white/60">Kalan Süre</div>
+            </div>
+          </div>
 
           {/* Tug of War Rope */}
           <div className="mb-8">
@@ -1274,8 +1545,8 @@ export default function NewsTriviaPage(): JSX.Element {
                 <div className="flex justify-between text-sm text-white/60">
                   <span>Takım 1: {multiplayerState.team1Score}</span>
                   <span>Takım 2: {multiplayerState.team2Score}</span>
+                  </div>
                 </div>
-              </div>
               
               {/* Rope Visual */}
               <div className="relative h-8 bg-gray-800 rounded-full overflow-hidden">
@@ -1360,11 +1631,11 @@ export default function NewsTriviaPage(): JSX.Element {
                     className={buttonClass}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-sm font-semibold">
-                          {String.fromCharCode(65 + index)}
-                        </div>
-                        <span>{option}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-sm font-semibold">
+                        {String.fromCharCode(65 + index)}
+                      </div>
+                      <span>{option}</span>
                       </div>
                       
                       {/* Show who selected this option */}
