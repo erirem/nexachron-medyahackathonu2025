@@ -1036,7 +1036,7 @@ function DashboardHeader({ onOpenLiveTracking }: { onOpenLiveTracking: () => voi
       <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-[auto_1fr_auto]">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.36em] text-white/60">AA panoraması</p>
-          <h1 className="truncate text-[1.6rem] font-semibold leading-tight text-white">{`Hoş geldiniz, ${displayName}`}</h1>
+          <h1 className="truncate text-[1.6rem] font-semibold leading-tight text-white">{`Hoş geldiniz`}</h1>
           <p className="mt-1 max-w-xl text-[13px] text-white/70">{`Merhaba ${displayName}! Kişiselleştirilmiş haber akışınız hazır.`}</p>
         </div>
 

@@ -301,7 +301,9 @@ class _CelebrationEffectState extends State<CelebrationEffect>
     super.didUpdateWidget(oldWidget);
     if (widget.trigger && !oldWidget.trigger) {
       _controller.forward().then((_) {
-        _controller.reverse();
+        if (mounted) {
+          _controller.reverse();
+        }
       });
     }
   }

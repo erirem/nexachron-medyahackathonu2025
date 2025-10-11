@@ -136,7 +136,9 @@ class _FlappyBirdPageState extends ConsumerState<FlappyBirdPage>
       });
       
       _birdController.forward().then((_) {
-        _birdController.reverse();
+        if (mounted) {
+          _birdController.reverse();
+        }
       });
     }
   }

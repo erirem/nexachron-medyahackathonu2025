@@ -123,9 +123,17 @@ export class VideoComposerService {
     // Get file stats
     const stats = await fs.stat(outputPath);
 
+    // Upload video and get URLs
+    const videoUrl = await this.getPublicUrl(outputPath);
+    const thumbnailUrl = await this.getPublicUrl(thumbnailPath);
+
+    if (!videoUrl) {
+      throw new Error('Failed to upload video to storage');
+    }
+
     return {
-      videoUrl: await this.getPublicUrl(outputPath),
-      thumbnailUrl: await this.getPublicUrl(thumbnailPath),
+      videoUrl,
+      thumbnailUrl: thumbnailUrl || '',
       duration: reel.duration_seconds,
       fileSize: stats.size
     };
@@ -186,9 +194,17 @@ export class VideoComposerService {
     // Get file stats
     const stats = await fs.stat(outputPath);
 
+    // Upload video and get URLs
+    const videoUrl = await this.getPublicUrl(outputPath);
+    const thumbnailUrl = await this.getPublicUrl(thumbnailPath);
+
+    if (!videoUrl) {
+      throw new Error('Failed to upload video to storage');
+    }
+
     return {
-      videoUrl: await this.getPublicUrl(outputPath),
-      thumbnailUrl: await this.getPublicUrl(thumbnailPath),
+      videoUrl,
+      thumbnailUrl: thumbnailUrl || '',
       duration: reel.duration_seconds,
       fileSize: stats.size
     };
@@ -230,9 +246,16 @@ export class VideoComposerService {
     // Get file stats
     const stats = await fs.stat(outputPath);
 
+    const videoUrl = await this.getPublicUrl(outputPath);
+    const thumbnailUrl = await this.getPublicUrl(thumbnailPath);
+    
+    if (!videoUrl) {
+      throw new Error('Failed to upload video to storage');
+    }
+
     return {
-      videoUrl: await this.getPublicUrl(outputPath),
-      thumbnailUrl: await this.getPublicUrl(thumbnailPath),
+      videoUrl,
+      thumbnailUrl: thumbnailUrl || '',
       duration: reel.duration_seconds,
       fileSize: stats.size
     };
@@ -550,7 +573,7 @@ export class VideoComposerService {
   /**
    * Upload video to storage and get public URL
    */
-  private async getPublicUrl(filePath: string): Promise<string> {
+  private async getPublicUrl(filePath: string): Promise<string | null> {
     const fileName = path.basename(filePath);
     
     try {
@@ -584,8 +607,8 @@ export class VideoComposerService {
 
     } catch (error) {
       this.logger.error(`Failed to upload video: ${error.message}`);
-      // Fallback to mock URL if upload fails
-      return `https://example.com/storage/reels/${fileName}`;
+      // Return null instead of invalid URL to indicate failure
+      return null;
     }
   }
 
