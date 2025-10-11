@@ -26,12 +26,14 @@ interface GamificationContextType {
   useStreakProtection: () => boolean;
   getStreakInfo: () => StreakInfo;
   completeQuiz: (quizId: string, score: number, totalQuestions: number) => void;
-  trackActivity: (type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow') => void;
+  trackActivity: (type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow' | 'hype') => void;
   getDailyActivity: () => DailyActivity;
   getWeeklyActivity: () => WeeklyActivity;
   getMonthlyActivity: () => MonthlyActivity;
   completeNews: (newsId: string) => void;
   completeSpeedRead: (newsId: string) => void;
+  giveHype: (newsId: string, hypePower: number) => void;
+  calculateHypePower: (rank: UserRank) => number;
 }
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
@@ -449,8 +451,40 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     trackActivity('quiz_complete');
   }, [userProfile, addXP]);
 
+  // Hype gücü hesaplama
+  const calculateHypePower = useCallback((rank: UserRank): number => {
+    switch (rank) {
+      case UserRank.NEW_MEMBER:
+        return 1;
+      case UserRank.ACTIVE_READER:
+        return 2;
+      case UserRank.KNOWLEDGE_SHARER:
+        return 3;
+      case UserRank.EXPERT_COMMENTER:
+        return 4;
+      case UserRank.COMMUNITY_LEADER:
+        return 5;
+      default:
+        return 1;
+    }
+  }, []);
+
+  // Hype verme
+  const giveHype = useCallback((newsId: string, hypePower: number) => {
+    if (!userProfile) return;
+
+    // Hype verme için küçük XP bonusu
+    addXP('COMMENT', 5);
+
+    // Analytics tracking
+    console.log(`Hype verildi: ${newsId}, Hype gücü: ${hypePower}, Kullanıcı rank: ${userProfile.currentRank}`);
+    
+    // Gerçek uygulamada burada API çağrısı yapılacak
+    // await hypeNews(newsId, hypePower);
+  }, [userProfile, addXP]);
+
   // Aktivite takibi
-  const trackActivity = useCallback((type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow') => {
+  const trackActivity = useCallback((type: 'news_read' | 'comment' | 'quiz_complete' | 'topic_follow' | 'hype') => {
     setUserProfile(prev => {
       if (!prev) return prev;
 
@@ -534,6 +568,9 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
           updatedDailyActivity.topicsFollowed = prev.followedTopics.length;
           updatedWeeklyActivity.topicsFollowed = prev.followedTopics.length;
           updatedMonthlyActivity.topicsFollowed = prev.followedTopics.length;
+          break;
+        case 'hype':
+          // Hype verme aktivitesi için özel bir sayaç yok, sadece XP ekleniyor
           break;
       }
 
@@ -687,7 +724,9 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       getWeeklyActivity,
       getMonthlyActivity,
       completeNews,
-      completeSpeedRead
+      completeSpeedRead,
+      giveHype,
+      calculateHypePower
     }}>
       {children}
       {/* XP Animasyonları */}

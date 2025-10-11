@@ -612,6 +612,12 @@ abstract class AppLocalizations {
   /// **'Kayıt sırasında beklenmeyen bir hata oluştu.'**
   String get registerStatusUnexpected;
 
+  /// No description provided for @bookmarksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydedilenler'**
+  String get bookmarksTitle;
+
   /// No description provided for @profileAppBarTitle.
   ///
   /// In tr, this message translates to:
@@ -707,6 +713,132 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Son giriş: {date} • {time}'**
   String profileLastSeen(Object date, Object time);
+
+  /// No description provided for @gamificationRankNewMember.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Katılımcı'**
+  String get gamificationRankNewMember;
+
+  /// No description provided for @gamificationRankActiveReader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif Okur'**
+  String get gamificationRankActiveReader;
+
+  /// No description provided for @gamificationRankKnowledgeSharer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgi Paylaşımcısı'**
+  String get gamificationRankKnowledgeSharer;
+
+  /// No description provided for @gamificationRankExpertCommenter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzman Yorumcu'**
+  String get gamificationRankExpertCommenter;
+
+  /// No description provided for @gamificationRankCommunityLeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Topluluk Lideri'**
+  String get gamificationRankCommunityLeader;
+
+  /// No description provided for @gamificationLeagueBronze.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bronz'**
+  String get gamificationLeagueBronze;
+
+  /// No description provided for @gamificationLeagueSilver.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gümüş'**
+  String get gamificationLeagueSilver;
+
+  /// No description provided for @gamificationLeagueGold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın'**
+  String get gamificationLeagueGold;
+
+  /// No description provided for @gamificationLeaguePlatinum.
+  ///
+  /// In tr, this message translates to:
+  /// **'Platin'**
+  String get gamificationLeaguePlatinum;
+
+  /// No description provided for @gamificationLeagueDiamond.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elmas'**
+  String get gamificationLeagueDiamond;
+
+  /// No description provided for @gamificationXPProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'XP İlerlemesi'**
+  String get gamificationXPProgress;
+
+  /// No description provided for @gamificationStreak.
+  ///
+  /// In tr, this message translates to:
+  /// **'Streak'**
+  String get gamificationStreak;
+
+  /// No description provided for @gamificationSeasonXP.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sezon XP'**
+  String get gamificationSeasonXP;
+
+  /// No description provided for @gamificationWeekly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık'**
+  String get gamificationWeekly;
+
+  /// No description provided for @gamificationMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık'**
+  String get gamificationMonthly;
+
+  /// No description provided for @gamificationFollowing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takip'**
+  String get gamificationFollowing;
+
+  /// No description provided for @gamificationBadges.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rozetler'**
+  String get gamificationBadges;
+
+  /// No description provided for @gamificationStreakProtection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Streak Koruması'**
+  String get gamificationStreakProtection;
+
+  /// No description provided for @gamificationDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'gün'**
+  String get gamificationDays;
+
+  /// No description provided for @gamificationPoints.
+  ///
+  /// In tr, this message translates to:
+  /// **'puan'**
+  String get gamificationPoints;
+
+  /// No description provided for @gamificationItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'adet'**
+  String get gamificationItems;
 
   /// No description provided for @landingHeroTitle.
   ///

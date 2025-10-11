@@ -26,14 +26,21 @@ export default function LoginPage() {
     // If user is logged in and has completed onboarding, redirect to dashboard
     if (user && hasCompletedOnboarding === true) {
       const locale = pathname?.split('/')[1] || 'tr';
-      router.push(`/${locale}/dashboard`);
+      window.location.href = `/${locale}/dashboard`;
       return;
     }
 
     // If user is logged in but hasn't completed onboarding, redirect to onboarding
     if (user && hasCompletedOnboarding === false) {
       const locale = pathname?.split('/')[1] || 'tr';
-      router.push(`/${locale}/onboarding`);
+      window.location.href = `/${locale}/onboarding`;
+      return;
+    }
+    
+    // If user is logged in but onboarding status is unknown (null), allow dashboard access
+    if (user && hasCompletedOnboarding === null) {
+      const locale = pathname?.split('/')[1] || 'tr';
+      window.location.href = `/${locale}/dashboard`;
       return;
     }
   }, [user, loading, onboardingStatusLoading, hasCompletedOnboarding, router, pathname]);

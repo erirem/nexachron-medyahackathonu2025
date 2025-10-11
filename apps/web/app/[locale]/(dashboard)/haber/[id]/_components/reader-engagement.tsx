@@ -78,15 +78,69 @@ const commentsData: { [key: string]: Comment[] } = {
       likes: 7,
       replies: []
     }
+  ],
+  'default': [
+    {
+      id: '1',
+      user: { 
+        name: 'Ayşe Yılmaz', 
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80',
+        verified: true,
+        badge: 'Haber Editörü'
+      },
+      content: 'Bu haber gerçekten önemli gelişmeleri içeriyor. Detaylı analiz için teşekkürler!',
+      timestamp: '3 saat önce',
+      likes: 15,
+      replies: []
+    },
+    {
+      id: '2',
+      user: { 
+        name: 'Fatih Özkan', 
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80',
+        verified: false
+      },
+      content: 'Çok faydalı bir haber. Bu tür analizlerin devamını bekliyoruz.',
+      timestamp: '5 saat önce',
+      likes: 8,
+      replies: [
+        {
+          id: '2-1',
+          user: { 
+            name: 'Zeynep Kaya', 
+            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b0e4?auto=format&fit=crop&w=100&q=80',
+            verified: false
+          },
+          content: 'Katılıyorum, çok değerli bilgiler.',
+          timestamp: '4 saat önce',
+          likes: 3
+        }
+      ]
+    },
+    {
+      id: '3',
+      user: { 
+        name: 'Emre Demir', 
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80',
+        verified: false
+      },
+      content: 'Güzel bir haber. Teşekkürler!',
+      timestamp: '6 saat önce',
+      likes: 5,
+      replies: []
+    }
   ]
 };
 
 export function ReaderEngagement({ articleId }: ReaderEngagementProps): JSX.Element {
-  const [comments, setComments] = useState(commentsData[articleId as keyof typeof commentsData] || []);
+  const [comments, setComments] = useState(
+    commentsData[articleId as keyof typeof commentsData] || commentsData['default'] || []
+  );
   const [newComment, setNewComment] = useState('');
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
 
   const handleCommentSubmit = () => {
     if (!newComment.trim()) return;
@@ -115,6 +169,19 @@ export function ReaderEngagement({ articleId }: ReaderEngagementProps): JSX.Elem
     setLikedComments(newLikedComments);
   };
 
+  const sortedComments = [...comments].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      case 'oldest':
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      case 'popular':
+        return (b.likes + (likedComments.has(b.id) ? 1 : 0)) - (a.likes + (likedComments.has(a.id) ? 1 : 0));
+      default:
+        return 0;
+    }
+  });
+
   return (
     <section className="mt-16">
       {/* Comment Header */}
@@ -126,7 +193,9 @@ export function ReaderEngagement({ articleId }: ReaderEngagementProps): JSX.Elem
         <div className="flex items-center gap-6 text-sm text-white/60">
           <span>{comments.length} yorum</span>
           <span>•</span>
-          <span>3.4k görüntülenme</span>
+          <span>{Math.floor(Math.random() * 5000) + 1000} görüntülenme</span>
+          <span>•</span>
+          <span>{comments.reduce((acc, comment) => acc + comment.likes + (comment.replies?.reduce((replyAcc, reply) => replyAcc + reply.likes, 0) || 0), 0)} beğeni</span>
         </div>
       </div>
 
@@ -209,9 +278,25 @@ export function ReaderEngagement({ articleId }: ReaderEngagementProps): JSX.Elem
 
       {/* Comments List */}
       <div className="space-y-6">
-        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-          💭 Yorumlar ({comments.length})
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            💭 Yorumlar ({comments.length})
+          </h3>
+          
+          {/* Sort Options */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-white/60">Sırala:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'popular')}
+              className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-white/40"
+            >
+              <option value="newest">En Yeni</option>
+              <option value="oldest">En Eski</option>
+              <option value="popular">En Popüler</option>
+            </select>
+          </div>
+        </div>
         
         {comments.length === 0 ? (
           <div className="text-center py-12 text-white/60">
@@ -221,7 +306,7 @@ export function ReaderEngagement({ articleId }: ReaderEngagementProps): JSX.Elem
           </div>
         ) : (
           <div className="space-y-6">
-            {comments.map((comment) => (
+            {sortedComments.map((comment) => (
               <div key={comment.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
                 <div className="flex items-start gap-4 mb-4">
                   <Image

@@ -15,15 +15,35 @@ export function SpeedReadTimer({
   onTimeExpired, 
   onSpeedReadComplete 
 }: SpeedReadTimerProps): JSX.Element {
-  const [timeLeft, setTimeLeft] = useState(5 * 60); // 5 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(2 * 60); // 2 minutes in seconds
   const [isActive, setIsActive] = useState(true);
   const [hasCompleted, setHasCompleted] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(true);
   const { completeSpeedRead } = useGamification();
 
   const formatTime = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }, []);
+
+  // Hide tooltip on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowTooltip(false);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Auto hide tooltip after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -94,6 +114,23 @@ export function SpeedReadTimer({
 
   return (
     <div className="absolute top-4 right-4 z-10">
+      {/* Tooltip */}
+      {showTooltip && (
+        <div className="absolute -bottom-16 right-0 w-64 bg-black/90 backdrop-blur-sm text-white text-xs p-3 rounded-lg shadow-xl border border-white/20 animate-in fade-in duration-300">
+          <div className="flex items-start gap-2">
+            <span className="text-blue-400 mt-0.5">💡</span>
+            <div>
+              <p className="font-semibold mb-1">Hızlı Okuma Modu</p>
+              <p className="text-white/80 leading-relaxed">
+                Bu süre içinde haberi okuyarak <span className="text-green-400 font-semibold">+{XP_VALUES.SPEED_READ} XP</span> kazanabilirsiniz!
+              </p>
+            </div>
+          </div>
+          {/* Arrow pointing up */}
+          <div className="absolute -top-2 right-4 w-4 h-4 bg-black/90 border-t border-l border-white/20 rotate-45"></div>
+        </div>
+      )}
+      
       <div className={`bg-gradient-to-r text-white px-3 py-2 rounded-full font-bold shadow-lg transition-all duration-300 ${
         timeLeft <= 60 
           ? 'from-red-500 to-pink-500 animate-pulse' 

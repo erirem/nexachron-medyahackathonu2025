@@ -357,6 +357,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
+      console.log('AuthContext: signOut başlatılıyor...');
+      
+      // Önce state'i temizle ki UI hemen güncellensin
+      setUser(null);
+      setProfile(null);
+      setHasCompletedOnboarding(null);
+      setIsFirstTimeUser(null);
+      setOnboardingStatusLoading(false);
+      
       const persistent = getSupabaseClient(true);
       const sessionClient = getSupabaseClient(false);
 
@@ -365,24 +374,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           // @ts-ignore - bazı tip sürümlerinde scope eksik olabilir
           await client.auth.signOut({ scope: 'global' });
-        } catch {
+          console.log('AuthContext: Global signOut başarılı');
+        } catch (error) {
+          console.log('AuthContext: Global signOut başarısız, normal signOut deneniyor:', error);
           await client.auth.signOut();
+          console.log('AuthContext: Normal signOut başarılı');
         }
       };
 
-      await Promise.allSettled([
+      const results = await Promise.allSettled([
         signOutWithScope(persistent),
         signOutWithScope(sessionClient),
       ]);
+
+      // Sonuçları kontrol et
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.warn(`AuthContext: Client ${index} signOut hatası:`, result.reason);
+        }
+      });
+
+      console.log('AuthContext: Tüm signOut işlemleri tamamlandı');
     } catch (e) {
-      console.warn('AuthContext: signOut sırasında uyarı:', e);
-    } finally {
-      // Context state'lerini temizle
+      console.error('AuthContext: signOut sırasında kritik hata:', e);
+      // Hata olsa bile state'i temizle
       setUser(null);
       setProfile(null);
       setHasCompletedOnboarding(null);
       setIsFirstTimeUser(null);
       setOnboardingStatusLoading(false);
+    } finally {
+      // LocalStorage'ı da temizle
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('supabase.auth.token');
+          // Supabase auth token'larını temizle
+          Object.keys(localStorage).forEach(key => {
+            if (key.includes('supabase') || key.includes('sb-')) {
+              localStorage.removeItem(key);
+            }
+          });
+          console.log('AuthContext: LocalStorage temizlendi');
+        }
+      } catch (storageError) {
+        console.warn('AuthContext: LocalStorage temizleme hatası:', storageError);
+      }
+      
+      console.log('AuthContext: SignOut tamamlandı');
     }
   };
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dashboard_page.dart';
+import 'bookmarks_page.dart';
 import '../../../auth/presentation/pages/profile_screen.dart';
 import '../../../games/presentation/pages/games_page.dart';
 
@@ -161,19 +162,3 @@ class SearchPage extends StatelessWidget {
   }
 }
 
-class BookmarksPage extends StatelessWidget {
-  const BookmarksPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF0F1624),
-      body: Center(
-        child: Text(
-          'Kaydedilenler',
-          style: TextStyle(color: Colors.white, fontSize: 24),
-        ),
-      ),
-    );
-  }
-}

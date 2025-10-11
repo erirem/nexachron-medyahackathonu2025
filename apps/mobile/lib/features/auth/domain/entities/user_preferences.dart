@@ -1,5 +1,6 @@
 /// Kullanıcı tercihlerini temsil eden entity sınıfları
 /// Web API ile uyumlu model yapısı
+library;
 
 class CategoryPreferences {
   const CategoryPreferences({required this.preferred, required this.blocked});
