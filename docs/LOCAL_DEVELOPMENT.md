@@ -111,11 +111,25 @@ apps/api/.env          # Backend config
 apps/web/.env.local    # Frontend config
 ```
 
+### OpenAI API Key Kurulumu:
+```bash
+# 1. OpenAI hesabı oluşturun: https://platform.openai.com
+# 2. API Keys sayfasına gidin: https://platform.openai.com/api-keys
+# 3. "Create new secret key" butonuna tıklayın
+# 4. Key'i kopyalayın (sk- ile başlar)
+# 5. apps/api/.env dosyasına ekleyin:
+OPENAI_API_KEY=sk-your-copied-key-here
+```
+
 ### Environment Değişkenleri:
 ```bash
 # API için (.env):
 SUPABASE_URL=https://tfqnfkyntjreanffixti.supabase.co
 SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+
+# OpenAI API Key (TTS ve AI özellikleri için gerekli)
+OPENAI_API_KEY=sk-your-openai-api-key-here
 
 # Web için (.env.local):
 NEXT_PUBLIC_API_URL=http://localhost:4000

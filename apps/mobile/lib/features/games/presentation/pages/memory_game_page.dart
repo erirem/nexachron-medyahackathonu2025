@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
 import 'dart:async';
 
-import '../../domain/entities/game_types.dart';
 import '../providers/gamification_provider.dart';
 import '../widgets/game_header.dart';
 import '../widgets/game_completion_dialog.dart';

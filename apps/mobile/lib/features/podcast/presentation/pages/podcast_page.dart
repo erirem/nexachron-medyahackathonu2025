@@ -1,12 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'podcast_player_page.dart';
+import '../providers/podcast_provider.dart';
+import '../providers/audio_player_notifier.dart';
+import '../../domain/entities/podcast_item.dart';
 
-class PodcastPage extends ConsumerWidget {
+class PodcastPage extends ConsumerStatefulWidget {
   const PodcastPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PodcastPage> createState() => _PodcastPageState();
+}
+
+class _PodcastPageState extends ConsumerState<PodcastPage> {
+  @override
+  Widget build(BuildContext context) {
+    final podcastState = ref.watch(podcastNewsProvider);
+
+    // İlk yüklemede haberleri çek
+    ref.listen<PodcastNewsState>(podcastNewsProvider, (previous, next) {
+      if (previous?.isLoading == false && next.isLoading == true) {
+        // İlk yükleme başladı
+      } else if (previous?.isLoading == true &&
+          next.isLoading == false &&
+          next.error != null) {
+        // Hata oluştu
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Tekrar Dene',
+              textColor: Colors.white,
+              onPressed: () => ref.read(podcastNewsProvider.notifier).refresh(),
+            ),
+          ),
+        );
+      }
+    });
+
+    // İlk yükleme
+    if (!podcastState.isLoading &&
+        podcastState.featuredPodcasts.isEmpty &&
+        podcastState.error == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(podcastNewsProvider.notifier).loadPodcastNews();
+      });
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F1624),
       body: SafeArea(
@@ -59,46 +100,43 @@ class PodcastPage extends ConsumerWidget {
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 20),
                   ),
                 ],
               ),
             ),
-            
+
             // Content
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Featured Podcasts Section
-                    _buildSectionHeader('Öne Çıkan Podcastler'),
-                    const SizedBox(height: 16),
-                    _buildFeaturedPodcasts(),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Trending Podcasts Section
-                    _buildSectionHeader('Trend Podcastler'),
-                    const SizedBox(height: 16),
-                    _buildTrendingPodcasts(),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Categories Section
-                    _buildSectionHeader('Kategoriler'),
-                    const SizedBox(height: 16),
-                    _buildCategories(),
-                    
-                    const SizedBox(height: 100), // Bottom padding
-                  ],
-                ),
-              ),
+              child:
+                  podcastState.isLoading &&
+                      podcastState.featuredPodcasts.isEmpty
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF0f6acd),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Featured Podcasts Section
+                          _buildSectionHeader('Öne Çıkan Podcastler'),
+                          const SizedBox(height: 16),
+                          _buildFeaturedPodcasts(podcastState.featuredPodcasts),
+
+                          const SizedBox(height: 32),
+
+                          // Trending Podcasts Section
+                          _buildSectionHeader('Trend Podcastler'),
+                          const SizedBox(height: 16),
+                          _buildTrendingPodcasts(podcastState.trendingPodcasts),
+
+                          const SizedBox(height: 100), // Bottom padding
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -130,132 +168,103 @@ class PodcastPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildFeaturedPodcasts() {
-    return SizedBox(
-      height: 200,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Container(
-            width: 160,
-            margin: const EdgeInsets.only(right: 16),
-            child: _buildPodcastCard(
-              title: 'Güncel Haberler',
-              subtitle: 'Son dakika gelişmeleri',
-              imageUrl: 'https://picsum.photos/200/200?random=${index + 1}',
-              duration: '15 dk',
-              isPlaying: index == 0,
-              index: index,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildTrendingPodcasts() {
-    return SizedBox(
-      height: 200,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Container(
-            width: 160,
-            margin: const EdgeInsets.only(right: 16),
-            child: _buildPodcastCard(
-              title: 'Spor Haberleri',
-              subtitle: 'Futbol, basketbol ve daha fazlası',
-              imageUrl: 'https://picsum.photos/200/200?random=${index + 10}',
-              duration: '12 dk',
-              isPlaying: false,
-              index: index,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildCategories() {
-    final categories = [
-      {'name': 'Gündem', 'color': Colors.blue, 'icon': Icons.trending_up},
-      {'name': 'Spor', 'color': Colors.green, 'icon': Icons.sports_soccer},
-      {'name': 'Teknoloji', 'color': Colors.purple, 'icon': Icons.computer},
-      {'name': 'Ekonomi', 'color': Colors.orange, 'icon': Icons.trending_up},
-      {'name': 'Dünya', 'color': Colors.red, 'icon': Icons.public},
-      {'name': 'Kültür', 'color': Colors.pink, 'icon': Icons.movie},
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                (category['color'] as Color).withOpacity(0.8),
-                (category['color'] as Color).withOpacity(0.6),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
+  Widget _buildFeaturedPodcasts(List<PodcastItem> podcasts) {
+    if (podcasts.isEmpty) {
+      return const SizedBox(
+        height: 220,
+        child: Center(
+          child: Text(
+            'Öne çıkan podcast bulunamadı',
+            style: TextStyle(color: Colors.grey),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                category['icon'] as IconData,
-                color: Colors.white,
-                size: 32,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                category['name'] as String,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 220, // Yüksekliği artırdık
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: podcasts.length,
+        itemBuilder: (context, index) {
+          final podcast = podcasts[index];
+          return Consumer(
+            builder: (context, ref, child) {
+              return Container(
+                width: 160,
+                margin: const EdgeInsets.only(right: 16),
+                child: _buildPodcastCard(
+                  context: context,
+                  podcast: podcast,
+                  ref: ref,
                 ),
-              ),
-            ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTrendingPodcasts(List<PodcastItem> podcasts) {
+    if (podcasts.isEmpty) {
+      return const SizedBox(
+        height: 220,
+        child: Center(
+          child: Text(
+            'Trend podcast bulunamadı',
+            style: TextStyle(color: Colors.grey),
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 220, // Yüksekliği artırdık
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: podcasts.length,
+        itemBuilder: (context, index) {
+          final podcast = podcasts[index];
+          return Consumer(
+            builder: (context, ref, child) {
+              return Container(
+                width: 160,
+                margin: const EdgeInsets.only(right: 16),
+                child: _buildPodcastCard(
+                  context: context,
+                  podcast: podcast,
+                  ref: ref,
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
   Widget _buildPodcastCard({
-    required String title,
-    required String subtitle,
-    required String imageUrl,
-    required String duration,
-    required bool isPlaying,
-    required int index,
+    required BuildContext context,
+    required PodcastItem podcast,
+    required WidgetRef ref,
   }) {
+    // Audio player state'ini dinle
+    final audioState = ref.watch(audioPlayerProvider);
+    final isCurrentlyPlaying =
+        audioState.isPlaying &&
+        audioState.currentAudioUrl != null &&
+        podcast.audioUrl == audioState.currentAudioUrl;
+
     return GestureDetector(
       onTap: () {
+        // Seçili podcast'i ayarla
+        ref.read(selectedPodcastProvider.notifier).setPodcast(podcast);
+
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PodcastPlayerPage(
-              podcastId: 'podcast_$index',
-              title: title,
-              subtitle: subtitle,
-              imageUrl: imageUrl,
-              duration: duration,
-            ),
+            builder: (context) => PodcastPlayerPage(podcast: podcast),
           ),
         );
       },
@@ -263,17 +272,17 @@ class PodcastPage extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.1),
-            width: 1,
-          ),
+          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               child: Stack(
                 children: [
                   Container(
@@ -281,23 +290,23 @@ class PodcastPage extends ConsumerWidget {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: NetworkImage(imageUrl),
+                        image: NetworkImage(podcast.imageUrl),
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                  if (isPlaying)
+                  if (isCurrentlyPlaying)
                     Positioned(
                       top: 8,
                       right: 8,
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
+                          color: const Color(0xFF0f6acd).withOpacity(0.9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
-                          Icons.play_arrow,
+                          Icons.equalizer,
                           color: Colors.white,
                           size: 16,
                         ),
@@ -307,13 +316,41 @@ class PodcastPage extends ConsumerWidget {
                     bottom: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.7),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        duration,
+                        podcast.duration,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Kategori badge
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0f6acd), Color(0xFF1a8dff)],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        podcast.category,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -325,29 +362,30 @@ class PodcastPage extends ConsumerWidget {
                 ],
               ),
             ),
-            
+
             // Content
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8), // Padding'i azalttık
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    title,
+                    podcast.title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 13, // Font boyutunu küçülttük
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2), // Spacing'i azalttık
                   Text(
-                    subtitle,
+                    podcast.subtitle,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
-                      fontSize: 12,
+                      fontSize: 11, // Font boyutunu küçülttük
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -359,5 +397,16 @@ class PodcastPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // Podcast sayfasından çıkıldığında sesi durdur
+    try {
+      ref.read(audioPlayerProvider.notifier).stop();
+    } catch (e) {
+      print('❌ Error stopping audio on podcast page dispose: $e');
+    }
+    super.dispose();
   }
 }

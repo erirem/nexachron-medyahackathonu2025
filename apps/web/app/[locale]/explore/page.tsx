@@ -487,25 +487,6 @@ function AutomotiveIcon(): React.JSX.Element {
 
 function PlayCircleIcon(): React.JSX.Element {
     return (
-        <Sidebar
-            width={300}
-            onWidthChange={() => { }}
-            minWidth={300}
-            maxWidth={300}
-            isCollapsed={false}
-            activeCategory={'reels'}
-            onCategoryChange={(cat) => {
-                if (cat === 'reels') return;
-                if (cat === 'profile' || cat === 'leaderboard' || cat === 'quizzes') {
-                    router.push(`/${currentLocale}/${cat}`);
-                } else if (cat === 'audio') {
-                    router.push(`/${currentLocale}/podcast`);
-                } else {
-                    router.push(`/${currentLocale}/dashboard`);
-                }
-            }}
-            topics={topics}
-        />
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="12" cy="12" r="10" />
             <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />

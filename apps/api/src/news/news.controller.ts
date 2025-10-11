@@ -96,8 +96,11 @@ export class NewsController {
     const isPopularValue = this.parseBoolean(isPopular);
 
     // Parse categoryIds from comma-separated string
-    const categoryIdsArray = categoryIds 
-      ? categoryIds.split(',').map(id => id.trim()).filter(id => id.length > 0)
+    const categoryIdsArray = categoryIds
+      ? categoryIds
+          .split(',')
+          .map((id) => id.trim())
+          .filter((id) => id.length > 0)
       : undefined;
 
     try {
@@ -314,7 +317,8 @@ export class NewsController {
     const locale = resolveLocale(acceptLanguage);
 
     // UUID doğrulaması: Supabase tarafında tip uyuşmazlığı 500 yerine 400 dönsün
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       throw new BadRequestException(translate(locale, 'errors.invalidId'));
     }

@@ -25,11 +25,32 @@ const convertNewsToPodcast = (newsItem: any): Podcast => {
   const contentLength = newsItem.summary?.length || 0;
   const estimatedDuration = Math.max(5, Math.min(30, Math.ceil(contentLength / 100))); // 5-30 minutes
   
+  // Get image from API data - prioritize featured image, then media gallery
+  let imageUrl = '';
+  
+  if (newsItem.media && newsItem.media.length > 0) {
+    // Use the first image from media array (featured image)
+    const featuredImage = newsItem.media.find((m: any) => m.type === 'image');
+    if (featuredImage) {
+      imageUrl = featuredImage.url;
+    }
+  }
+  
+  // Fallback to image_url field if media array is empty
+  if (!imageUrl && newsItem.image_url) {
+    imageUrl = newsItem.image_url;
+  }
+  
+  // Final fallback to random image
+  if (!imageUrl) {
+    imageUrl = `https://picsum.photos/300/300?random=${newsItem.id}`;
+  }
+  
   return {
     id: newsItem.id,
     title: newsItem.title,
     subtitle: newsItem.summary || 'Haber detayları',
-    imageUrl: newsItem.image_url || 'https://picsum.photos/300/300?random=' + newsItem.id,
+    imageUrl: imageUrl,
     duration: `${estimatedDuration} dk`,
     category: newsItem.category || 'Gündem',
   };
@@ -204,10 +225,6 @@ export function PodcastPage() {
                   </button>
                 </div>
                 
-                {/* Debug info - remove in production */}
-                <div className="mb-4 text-xs text-gray-400">
-                  Debug: Loading: {isNewsLoading ? 'Yes' : 'No'}, Count: {trendingPodcasts.length}, Data: {newsData?.length || 0}
-                </div>
                 
                 {isNewsLoading ? (
                   <div className="flex items-center justify-center py-8">

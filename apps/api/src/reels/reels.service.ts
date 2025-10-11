@@ -9,7 +9,6 @@ import {
   ReelGenerationRequest,
   ReelFeedItem,
   ReelStatus,
-  ReelSourceType
 } from './dto/reel.dto';
 import { ProcessedNewsItem } from '../news-ingest/dto/news-item.dto';
 
@@ -47,8 +46,8 @@ export class ReelsService {
     private readonly supabaseService: SupabaseService,
     private readonly reelGeneratorService: ReelGeneratorService,
     private readonly ttsService: TTSService,
-    private readonly videoComposerService: VideoComposerService
-  ) { }
+    private readonly videoComposerService: VideoComposerService,
+  ) {}
 
   /**
    * Generate reel from news item
@@ -71,7 +70,11 @@ export class ReelsService {
       }
 
       // 3. Generate reel
-      const reel = await this.reelGeneratorService.generateReel(newsItem, request, request.news_id);
+      const reel = await this.reelGeneratorService.generateReel(
+        newsItem,
+        request,
+        request.news_id,
+      );
 
       // 4. Set news_id after generation
       reel.news_id = request.news_id;
@@ -81,9 +84,11 @@ export class ReelsService {
 
       this.logger.log(`Reel generated successfully: ${reel.id}`);
       return reel;
-
     } catch (error) {
-      this.logger.error(`Failed to generate reel for news: ${request.news_id}`, error);
+      this.logger.error(
+        `Failed to generate reel for news: ${request.news_id}`,
+        error,
+      );
       throw error;
     }
   }
@@ -91,20 +96,26 @@ export class ReelsService {
   /**
    * Bulk generate reels from recent news
    */
-  async generateBulkReels(request: BulkGenerationRequest): Promise<BulkGenerationResult> {
-    this.logger.log(`Starting bulk reel generation: ${JSON.stringify(request)}`);
+  async generateBulkReels(
+    request: BulkGenerationRequest,
+  ): Promise<BulkGenerationResult> {
+    this.logger.log(
+      `Starting bulk reel generation: ${JSON.stringify(request)}`,
+    );
 
     const result: BulkGenerationResult = {
       generated: [],
       failed: [],
-      errors: []
+      errors: [],
     };
 
     try {
       // Get recent news items
       const newsItems = await this.getRecentNewsForReels(request);
 
-      this.logger.log(`Found ${newsItems.length} news items for reel generation`);
+      this.logger.log(
+        `Found ${newsItems.length} news items for reel generation`,
+      );
 
       // Process each news item
       for (const newsItem of newsItems) {
@@ -119,24 +130,27 @@ export class ReelsService {
           // Generate reel
           const reel = await this.generateReelFromNews({
             news_id: newsItem.id,
-            priority: request.priorityThreshold
+            priority: request.priorityThreshold,
           });
 
           result.generated.push(reel.id);
-
         } catch (error) {
-          this.logger.error(`Failed to generate reel for news: ${newsItem.id}`, error);
+          this.logger.error(
+            `Failed to generate reel for news: ${newsItem.id}`,
+            error,
+          );
           result.failed.push(newsItem.id);
           result.errors.push({
             news_id: newsItem.id,
-            error: error.message
+            error: error.message,
           });
         }
       }
 
-      this.logger.log(`Bulk generation completed: ${result.generated.length} generated, ${result.failed.length} failed`);
+      this.logger.log(
+        `Bulk generation completed: ${result.generated.length} generated, ${result.failed.length} failed`,
+      );
       return result;
-
     } catch (error) {
       this.logger.error('Bulk reel generation failed', error);
       throw error;
@@ -152,7 +166,8 @@ export class ReelsService {
 
       let query = this.supabaseService.adminSupabase
         .from('reels')
-        .select(`
+        .select(
+          `
           id,
           content,
           assets,
@@ -166,7 +181,8 @@ export class ReelsService {
             original_url,
             source
           )
-        `)
+        `,
+        )
         .eq('status', ReelStatus.COMPLETED)
         .not('assets->video_url', 'is', null);
 
@@ -186,7 +202,10 @@ export class ReelsService {
         case 'trending':
           // Trending: high engagement in recent time
           query = query
-            .gte('published_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+            .gte(
+              'published_at',
+              new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            )
             .order('engagement_score', { ascending: false });
           break;
       }
@@ -197,36 +216,46 @@ export class ReelsService {
         .select('*', { count: 'exact', head: true });
 
       // Get paginated results
-      const { data: reelsData, error } = await query
-        .range(offset, offset + request.limit - 1);
+      const { data: reelsData, error } = await query.range(
+        offset,
+        offset + request.limit - 1,
+      );
 
       if (error) {
         throw new Error(`Database query failed: ${error.message}`);
       }
 
       // Transform to feed items
-      const reels: ReelFeedItem[] = reelsData?.map(reel => ({
-        id: reel.id,
-        video_url: reel.assets.video_url,
-        thumbnail_url: reel.assets.thumbnail_url,
-        content: reel.content,
-        duration_seconds: reel.duration_seconds,
-        category: reel.category || 'general',
-        engagement_score: reel.engagement_score,
-        published_at: new Date(reel.published_at),
-        news_reference: {
-          id: Array.isArray(reel.news) ? reel.news[0]?.id : (reel.news as any)?.id,
-          title: Array.isArray(reel.news) ? reel.news[0]?.title : (reel.news as any)?.title,
-          original_url: Array.isArray(reel.news) ? reel.news[0]?.original_url : (reel.news as any)?.original_url,
-          source: Array.isArray(reel.news) ? reel.news[0]?.source : (reel.news as any)?.source
-        }
-      })) || [];
+      const reels: ReelFeedItem[] =
+        reelsData?.map((reel) => ({
+          id: reel.id,
+          video_url: reel.assets.video_url,
+          thumbnail_url: reel.assets.thumbnail_url,
+          content: reel.content,
+          duration_seconds: reel.duration_seconds,
+          category: reel.category || 'general',
+          engagement_score: reel.engagement_score,
+          published_at: new Date(reel.published_at),
+          news_reference: {
+            id: Array.isArray(reel.news)
+              ? reel.news[0]?.id
+              : (reel.news as any)?.id,
+            title: Array.isArray(reel.news)
+              ? reel.news[0]?.title
+              : (reel.news as any)?.title,
+            original_url: Array.isArray(reel.news)
+              ? reel.news[0]?.original_url
+              : (reel.news as any)?.original_url,
+            source: Array.isArray(reel.news)
+              ? reel.news[0]?.source
+              : (reel.news as any)?.source,
+          },
+        })) || [];
 
       return {
         reels,
-        total: count || 0
+        total: count || 0,
       };
-
     } catch (error) {
       this.logger.error('Failed to get reels feed', error);
       throw error;
@@ -245,7 +274,8 @@ export class ReelsService {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') { // Not found
+        if (error.code === 'PGRST116') {
+          // Not found
           return null;
         }
         throw new Error(`Database query failed: ${error.message}`);
@@ -305,10 +335,12 @@ export class ReelsService {
       this.logger.debug(`Total reels available: ${allReels.length}`);
 
       // Find current reel index in the ordered list
-      const currentIndex = allReels.findIndex(r => r.id === currentId);
+      const currentIndex = allReels.findIndex((r) => r.id === currentId);
 
       if (currentIndex === -1) {
-        this.logger.warn(`Current reel ${currentId} not found in ordered list, starting from beginning`);
+        this.logger.warn(
+          `Current reel ${currentId} not found in ordered list, starting from beginning`,
+        );
         // If current not found, start from beginning
         const firstReel = await this.getReelById(allReels[0].id);
         return firstReel;
@@ -333,7 +365,9 @@ export class ReelsService {
       }
 
       const targetReelId = allReels[targetIndex].id;
-      this.logger.debug(`Moving from index ${currentIndex}/${allReels.length} to ${targetIndex}, reel ${targetReelId}`);
+      this.logger.debug(
+        `Moving from index ${currentIndex}/${allReels.length} to ${targetIndex}, reel ${targetReelId}`,
+      );
 
       // Fetch full reel data for the target
       const targetReel = await this.getReelById(targetReelId);
@@ -353,12 +387,15 @@ export class ReelsService {
   /**
    * Update reel engagement
    */
-  async updateEngagement(reelId: string, engagement: {
-    views?: number;
-    likes?: number;
-    shares?: number;
-    comments?: number;
-  }): Promise<number> {
+  async updateEngagement(
+    reelId: string,
+    engagement: {
+      views?: number;
+      likes?: number;
+      shares?: number;
+      comments?: number;
+    },
+  ): Promise<number> {
     try {
       // Calculate new engagement score
       const engagementScore = this.calculateEngagementScore(engagement);
@@ -367,7 +404,7 @@ export class ReelsService {
         .from('reels')
         .update({
           engagement_score: engagementScore,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', reelId);
 
@@ -377,7 +414,10 @@ export class ReelsService {
 
       return engagementScore;
     } catch (error) {
-      this.logger.error(`Failed to update engagement for reel: ${reelId}`, error);
+      this.logger.error(
+        `Failed to update engagement for reel: ${reelId}`,
+        error,
+      );
       throw error;
     }
   }
@@ -434,7 +474,7 @@ export class ReelsService {
         progress,
         current_step: currentStep,
         error: lastError,
-        processing_log: data.processing_log
+        processing_log: data.processing_log,
       };
     } catch (error) {
       this.logger.error(`Failed to get reel status: ${id}`, error);
@@ -477,11 +517,13 @@ export class ReelsService {
       }
 
       // Transform database records to Reel type
-      const transformedReels = (reels || []).map(reel => this.transformDatabaseToReel(reel));
+      const transformedReels = (reels || []).map((reel) =>
+        this.transformDatabaseToReel(reel),
+      );
 
       return {
         reels: transformedReels,
-        total: count || 0
+        total: count || 0,
       };
     } catch (error) {
       this.logger.error('Error fetching reels list', error);
@@ -502,7 +544,9 @@ export class ReelsService {
     total: number;
   }> {
     try {
-      this.logger.debug(`getExploreFeed: limit=${options.limit}, offset=${options.offset}, category=${options.category}`);
+      this.logger.debug(
+        `getExploreFeed: limit=${options.limit}, offset=${options.offset}, category=${options.category}`,
+      );
 
       // First, get total count
       let countQuery = this.supabaseService.adminSupabase
@@ -531,7 +575,9 @@ export class ReelsService {
       // If offset exceeds available reels, wrap around (infinite scroll loop)
       const adjustedOffset = options.offset % totalAvailable;
 
-      this.logger.debug(`Adjusted offset: ${adjustedOffset} (original: ${options.offset})`);
+      this.logger.debug(
+        `Adjusted offset: ${adjustedOffset} (original: ${options.offset})`,
+      );
 
       // Base query: only completed reels with video
       let query = this.supabaseService.adminSupabase
@@ -569,7 +615,9 @@ export class ReelsService {
 
       // If we got fewer reels than requested (edge case at end of list), loop from beginning
       if (resultReels.length < options.limit && totalAvailable > 0) {
-        this.logger.debug(`Need more reels: got ${resultReels.length}, need ${options.limit}`);
+        this.logger.debug(
+          `Need more reels: got ${resultReels.length}, need ${options.limit}`,
+        );
 
         // Fetch additional reels from the beginning
         const needed = options.limit - resultReels.length;
@@ -584,20 +632,30 @@ export class ReelsService {
         }
 
         if (options.userId) {
-          additionalQuery = additionalQuery.order('engagement_score', { ascending: false });
+          additionalQuery = additionalQuery.order('engagement_score', {
+            ascending: false,
+          });
         } else {
-          additionalQuery = additionalQuery.order('created_at', { ascending: false });
+          additionalQuery = additionalQuery.order('created_at', {
+            ascending: false,
+          });
         }
 
         additionalQuery = additionalQuery.range(0, needed - 1);
 
-        const { data: additionalReels, error: additionalError } = await additionalQuery;
+        const { data: additionalReels, error: additionalError } =
+          await additionalQuery;
 
         if (additionalError) {
-          this.logger.error('Failed to fetch additional reels', additionalError);
+          this.logger.error(
+            'Failed to fetch additional reels',
+            additionalError,
+          );
         } else if (additionalReels && additionalReels.length > 0) {
           resultReels = [...resultReels, ...additionalReels];
-          this.logger.debug(`Added ${additionalReels.length} more reels from beginning`);
+          this.logger.debug(
+            `Added ${additionalReels.length} more reels from beginning`,
+          );
         }
       }
 
@@ -606,16 +664,21 @@ export class ReelsService {
         try {
           return this.transformDatabaseToReel(reel);
         } catch (error) {
-          this.logger.error(`Failed to transform reel at index ${index}:`, error);
+          this.logger.error(
+            `Failed to transform reel at index ${index}:`,
+            error,
+          );
           throw error;
         }
       });
 
-      this.logger.debug(`Returning ${transformedReels.length} transformed reels`);
+      this.logger.debug(
+        `Returning ${transformedReels.length} transformed reels`,
+      );
 
       return {
         reels: transformedReels,
-        total: Math.max(totalAvailable, 100) // Show as if we have many for infinite scroll demo
+        total: Math.max(totalAvailable, 100), // Show as if we have many for infinite scroll demo
       };
     } catch (error) {
       this.logger.error('Error fetching explore feed', error);
@@ -626,7 +689,10 @@ export class ReelsService {
   /**
    * Get reels statistics
    */
-  async getReelsStats(options: { period: string; category?: string }): Promise<any> {
+  async getReelsStats(options: {
+    period: string;
+    category?: string;
+  }): Promise<any> {
     try {
       const startDate = this.getStartDateForPeriod(options.period);
 
@@ -648,14 +714,24 @@ export class ReelsService {
       // Calculate statistics
       const stats = {
         total_reels: reels?.length || 0,
-        completed_reels: reels?.filter(r => r.status === ReelStatus.COMPLETED).length || 0,
-        failed_reels: reels?.filter(r => r.status === ReelStatus.FAILED).length || 0,
-        processing_reels: reels?.filter(r => r.status === ReelStatus.PROCESSING).length || 0,
-        total_views: reels?.reduce((sum, r) => sum + (r.engagement_score || 0), 0) || 0,
-        total_engagement: reels?.reduce((sum, r) => sum + (r.engagement_score || 0), 0) || 0,
-        avg_duration: reels?.reduce((sum, r) => sum + r.duration_seconds, 0) / (reels?.length || 1) || 0,
+        completed_reels:
+          reels?.filter((r) => r.status === ReelStatus.COMPLETED).length || 0,
+        failed_reels:
+          reels?.filter((r) => r.status === ReelStatus.FAILED).length || 0,
+        processing_reels:
+          reels?.filter((r) => r.status === ReelStatus.PROCESSING).length || 0,
+        total_views:
+          reels?.reduce((sum, r) => sum + (r.engagement_score || 0), 0) || 0,
+        total_engagement:
+          reels?.reduce((sum, r) => sum + (r.engagement_score || 0), 0) || 0,
+        avg_duration:
+          reels?.reduce((sum, r) => sum + r.duration_seconds, 0) /
+            (reels?.length || 1) || 0,
         top_categories: this.calculateTopCategories(reels || []),
-        recent_activity: await this.getRecentActivity(startDate, options.category)
+        recent_activity: await this.getRecentActivity(
+          startDate,
+          options.category,
+        ),
       };
 
       return stats;
@@ -676,7 +752,7 @@ export class ReelsService {
     const results = {
       tts_service: { success: false, message: '' },
       video_composer: { success: false, message: '' },
-      storage: { success: false, message: '' }
+      storage: { success: false, message: '' },
     };
 
     try {
@@ -688,7 +764,8 @@ export class ReelsService {
 
     try {
       // Test video composer
-      results.video_composer = await this.videoComposerService.testComposition();
+      results.video_composer =
+        await this.videoComposerService.testComposition();
     } catch (error) {
       results.video_composer = { success: false, message: error.message };
     }
@@ -724,7 +801,7 @@ export class ReelsService {
         step: 'retry',
         status: 'started',
         timestamp: new Date(),
-        details: 'Retrying failed reel generation'
+        details: 'Retrying failed reel generation',
       });
 
       // Save updated status
@@ -762,7 +839,8 @@ export class ReelsService {
     try {
       let query = this.supabaseService.adminSupabase
         .from('reels')
-        .select(`
+        .select(
+          `
           id,
           content,
           assets,
@@ -776,7 +854,8 @@ export class ReelsService {
             original_url,
             source
           )
-        `)
+        `,
+        )
         .eq('status', ReelStatus.COMPLETED)
         .gte('published_at', startDate.toISOString())
         .order('engagement_score', { ascending: false })
@@ -792,23 +871,32 @@ export class ReelsService {
         throw new Error(`Trending reels query failed: ${error.message}`);
       }
 
-      return data?.map(reel => ({
-        id: reel.id,
-        video_url: reel.assets.video_url,
-        thumbnail_url: reel.assets.thumbnail_url,
-        content: reel.content,
-        duration_seconds: reel.duration_seconds,
-        category: reel.category || 'general',
-        engagement_score: reel.engagement_score,
-        published_at: new Date(reel.published_at),
-        news_reference: {
-          id: Array.isArray(reel.news) ? reel.news[0]?.id : (reel.news as any)?.id,
-          title: Array.isArray(reel.news) ? reel.news[0]?.title : (reel.news as any)?.title,
-          original_url: Array.isArray(reel.news) ? reel.news[0]?.original_url : (reel.news as any)?.original_url,
-          source: Array.isArray(reel.news) ? reel.news[0]?.source : (reel.news as any)?.source
-        }
-      })) || [];
-
+      return (
+        data?.map((reel) => ({
+          id: reel.id,
+          video_url: reel.assets.video_url,
+          thumbnail_url: reel.assets.thumbnail_url,
+          content: reel.content,
+          duration_seconds: reel.duration_seconds,
+          category: reel.category || 'general',
+          engagement_score: reel.engagement_score,
+          published_at: new Date(reel.published_at),
+          news_reference: {
+            id: Array.isArray(reel.news)
+              ? reel.news[0]?.id
+              : (reel.news as any)?.id,
+            title: Array.isArray(reel.news)
+              ? reel.news[0]?.title
+              : (reel.news as any)?.title,
+            original_url: Array.isArray(reel.news)
+              ? reel.news[0]?.original_url
+              : (reel.news as any)?.original_url,
+            source: Array.isArray(reel.news)
+              ? reel.news[0]?.source
+              : (reel.news as any)?.source,
+          },
+        })) || []
+      );
     } catch (error) {
       this.logger.error('Failed to get trending reels', error);
       throw error;
@@ -821,7 +909,9 @@ export class ReelsService {
   @Cron(CronExpression.EVERY_2_HOURS)
   async scheduledReelGeneration(): Promise<void> {
     if (this.isProcessing) {
-      this.logger.warn('Scheduled reel generation already in progress, skipping...');
+      this.logger.warn(
+        'Scheduled reel generation already in progress, skipping...',
+      );
       return;
     }
 
@@ -832,10 +922,12 @@ export class ReelsService {
       const result = await this.generateBulkReels({
         limit: 20, // Generate up to 20 reels per run
         hoursBack: 4, // Look at news from last 4 hours
-        priorityThreshold: 6 // Only high priority news
+        priorityThreshold: 6, // Only high priority news
       });
 
-      this.logger.log(`Scheduled reel generation completed: ${result.generated.length} generated, ${result.failed.length} failed`);
+      this.logger.log(
+        `Scheduled reel generation completed: ${result.generated.length} generated, ${result.failed.length} failed`,
+      );
     } catch (error) {
       this.logger.error('Scheduled reel generation failed', error);
     } finally {
@@ -897,19 +989,22 @@ export class ReelsService {
     bestImage?: any;
   }> {
     try {
-      const { data: mediaData, error } = await this.supabaseService.adminSupabase
-        .from('news_media')
-        .select('*')
-        .eq('news_id', newsId)
-        .order('quality_score', { ascending: false });
+      const { data: mediaData, error } =
+        await this.supabaseService.adminSupabase
+          .from('news_media')
+          .select('*')
+          .eq('news_id', newsId)
+          .order('quality_score', { ascending: false });
 
       if (error) {
         this.logger.error(`Failed to fetch media for news ${newsId}:`, error);
         return { videos: [], images: [], hasVideo: false, hasImage: false };
       }
 
-      const videos = mediaData?.filter(item => item.media_type === 'VIDEO') || [];
-      const images = mediaData?.filter(item => item.media_type === 'IMAGE') || [];
+      const videos =
+        mediaData?.filter((item) => item.media_type === 'VIDEO') || [];
+      const images =
+        mediaData?.filter((item) => item.media_type === 'IMAGE') || [];
 
       return {
         videos,
@@ -917,7 +1012,7 @@ export class ReelsService {
         hasVideo: videos.length > 0,
         hasImage: images.length > 0,
         bestVideo: videos[0],
-        bestImage: images[0]
+        bestImage: images[0],
       };
     } catch (error) {
       this.logger.error(`Error fetching media for news ${newsId}:`, error);
@@ -925,7 +1020,9 @@ export class ReelsService {
     }
   }
 
-  private async getRecentNewsForReels(request: BulkGenerationRequest): Promise<any[]> {
+  private async getRecentNewsForReels(
+    request: BulkGenerationRequest,
+  ): Promise<any[]> {
     const startDate = new Date(Date.now() - request.hoursBack * 60 * 60 * 1000);
 
     try {
@@ -973,7 +1070,7 @@ export class ReelsService {
           processing_log: reel.processing_log,
           created_at: reel.created_at.toISOString(),
           updated_at: reel.updated_at.toISOString(),
-          published_at: reel.published_at?.toISOString()
+          published_at: reel.published_at?.toISOString(),
         });
 
       if (error) {
@@ -988,9 +1085,16 @@ export class ReelsService {
   private transformDatabaseToReel(data: any): Reel {
     try {
       // Parse JSONB fields if they're strings
-      const content = typeof data.content === 'string' ? JSON.parse(data.content) : data.content;
-      const assets = typeof data.assets === 'string' ? JSON.parse(data.assets) : data.assets;
-      const processing_log = typeof data.processing_log === 'string' ? JSON.parse(data.processing_log) : data.processing_log;
+      const content =
+        typeof data.content === 'string'
+          ? JSON.parse(data.content)
+          : data.content;
+      const assets =
+        typeof data.assets === 'string' ? JSON.parse(data.assets) : data.assets;
+      const processing_log =
+        typeof data.processing_log === 'string'
+          ? JSON.parse(data.processing_log)
+          : data.processing_log;
 
       return {
         ...data,
@@ -999,7 +1103,9 @@ export class ReelsService {
         processing_log: processing_log || [],
         created_at: new Date(data.created_at),
         updated_at: new Date(data.updated_at),
-        published_at: data.published_at ? new Date(data.published_at) : undefined
+        published_at: data.published_at
+          ? new Date(data.published_at)
+          : undefined,
       };
     } catch (error) {
       this.logger.error(`Failed to transform reel ${data.id}:`, error);
@@ -1011,7 +1117,7 @@ export class ReelsService {
   private transformDatabaseToNews(data: any): ProcessedNewsItem {
     return {
       ...data,
-      published_at: new Date(data.published_at)
+      published_at: new Date(data.published_at),
     };
   }
 
@@ -1027,17 +1133,14 @@ export class ReelsService {
     const comments = engagement.comments || 0;
 
     // Weighted engagement score
-    return Math.round(
-      views * 1 +
-      likes * 5 +
-      shares * 10 +
-      comments * 15
-    );
+    return Math.round(views * 1 + likes * 5 + shares * 10 + comments * 15);
   }
 
   private calculateProgress(processingLog: any[]): number {
     const totalSteps = 6; // initialization, processing, tts, composition, thumbnail, completion
-    const completedSteps = processingLog.filter(log => log.status === 'completed').length;
+    const completedSteps = processingLog.filter(
+      (log) => log.status === 'completed',
+    ).length;
     return Math.round((completedSteps / totalSteps) * 100);
   }
 
@@ -1047,7 +1150,7 @@ export class ReelsService {
   }
 
   private getLastError(processingLog: any[]): string | undefined {
-    const errorLog = processingLog.find(log => log.status === 'failed');
+    const errorLog = processingLog.find((log) => log.status === 'failed');
     return errorLog?.error;
   }
 
@@ -1074,7 +1177,7 @@ export class ReelsService {
   }> {
     const categoryStats = new Map();
 
-    reels.forEach(reel => {
+    reels.forEach((reel) => {
       const category = 'general'; // Default category for now
       if (!categoryStats.has(category)) {
         categoryStats.set(category, { count: 0, totalEngagement: 0 });
@@ -1089,18 +1192,23 @@ export class ReelsService {
       .map(([category, stats]) => ({
         category,
         count: stats.count,
-        avg_engagement: Math.round(stats.totalEngagement / stats.count)
+        avg_engagement: Math.round(stats.totalEngagement / stats.count),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
   }
 
-  private async getRecentActivity(startDate: Date, category?: string): Promise<Array<{
-    date: string;
-    generated: number;
-    completed: number;
-    failed: number;
-  }>> {
+  private async getRecentActivity(
+    startDate: Date,
+    category?: string,
+  ): Promise<
+    Array<{
+      date: string;
+      generated: number;
+      completed: number;
+      failed: number;
+    }>
+  > {
     // TODO: Implement daily activity aggregation
     return [];
   }
@@ -1113,12 +1221,18 @@ export class ReelsService {
         .list('', { limit: 1 });
 
       if (error) {
-        return { success: false, message: `Storage test failed: ${error.message}` };
+        return {
+          success: false,
+          message: `Storage test failed: ${error.message}`,
+        };
       }
 
       return { success: true, message: 'Storage service is ready' };
     } catch (error) {
-      return { success: false, message: `Storage test failed: ${error.message}` };
+      return {
+        success: false,
+        message: `Storage test failed: ${error.message}`,
+      };
     }
   }
 
@@ -1139,7 +1253,7 @@ export class ReelsService {
         mediaGallery: newsItem.media_gallery,
         newsMedia: mediaData,
         totalImages: mediaData.images.length,
-        totalVideos: mediaData.videos.length
+        totalVideos: mediaData.videos.length,
       };
     } catch (error) {
       this.logger.error(`Failed to test media for news ${newsId}:`, error);
@@ -1162,63 +1276,67 @@ export class ReelsService {
   }> {
     try {
       // Simple query to get news with video media
-      const { data: videoMedia, error: videoError } = await this.supabaseService.adminSupabase
-        .from('news_media')
-        .select('news_id, media_type')
-        .eq('media_type', 'VIDEO')
-        .limit(50);
+      const { data: videoMedia, error: videoError } =
+        await this.supabaseService.adminSupabase
+          .from('news_media')
+          .select('news_id, media_type')
+          .eq('media_type', 'VIDEO')
+          .limit(50);
 
       if (videoError) {
         this.logger.error('Failed to fetch video media:', videoError);
         return {
           news_with_video: [],
-          total_found: 0
+          total_found: 0,
         };
       }
 
       if (!videoMedia || videoMedia.length === 0) {
         return {
           news_with_video: [],
-          total_found: 0
+          total_found: 0,
         };
       }
 
       // Get unique news IDs
-      const uniqueNewsIds = [...new Set(videoMedia.map(item => item.news_id))].slice(0, limit);
+      const uniqueNewsIds = [
+        ...new Set(videoMedia.map((item) => item.news_id)),
+      ].slice(0, limit);
 
       // Get news details for these IDs
-      const { data: newsData, error: newsError } = await this.supabaseService.adminSupabase
-        .from('news')
-        .select('id, title, created_at')
-        .in('id', uniqueNewsIds)
-        .order('created_at', { ascending: false });
+      const { data: newsData, error: newsError } =
+        await this.supabaseService.adminSupabase
+          .from('news')
+          .select('id, title, created_at')
+          .in('id', uniqueNewsIds)
+          .order('created_at', { ascending: false });
 
       if (newsError) {
         this.logger.error('Failed to fetch news details:', newsError);
         return {
           news_with_video: [],
-          total_found: 0
+          total_found: 0,
         };
       }
 
       // Simple response with basic info
-      const newsWithVideo = (newsData || []).map(news => ({
+      const newsWithVideo = (newsData || []).map((news) => ({
         id: news.id,
         title: news.title,
         created_at: news.created_at,
         video_count: 1, // Assume 1 video for now
-        image_count: 0
+        image_count: 0,
       }));
 
       return {
         news_with_video: newsWithVideo,
-        total_found: newsWithVideo.length
+        total_found: newsWithVideo.length,
       };
     } catch (error) {
       this.logger.error('Error finding news with video:', error);
       return {
         news_with_video: [],
-        total_found: 0
+        total_found: 0,
       };
     }
   }

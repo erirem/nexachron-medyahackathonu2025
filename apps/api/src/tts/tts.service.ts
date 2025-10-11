@@ -326,7 +326,8 @@ export class TTSService {
   ): Promise<Buffer> {
     const openaiApiKey = process.env.OPENAI_API_KEY;
     if (!openaiApiKey) {
-      throw new Error('OpenAI API key bulunamadı');
+      this.logger.error('OpenAI API key bulunamadı. Lütfen apps/api/.env dosyasına OPENAI_API_KEY ekleyin.');
+      throw new BadRequestException('TTS oluşturulamadı: OpenAI API key bulunamadı. Lütfen sistem yöneticisine başvurun.');
     }
 
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
