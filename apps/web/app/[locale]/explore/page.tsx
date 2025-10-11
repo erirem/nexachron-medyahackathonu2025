@@ -13,6 +13,17 @@ export default function ExplorePage({ params }: { params: Promise<{ locale: stri
     const { user, loading, onboardingStatusLoading } = useAuthState();
     const router = useRouter();
     const pathname = usePathname();
+    
+    // Move useRef to the top - before any conditional returns
+    const clientRef = useRef<QueryClient | null>(null);
+    if (!clientRef.current) clientRef.current = new QueryClient({
+        defaultOptions: {
+            queries: {
+                staleTime: 1000 * 60 * 5, // 5 minutes
+                gcTime: 1000 * 60 * 10, // 10 minutes
+            },
+        },
+    });
 
     useEffect(() => {
         // Wait for auth to finish loading
@@ -51,16 +62,6 @@ export default function ExplorePage({ params }: { params: Promise<{ locale: stri
     if (!user) {
         return null;
     }
-
-    const clientRef = useRef<QueryClient | null>(null);
-    if (!clientRef.current) clientRef.current = new QueryClient({
-        defaultOptions: {
-            queries: {
-                staleTime: 1000 * 60 * 5, // 5 minutes
-                gcTime: 1000 * 60 * 10, // 10 minutes
-            },
-        },
-    });
     return (
         <QueryClientProvider client={clientRef.current}>
             <ExploreShell locale={locale} />
@@ -86,7 +87,7 @@ function ExploreShell({ locale }: { locale: string }) {
         const fetchCategories = async () => {
             try {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-                const response = await fetch(`${apiUrl}/api/reels/list?limit=100`);
+                const response = await fetch(`${apiUrl}/api/reels?pageSize=100&page=1`);
                 const data = await response.json();
 
                 // Extract unique categories
@@ -504,12 +505,8 @@ function PlayCircleIcon(): React.JSX.Element {
                     router.push(`/${currentLocale}/dashboard`);
                 }
             }}
-            topics={topics}
+            topics={[]}
         />
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="12" cy="12" r="10" />
-            <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />
-        </svg>
     );
 }
 

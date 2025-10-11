@@ -50,7 +50,7 @@ export function ExploreGrid({ items, locale }: Props) {
         <div className="min-h-screen px-0">
             <div className="grid gap-2.5"
                 style={{ gridTemplateColumns: `repeat(${cols.base}, minmax(0, 1fr))` }}>
-                {items.map((it, idx) => {
+                {items.filter(it => it && it.id).map((it, idx) => {
                     const href = `/${locale}/reel/${it.id}?from=explore`;
                     const isTall = idx % 7 === 3; // Every 7th item (at position 3) is taller
                     const categoryDisplay = categoryNames[it.category] || it.category.toUpperCase();

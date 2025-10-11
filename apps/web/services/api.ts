@@ -710,13 +710,13 @@ export async function fetchExploreFeed(
   config: RequestConfig = {},
 ): Promise<ExploreFeedResponse> {
   const response = await apiFetch<ExploreFeedResponse>(
-    '/api/reels/explore',
+    '/api/reels/feed',
     {
       query: {
-        limit: params.limit || 24,
-        cursor: params.cursor,
+        pageSize: params.limit || 24,
+        page: params.cursor ? Math.floor(parseInt(params.cursor) / (params.limit || 24)) + 1 : 1,
         category: params.category,
-        userId: params.userId,
+        sort: 'recent',
       },
       signal: config.signal,
     },
