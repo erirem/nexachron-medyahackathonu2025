@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dashboard_page.dart';
 import 'bookmarks_page.dart';
-import '../../../auth/presentation/pages/profile_screen.dart';
 import '../../../games/presentation/pages/games_page.dart';
 import '../../../podcast/presentation/pages/podcast_page.dart';
+import '../../../reels/presentation/pages/reels_page.dart';
 
 class CurrentIndexNotifier extends Notifier<int> {
   @override
@@ -28,69 +28,75 @@ class MainNavigation extends ConsumerWidget {
 
     final pages = [
       const DashboardPage(),
+      const ReelsPage(),
       const PodcastPage(),
       const GamesPage(),
       const BookmarksPage(),
-      const ProfileScreen(),
     ];
 
     return Scaffold(
-      body: IndexedStack(index: currentIndex, children: pages),
+      body: pages[currentIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF1a2234),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
           border: Border(
-            top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+            top: BorderSide(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavBarItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: 'Ana Sayfa',
-                  isActive: currentIndex == 0,
-                  onTap: () =>
-                      ref.read(currentIndexProvider.notifier).setIndex(0),
-                ),
-                _NavBarItem(
-                  icon: Icons.podcasts_outlined,
-                  activeIcon: Icons.podcasts,
-                  label: 'Podcast',
-                  isActive: currentIndex == 1,
-                  onTap: () =>
-                      ref.read(currentIndexProvider.notifier).setIndex(1),
-                ),
-                _NavBarItem(
-                  icon: Icons.games_outlined,
-                  activeIcon: Icons.games,
-                  label: 'Oyunlar',
-                  isActive: currentIndex == 2,
-                  onTap: () =>
-                      ref.read(currentIndexProvider.notifier).setIndex(2),
-                ),
-                _NavBarItem(
-                  icon: Icons.bookmark_outline,
-                  activeIcon: Icons.bookmark,
-                  label: 'Kayıtlar',
-                  isActive: currentIndex == 3,
-                  onTap: () =>
-                      ref.read(currentIndexProvider.notifier).setIndex(3),
-                ),
-                _NavBarItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: 'Profil',
-                  isActive: currentIndex == 4,
-                  onTap: () =>
-                      ref.read(currentIndexProvider.notifier).setIndex(4),
-                ),
-              ],
-            ),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(6, 16, 6, 32),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _NavBarItem(
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: 'Ana Sayfa',
+                isActive: currentIndex == 0,
+                onTap: () =>
+                    ref.read(currentIndexProvider.notifier).setIndex(0),
+              ),
+              _NavBarItem(
+                icon: Icons.video_library_outlined,
+                activeIcon: Icons.video_library,
+                label: 'Reels',
+                isActive: currentIndex == 1,
+                onTap: () =>
+                    ref.read(currentIndexProvider.notifier).setIndex(1),
+              ),
+              _NavBarItem(
+                icon: Icons.podcasts_outlined,
+                activeIcon: Icons.podcasts,
+                label: 'Podcast',
+                isActive: currentIndex == 2,
+                onTap: () =>
+                    ref.read(currentIndexProvider.notifier).setIndex(2),
+              ),
+              _NavBarItem(
+                icon: Icons.games_outlined,
+                activeIcon: Icons.games,
+                label: 'Oyunlar',
+                isActive: currentIndex == 3,
+                onTap: () =>
+                    ref.read(currentIndexProvider.notifier).setIndex(3),
+              ),
+              _NavBarItem(
+                icon: Icons.bookmark_outline,
+                activeIcon: Icons.bookmark,
+                label: 'Kayıtlar',
+                isActive: currentIndex == 4,
+                onTap: () =>
+                    ref.read(currentIndexProvider.notifier).setIndex(4),
+              ),
+            ],
           ),
         ),
       ),
@@ -115,39 +121,47 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: isActive
-              ? const LinearGradient(
-                  colors: [Color(0xFF0f6acd), Color(0xFF1a8dff)],
-                )
-              : null,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              color: isActive ? Colors.white : Colors.white.withOpacity(0.6),
-              size: 24,
-            ),
-            if (isActive) ...[
-              const SizedBox(width: 8),
+    return Flexible(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: isActive
+                ? const LinearGradient(
+                    colors: [Color(0xFF0f6acd), Color(0xFF1a8dff)],
+                  )
+                : null,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isActive ? activeIcon : icon,
+                color: isActive
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.6),
+                size: 26,
+              ),
+              const SizedBox(height: 4),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                style: TextStyle(
+                  color: isActive
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.6),
+                  fontSize: 10,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                textAlign: TextAlign.center,
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -171,4 +185,3 @@ class SearchPage extends StatelessWidget {
     );
   }
 }
-

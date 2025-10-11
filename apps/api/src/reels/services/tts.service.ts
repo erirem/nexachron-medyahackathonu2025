@@ -56,6 +56,10 @@ export class TTSService {
       // 2. Upload to storage and get URL
       const audioUrl = await this.uploadAudioToStorage(audioBuffer);
 
+      if (!audioUrl) {
+        throw new Error('Failed to upload TTS audio to storage');
+      }
+
       // 3. Calculate duration (approximate)
       const duration = this.estimateAudioDuration(request.text, request.speed);
 
@@ -119,7 +123,7 @@ export class TTSService {
   /**
    * Upload audio to storage (Supabase Storage)
    */
-  private async uploadAudioToStorage(audioBuffer: Buffer): Promise<string> {
+  private async uploadAudioToStorage(audioBuffer: Buffer): Promise<string | null> {
     const fileName = `tts-${Date.now()}-${crypto.randomUUID()}.mp3`;
     
     this.logger.log(`Uploading TTS audio: ${fileName} (${audioBuffer.length} bytes)`);
@@ -148,8 +152,8 @@ export class TTSService {
 
     } catch (error) {
       this.logger.error(`Failed to upload TTS audio: ${error.message}`);
-      // Fallback to mock URL if upload fails
-      return `https://example.com/storage/reels-audio/${fileName}`;
+      // Return null instead of invalid URL to indicate failure
+      return null;
     }
   }
 
@@ -186,7 +190,7 @@ export class TTSService {
       this.logger.log(`Mock TTS generated: ${audioUrl} (${duration}s)`);
       
       return {
-        audio_url: audioUrl,
+        audio_url: audioUrl!,
         duration_seconds: duration,
         file_size_bytes: audioBuffer.length
       };

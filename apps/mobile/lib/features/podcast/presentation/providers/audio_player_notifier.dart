@@ -67,7 +67,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
   @override
   AudioPlayerState build() {
-    _initializeAudioPlayer();
+    // Audio player'ı widget tree build'i tamamlandıktan sonra başlat
+    Future.microtask(() => _initializeAudioPlayer());
     return const AudioPlayerState();
   }
 

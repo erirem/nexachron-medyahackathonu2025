@@ -979,8 +979,8 @@ export class ReelGeneratorService {
       this.logger.error(`Video composition failed: ${error.message}`);
       this.logger.error('Full video error:', error);
       this.logger.error('Error stack:', error.stack);
-      // Fallback to mock URL
-      return `https://example.com/reels/${reel.id}.mp4`;
+      // Don't return invalid URL, let the error propagate
+      throw error;
     }
   }
 }

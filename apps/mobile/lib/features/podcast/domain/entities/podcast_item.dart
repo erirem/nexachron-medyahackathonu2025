@@ -56,7 +56,7 @@ class PodcastItem {
           ? newsItem.summary
           : 'Haber detayları',
       imageUrl: imageUrl,
-      duration: '${estimatedDuration} dk',
+      duration: '$estimatedDuration dk',
       category: newsItem.category ?? 'Gündem',
     );
   }

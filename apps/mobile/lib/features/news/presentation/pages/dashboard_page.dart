@@ -28,10 +28,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // İlk yükleme
+    // İlk yükleme - timeout ile
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(infiniteNewsProvider.notifier).loadInitial();
+      _loadInitialWithTimeout();
     });
+  }
+
+  Future<void> _loadInitialWithTimeout() async {
+    try {
+      await ref
+          .read(infiniteNewsProvider.notifier)
+          .loadInitial()
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              print('⚠️ News loading timeout - continuing with empty state');
+            },
+          );
+    } catch (e) {
+      print('❌ Error loading initial news: $e');
+    }
   }
 
   @override
@@ -214,22 +230,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 stops: [0.0, 0.55, 1.0],
               ),
             ),
-            child: SafeArea(
-              child: TransparentLoadingOverlay(
-                isLoading: _isRefreshing,
-                child: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  color: Colors.white.withOpacity(0.8),
-                  backgroundColor: Colors.black.withOpacity(0.7),
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      // App Bar
-                      SliverAppBar(
-                        floating: true,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        title: const Text(
+            child: TransparentLoadingOverlay(
+              isLoading: _isRefreshing,
+              child: Column(
+                children: [
+                  // App Bar
+                  Container(
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top + 10,
+                      left: 16,
+                      right: 16,
+                      bottom: 10,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
                           'Nexachron',
                           style: TextStyle(
                             fontSize: 24,
@@ -237,460 +253,495 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             color: Colors.white,
                           ),
                         ),
-                        actions: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.notifications_outlined,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.account_circle_outlined,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              setState(
-                                () => _showProfileMenu = !_showProfileMenu,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-
-                      // Search Bar
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: NewsSearchBar(
-                            onSearch: (query) {
-                              ref
-                                  .read(searchQueryProvider.notifier)
-                                  .setQuery(query);
-                            },
-                          ),
-                        ),
-                      ),
-
-                      // Header
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'AA PANORAMASI',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  letterSpacing: 3,
-                                  color: Colors.white.withOpacity(0.6),
-                                  fontWeight: FontWeight.w500,
-                                ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.notifications_outlined,
+                                color: Colors.white,
                               ),
-                              const SizedBox(height: 8),
-                              // Başlık alanında otomatik dönen sabah/öğlen özeti
-                              const _BriefRotator(),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                      // Loading info banner for personalized feed
-                      if (infiniteNews.items.isEmpty && infiniteNews.isLoading)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.06),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.1),
-                                ),
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.account_circle_outlined,
+                                color: Colors.white,
                               ),
-                              child: Row(
+                              onPressed: () {
+                                setState(
+                                  () => _showProfileMenu = !_showProfileMenu,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+                    child: NewsSearchBar(
+                      onSearch: (query) {
+                        ref.read(searchQueryProvider.notifier).setQuery(query);
+                      },
+                    ),
+                  ),
+
+                  // Content
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: _onRefresh,
+                      color: Colors.white.withOpacity(0.8),
+                      backgroundColor: Colors.black.withOpacity(0.7),
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        slivers: [
+                          // Header
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                                  Text(
+                                    'AA PANORAMASI',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      letterSpacing: 3,
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Sizin için kişisel haberler yükleniyor…',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.85),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
+                                  const SizedBox(height: 8),
+                                  // Başlık alanında otomatik dönen sabah/öğlen özeti
+                                  const _BriefRotator(),
                                 ],
                               ),
                             ),
                           ),
-                        ),
 
-                      // Categories (collapsible)
-                      SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: GestureDetector(
-                                onTap: () => setState(
-                                  () => _showCategories = !_showCategories,
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                          // Loading info banner for personalized feed
+                          if (infiniteNews.items.isEmpty &&
+                              infiniteNews.isLoading)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _showCategories
-                                          ? Icons.keyboard_arrow_up
-                                          : Icons.keyboard_arrow_down,
-                                      color: Colors.white.withOpacity(0.8),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.06),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.1),
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Kategoriler',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white.withOpacity(0.85),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            AnimatedCrossFade(
-                              duration: const Duration(milliseconds: 200),
-                              crossFadeState: _showCategories
-                                  ? CrossFadeState.showSecond
-                                  : CrossFadeState.showFirst,
-                              firstChild: const SizedBox.shrink(),
-                              secondChild: categories.when(
-                                data: (cats) => SizedBox(
-                                  height: 40,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                    ),
-                                    itemCount: cats.length + 1,
-                                    itemBuilder: (context, index) {
-                                      if (index == 0) {
-                                        return CategoryChip(
-                                          label: 'Senin için',
-                                          isActive: selectedCategory == null,
-                                          compact: true,
-                                          onTap: () {
-                                            ref
-                                                .read(
-                                                  selectedCategoryProvider
-                                                      .notifier,
-                                                )
-                                                .clear();
-                                            ref
-                                                .read(
-                                                  infiniteNewsProvider.notifier,
-                                                )
-                                                .loadInitial();
-                                          },
-                                        );
-                                      }
-                                      final category = cats[index - 1];
-                                      return CategoryChip(
-                                        label: category.label,
-                                        count: category.total,
-                                        isActive:
-                                            selectedCategory == category.id,
-                                        compact: true,
-                                        onTap: () {
-                                          ref
-                                              .read(
-                                                selectedCategoryProvider
-                                                    .notifier,
-                                              )
-                                              .setCategory(category.id);
-                                          ref
-                                              .read(
-                                                infiniteNewsProvider.notifier,
-                                              )
-                                              .loadInitial(
-                                                categoryId: category.id,
-                                              );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                                loading: () => const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                                error: (error, stack) =>
-                                    const SizedBox.shrink(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                      // Recommendations Section Header
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final recommendations = ref.watch(
-                            recommendationsProvider,
-                          );
-                          return recommendations.when(
-                            data: (items) {
-                              if (items.isEmpty) {
-                                return const SliverToBoxAdapter(
-                                  child: SizedBox.shrink(),
-                                );
-                              }
-
-                              return SliverToBoxAdapter(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(
-                                        Icons.auto_awesome,
-                                        color: Colors.white.withOpacity(0.8),
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Sizin İçin Önerilenler',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white.withOpacity(0.9),
+                                      const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      GestureDetector(
-                                        onTap: () =>
-                                            _showRecommendationsInfo(context),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Sizin için kişisel haberler yükleniyor…',
+                                          style: TextStyle(
                                             color: Colors.white.withOpacity(
-                                              0.1,
+                                              0.85,
                                             ),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withOpacity(
-                                                0.2,
-                                              ),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            Icons.info_outline,
-                                            size: 16,
-                                            color: Colors.white.withOpacity(
-                                              0.7,
-                                            ),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              );
-                            },
-                            loading: () => const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
+                              ),
                             ),
-                            error: (error, stack) => const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            ),
-                          );
-                        },
-                      ),
 
-                      // Recommendations List
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final recommendations = ref.watch(
-                            recommendationsProvider,
-                          );
-                          return recommendations.when(
-                            data: (items) {
-                              if (items.isEmpty) {
-                                return const SliverToBoxAdapter(
-                                  child: SizedBox.shrink(),
-                                );
-                              }
-
-                              return SliverPadding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                sliver: SliverList(
-                                  delegate: SliverChildBuilderDelegate((
-                                    context,
-                                    index,
-                                  ) {
-                                    final news = items[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 12,
-                                      ),
-                                      child: EnhancedNewsCard(
-                                        news: news,
-                                        index: index,
-                                        isListItem: true,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  NewsDetailPage(
-                                                    newsId: news.id,
-                                                  ),
+                          // Categories (collapsible)
+                          SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () => setState(
+                                      () => _showCategories = !_showCategories,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _showCategories
+                                              ? Icons.keyboard_arrow_up
+                                              : Icons.keyboard_arrow_down,
+                                          color: Colors.white.withOpacity(0.8),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Kategoriler',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white.withOpacity(
+                                              0.85,
                                             ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                AnimatedCrossFade(
+                                  duration: const Duration(milliseconds: 200),
+                                  crossFadeState: _showCategories
+                                      ? CrossFadeState.showSecond
+                                      : CrossFadeState.showFirst,
+                                  firstChild: const SizedBox.shrink(),
+                                  secondChild: categories.when(
+                                    data: (cats) => SizedBox(
+                                      height: 40,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        itemCount: cats.length + 1,
+                                        itemBuilder: (context, index) {
+                                          if (index == 0) {
+                                            return CategoryChip(
+                                              label: 'Senin için',
+                                              isActive:
+                                                  selectedCategory == null,
+                                              compact: true,
+                                              onTap: () {
+                                                ref
+                                                    .read(
+                                                      selectedCategoryProvider
+                                                          .notifier,
+                                                    )
+                                                    .clear();
+                                                ref
+                                                    .read(
+                                                      infiniteNewsProvider
+                                                          .notifier,
+                                                    )
+                                                    .loadInitial();
+                                              },
+                                            );
+                                          }
+                                          final category = cats[index - 1];
+                                          return CategoryChip(
+                                            label: category.label,
+                                            count: category.total,
+                                            isActive:
+                                                selectedCategory == category.id,
+                                            compact: true,
+                                            onTap: () {
+                                              ref
+                                                  .read(
+                                                    selectedCategoryProvider
+                                                        .notifier,
+                                                  )
+                                                  .setCategory(category.id);
+                                              ref
+                                                  .read(
+                                                    infiniteNewsProvider
+                                                        .notifier,
+                                                  )
+                                                  .loadInitial(
+                                                    categoryId: category.id,
+                                                  );
+                                            },
                                           );
                                         },
                                       ),
-                                    );
-                                  }, childCount: items.length),
+                                    ),
+                                    loading: () => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                    error: (error, stack) =>
+                                        const SizedBox.shrink(),
+                                  ),
                                 ),
-                              );
-                            },
-                            loading: () => const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            ),
-                            error: (error, stack) => const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Spacing after recommendations
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final recommendations = ref.watch(
-                            recommendationsProvider,
-                          );
-                          return recommendations.when(
-                            data: (items) {
-                              if (items.isEmpty) {
-                                return const SliverToBoxAdapter(
-                                  child: SizedBox.shrink(),
-                                );
-                              }
-                              return const SliverToBoxAdapter(
-                                child: SizedBox(height: 24),
-                              );
-                            },
-                            loading: () => const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            ),
-                            error: (error, stack) => const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // News List - Infinite Scroll (single column)
-                      if (infiniteNews.items.isEmpty && infiniteNews.isLoading)
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _buildSkeletonCard(),
-                              ),
-                              childCount: 6,
+                              ],
                             ),
                           ),
-                        )
-                      else if (infiniteNews.items.isEmpty)
-                        const SliverFillRemaining(
-                          child: Center(
-                            child: Text(
-                              'Bu kategoride haber bulunamadı',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                        )
-                      else
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate((
-                              context,
-                              index,
-                            ) {
-                              final news = infiniteNews.items[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: EnhancedNewsCard(
-                                  news: news,
-                                  index: index,
-                                  isListItem: true,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            NewsDetailPage(newsId: news.id),
+
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                          // Recommendations Section Header
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final recommendations = ref.watch(
+                                recommendationsProvider,
+                              );
+                              return recommendations.when(
+                                data: (items) {
+                                  if (items.isEmpty) {
+                                    return const SliverToBoxAdapter(
+                                      child: SizedBox.shrink(),
+                                    );
+                                  }
+
+                                  return SliverToBoxAdapter(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
                                       ),
-                                    );
-                                  },
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.auto_awesome,
+                                            color: Colors.white.withOpacity(
+                                              0.8,
+                                            ),
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Sizin İçin Önerilenler',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white.withOpacity(
+                                                0.9,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: () =>
+                                                _showRecommendationsInfo(
+                                                  context,
+                                                ),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(
+                                                  0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                Icons.info_outline,
+                                                size: 16,
+                                                color: Colors.white.withOpacity(
+                                                  0.7,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                loading: () => const SliverToBoxAdapter(
+                                  child: SizedBox.shrink(),
                                 ),
+                                error: (error, stack) =>
+                                    const SliverToBoxAdapter(
+                                      child: SizedBox.shrink(),
+                                    ),
                               );
-                            }, childCount: infiniteNews.items.length),
+                            },
                           ),
-                        ),
 
-                      // Loading Indicator
-                      if (infiniteNews.isLoading &&
-                          infiniteNews.items.isNotEmpty)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Center(
-                              child: SizedBox(
-                                width: 32,
-                                height: 32,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 3,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white.withOpacity(0.7),
+                          // Recommendations List
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final recommendations = ref.watch(
+                                recommendationsProvider,
+                              );
+                              return recommendations.when(
+                                data: (items) {
+                                  if (items.isEmpty) {
+                                    return const SliverToBoxAdapter(
+                                      child: SizedBox.shrink(),
+                                    );
+                                  }
+
+                                  return SliverPadding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    sliver: SliverList(
+                                      delegate: SliverChildBuilderDelegate((
+                                        context,
+                                        index,
+                                      ) {
+                                        final news = items[index];
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          child: EnhancedNewsCard(
+                                            news: news,
+                                            index: index,
+                                            isListItem: true,
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      NewsDetailPage(
+                                                        newsId: news.id,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      }, childCount: items.length),
+                                    ),
+                                  );
+                                },
+                                loading: () => const SliverToBoxAdapter(
+                                  child: SizedBox.shrink(),
+                                ),
+                                error: (error, stack) =>
+                                    const SliverToBoxAdapter(
+                                      child: SizedBox.shrink(),
+                                    ),
+                              );
+                            },
+                          ),
+
+                          // Spacing after recommendations
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final recommendations = ref.watch(
+                                recommendationsProvider,
+                              );
+                              return recommendations.when(
+                                data: (items) {
+                                  if (items.isEmpty) {
+                                    return const SliverToBoxAdapter(
+                                      child: SizedBox.shrink(),
+                                    );
+                                  }
+                                  return const SliverToBoxAdapter(
+                                    child: SizedBox(height: 24),
+                                  );
+                                },
+                                loading: () => const SliverToBoxAdapter(
+                                  child: SizedBox.shrink(),
+                                ),
+                                error: (error, stack) =>
+                                    const SliverToBoxAdapter(
+                                      child: SizedBox.shrink(),
+                                    ),
+                              );
+                            },
+                          ),
+
+                          // News List - Infinite Scroll (single column)
+                          if (infiniteNews.items.isEmpty &&
+                              infiniteNews.isLoading)
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: _buildSkeletonCard(),
+                                  ),
+                                  childCount: 6,
+                                ),
+                              ),
+                            )
+                          else if (infiniteNews.items.isEmpty)
+                            const SliverFillRemaining(
+                              child: Center(
+                                child: Text(
+                                  'Bu kategoride haber bulunamadı',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                            )
+                          else
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  index,
+                                ) {
+                                  final news = infiniteNews.items[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: EnhancedNewsCard(
+                                      news: news,
+                                      index: index,
+                                      isListItem: true,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                NewsDetailPage(newsId: news.id),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                }, childCount: infiniteNews.items.length),
+                              ),
+                            ),
+
+                          // Loading Indicator
+                          if (infiniteNews.isLoading &&
+                              infiniteNews.items.isNotEmpty)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 32,
+                                    height: 32,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white.withOpacity(0.7),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
 
-                      const SliverToBoxAdapter(child: SizedBox(height: 32)),
-                    ],
+                          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -704,10 +755,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   child: Stack(
                     children: [
                       Positioned(
-                        top:
-                            kToolbarHeight +
-                            MediaQuery.of(context).padding.top +
-                            8,
+                        top: 80 + MediaQuery.of(context).padding.top + 8,
                         right: 16,
                         child: ProfileDropdownMenu(
                           onClose: () =>
@@ -854,9 +902,15 @@ class _BriefRotatorState extends State<_BriefRotator>
 
   void _startLoop() async {
     while (mounted) {
+      if (!mounted) return;
       await _controller.forward();
+
+      if (!mounted) return;
       await Future.delayed(const Duration(seconds: 5));
+
+      if (!mounted) return;
       await _controller.reverse();
+
       if (!mounted) return;
       setState(() {
         _index = (_index + 1) % _briefs.length;

@@ -67,14 +67,18 @@ class _GlassmorphicButtonState extends State<GlassmorphicButton>
   void _onTapUp(TapUpDetails details) {
     if (widget.enabled && !widget.isLoading) {
       setState(() => _isPressed = false);
-      _controller.reverse();
+      if (mounted) {
+        _controller.reverse();
+      }
     }
   }
 
   void _onTapCancel() {
     if (widget.enabled && !widget.isLoading) {
       setState(() => _isPressed = false);
-      _controller.reverse();
+      if (mounted) {
+        _controller.reverse();
+      }
     }
   }
 

@@ -70,6 +70,12 @@ class NexachronApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             title: 'Nexachron',
             theme: buildAppTheme(),
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(padding: EdgeInsets.zero),
+                child: child!,
+              );
+            },
             onGenerateTitle: (context) => context.l10n.appTitle,
             locale: localeController.locale,
             supportedLocales: buildSupportedLocales(),

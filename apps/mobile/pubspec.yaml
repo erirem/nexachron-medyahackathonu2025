@@ -51,7 +51,7 @@ dependencies:
   web_socket_channel: ^3.0.1
   just_audio: ^0.9.38
   audio_session: ^0.1.18
-  better_player: ^0.0.81
+  video_player: ^2.9.2
 
 dev_dependencies:
   flutter_test:

@@ -246,7 +246,7 @@ class NewsApiService {
         if (data['ok'] == true && data['items'] != null) {
           final items = data['items'] as List<dynamic>;
           print('✅ Loaded ${items.length} recommendation items');
-          
+
           // İçeriği boş bırak ve random sırala
           final newsItems = items.map((item) {
             final newsItem = NewsItem.fromJson(item);
@@ -268,7 +268,7 @@ class NewsApiService {
               media: newsItem.media,
             );
           }).toList();
-          
+
           // Random sırala
           newsItems.shuffle();
           return newsItems;
@@ -278,7 +278,7 @@ class NewsApiService {
         if (data['success'] == true && data['data'] != null) {
           final items = data['data']['items'] as List<dynamic>;
           print('✅ Loaded ${items.length} recommendation items');
-          
+
           // İçeriği boş bırak ve random sırala
           final newsItems = items.map((item) {
             final newsItem = NewsItem.fromJson(item);
@@ -300,7 +300,7 @@ class NewsApiService {
               media: newsItem.media,
             );
           }).toList();
-          
+
           // Random sırala
           newsItems.shuffle();
           return newsItems;
