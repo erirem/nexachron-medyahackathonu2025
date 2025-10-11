@@ -1,0 +1,61 @@
+# ===========================================
+# Nexachron API Development Dockerfile
+# ===========================================
+# Multi-stage build for NestJS API with hot-reload support
+
+# ===========================================
+# Stage 1: Dependencies
+# ===========================================
+FROM node:20-alpine AS dependencies
+
+# Install pnpm globally
+RUN npm install -g pnpm@10.17.0
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY apps/api/package.json ./apps/api/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# ===========================================
+# Stage 2: Development
+# ===========================================
+FROM node:20-alpine AS development
+
+# Install pnpm globally
+RUN npm install -g pnpm@10.17.0
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependencies from previous stage
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/apps/api/node_modules ./apps/api/node_modules
+
+# Copy workspace configuration
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY turbo.json ./
+
+# Copy shared types
+COPY packages/shared-types ./packages/shared-types
+
+# Copy API source code
+COPY apps/api ./apps/api
+
+# Set working directory to API
+WORKDIR /app/apps/api
+
+# Expose port
+EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Start development server with hot-reload
+CMD ["pnpm", "run", "dev"]

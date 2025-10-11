@@ -18,6 +18,26 @@
 
 ---
 
+## 🚀 Hızlı Başlangıç
+
+### 🐳 Docker ile Kurulum (Önerilen)
+```bash
+git clone https://github.com/your-username/nexachron.git
+cd nexachron
+cp .env.example .env
+# .env dosyasını düzenle (Supabase ve OpenAI anahtarları)
+./docker-start.sh
+```
+
+**Tüm servisler otomatik olarak başlar:**
+- 🌐 **Web**: http://localhost:3000
+- 🔧 **API**: http://localhost:4000  
+- 📱 **Mobile**: http://localhost:8080
+
+[Detaylı Docker kurulum rehberi →](DOCKER_SETUP.md)
+
+---
+
 
 
 ##  System Architecture
@@ -300,7 +320,78 @@ sequenceDiagram
 
 ##  Kurulum ve Çalıştırma Rehberi
 
-### Gereksinimler
+### 🐳 Docker ile Hızlı Kurulum (Önerilen)
+
+#### Gereksinimler
+- **Docker**: 20.10.0 veya üzeri
+- **Docker Compose**: 2.0.0 veya üzeri
+- **Git**: Projeyi klonlamak için
+- **Supabase hesabı**: Veritabanı için
+- **OpenAI API anahtarı**: AI servisleri için
+
+#### Hızlı Başlangıç
+```bash
+# 1. Projeyi klonla
+git clone https://github.com/your-username/nexachron.git
+cd nexachron
+
+# 2. Environment dosyasını oluştur
+cp .env.example .env
+
+# 3. .env dosyasını düzenle (Supabase ve OpenAI anahtarlarını ekle)
+nano .env
+
+# 4. Otomatik kurulum (tek komut!)
+./docker-start.sh
+```
+
+#### Manuel Docker Kurulumu
+```bash
+# Environment dosyalarını oluştur
+cp .env.example .env
+cp .env apps/api/.env
+
+# Web için .env.local oluştur
+cat > apps/web/.env.local << EOF
+NODE_ENV=development
+NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+EOF
+
+# Docker ile başlat
+docker-compose up --build
+```
+
+#### Servisler
+| Servis | Port | URL | Açıklama |
+|--------|------|-----|----------|
+| **Web** | 3000 | http://localhost:3000 | Next.js frontend |
+| **API** | 4000 | http://localhost:4000 | NestJS backend |
+| **Mobile** | 8080 | http://localhost:8080 | Flutter web |
+
+#### Yararlı Docker Komutları
+```bash
+# Servisleri başlat
+docker-compose up -d
+
+# Logları izle
+docker-compose logs -f
+
+# Servisleri durdur
+docker-compose down
+
+# Tam temizlik
+docker-compose down --volumes --remove-orphans
+```
+
+**Detaylı Docker kurulum rehberi için**: [DOCKER_SETUP.md](DOCKER_SETUP.md)
+
+---
+
+### 🔧 Manuel Kurulum (Gelişmiş)
+
+#### Gereksinimler
 
 #### Sistem Gereksinimleri
 - **Node.js**: 20.0.0 veya üzeri
@@ -726,6 +817,7 @@ git push origin main  # Triggers auto-deployment
 
 ## 📚 Documentation
 
+- [**Docker Setup**](DOCKER_SETUP.md) - 🐳 Docker ile kolay kurulum
 - [**Team Guide**](docs/TEAM_GUIDE.md) - Onboarding & workflow
 - [**Local Development**](docs/LOCAL_DEVELOPMENT.md) - Setup & debugging  
 - [**Deployment Guide**](docs/DEPLOYMENT.md) - Production setup

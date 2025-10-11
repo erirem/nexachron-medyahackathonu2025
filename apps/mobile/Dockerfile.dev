@@ -1,0 +1,55 @@
+# ===========================================
+# Nexachron Mobile Development Dockerfile
+# ===========================================
+# Flutter web development with hot-reload support
+
+# ===========================================
+# Stage 1: Flutter SDK
+# ===========================================
+FROM ghcr.io/cirruslabs/flutter:stable AS flutter-sdk
+
+# Set working directory
+WORKDIR /app
+
+# ===========================================
+# Stage 2: Dependencies
+# ===========================================
+FROM flutter-sdk AS dependencies
+
+# Copy pubspec files
+COPY pubspec.yaml pubspec.lock ./
+
+# Get Flutter dependencies
+RUN flutter pub get
+
+# ===========================================
+# Stage 3: Development
+# ===========================================
+FROM flutter-sdk AS development
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependencies from previous stage
+COPY --from=dependencies /app/.dart_tool ./.dart_tool
+COPY --from=dependencies /app/.packages ./.packages
+COPY --from=dependencies /app/pubspec.lock ./pubspec.lock
+
+# Copy Flutter source code
+COPY . .
+
+# Get Flutter dependencies again to ensure everything is up to date
+RUN flutter pub get
+
+# Enable web support
+RUN flutter config --enable-web
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:8080 || exit 1
+
+# Start Flutter web development server
+CMD ["flutter", "run", "-d", "web-server", "--web-port=8080", "--web-hostname=0.0.0.0"]

@@ -1,0 +1,129 @@
+# ===========================================
+# Nexachron Docker Compose - Local Development
+# ===========================================
+# Tüm servisleri local development için orchestrate eder
+
+# Docker Compose version 3.8 - version field is deprecated in newer versions
+
+services:
+  # ===========================================
+  # API Service (NestJS Backend)
+  # ===========================================
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: nexachron-api
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - FRONTEND_URL=http://web:3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_URL=${OPENAI_API_URL:-https://api.openai.com/v1}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+    volumes:
+      # Hot-reload için source code mount
+      - ./apps/api/src:/app/apps/api/src
+      - ./packages/shared-types:/app/packages/shared-types
+      # node_modules için anonymous volume (performance)
+      - /app/apps/api/node_modules
+      - /app/node_modules
+    networks:
+      - nexachron-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===========================================
+  # Web Service (Next.js Frontend)
+  # ===========================================
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    container_name: nexachron-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://api:4000
+      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+    volumes:
+      # Hot-reload için source code mount
+      - ./apps/web:/app/apps/web
+      - ./packages/shared-types:/app/packages/shared-types
+      # node_modules için anonymous volume (performance)
+      - /app/apps/web/node_modules
+      - /app/node_modules
+    networks:
+      - nexachron-network
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ===========================================
+  # Mobile Service (Flutter Web)
+  # ===========================================
+  mobile:
+    build:
+      context: ./apps/mobile
+      dockerfile: Dockerfile.dev
+    container_name: nexachron-mobile
+    ports:
+      - "8080:8080"
+    environment:
+      - FLUTTER_WEB_AUTO_DETECT=true
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - API_URL=http://host.docker.internal:4000
+    volumes:
+      # Hot-reload için source code mount
+      - ./apps/mobile/lib:/app/lib
+      - ./apps/mobile/web:/app/web
+      - ./apps/mobile/pubspec.yaml:/app/pubspec.yaml
+      - ./apps/mobile/pubspec.lock:/app/pubspec.lock
+    networks:
+      - nexachron-network
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  nexachron-network:
+    driver: bridge
+    name: nexachron-network
+
+# ===========================================
+# Volumes
+# ===========================================
+volumes:
+  # Anonymous volumes for node_modules (performance optimization)
+  api_node_modules:
+  web_node_modules:
