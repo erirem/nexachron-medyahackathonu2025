@@ -1,125 +1,224 @@
 # Nexachron 🚀
 
-**Gamified News Platform** - AI destekli içerik kürasyonu, quiz sistemleri ve sosyal özelliklerle donatılmış gamified haber platformu.
+**Gamified News Platform** - AI destekli içerik kürasyonu, quiz sistemleri ve sosyal özelliklerle donatılmış modern haber platformu.
 
-## ✨ Özellikler
+## 🎯 Proje Hakkında
 
-- 🎮 **Gamification**: XP sistemi, kartlar, liderlik tabloları
-- 📰 **Akıllı Haber Akışı**: Ruh haline dayalı içerik (Mutlu, Popüler, Dünya, Sürpriz)
-- 🧠 **İnteraktif Quizler**: Soruları yanıtlayarak XP kazanın
-- 🎴 **Kart Koleksiyonu**: Farklı nadirlik seviyelerinde nadir koleksiyonlar
-- 📍 **Konum Tabanlı**: Şehir bazlı içerik filtreleme
-- 💬 **Sosyal Özellikler**: Yorumlar, emoji tepkileri
-- 🔮 **Tahminler**: Gelecek olaylara bahis yapın
-- 🎬 **Reels**: Video içerik keşfi
-- 🎵 **Podcast**: Ses içerikleri
-- 📊 **Kişisel Analist**: AI destekli kullanıcı analizi
+Nexachron, kullanıcıların haberleri eğlenceli bir şekilde tüketmesini sağlayan, gamification öğeleri ile zenginleştirilmiş bir haber platformudur. AI destekli kişiselleştirme, çoklu platform desteği ve kapsamlı oyun sistemi ile kullanıcı deneyimini ön planda tutar.
 
-## 🏗️ Mimari
+## ✨ Ana Özellikler
+
+### 🎮 Gamification Sistemi
+- **XP Sistemi**: Haber okuma, quiz çözme ve etkileşimlerle XP kazanma
+- **Kart Koleksiyonu**: Nadir kartlar toplama ve koleksiyon oluşturma
+- **Liderlik Tablosu**: Kullanıcılar arası rekabet ve sıralama
+- **Streak Sistemi**: Günlük kullanım alışkanlığı oluşturma
+- **Rütbe Sistemi**: XP'ye göre rütbe yükseltme
+
+### 📰 Akıllı Haber Sistemi
+- **Ruh Haline Dayalı İçerik**: Mutlu, Popüler, Dünya, Sürpriz modları
+- **AI Destekli Öneriler**: Kullanıcı davranışlarına göre kişiselleştirilmiş içerik
+- **Konum Tabanlı Filtreleme**: Şehir bazlı haber filtreleme
+- **Kategori Sistemi**: Spor, Teknoloji, Politika, Ekonomi vb.
+- **Real-time Güncellemeler**: Anlık haber akışı
+
+### 🧠 İnteraktif Oyun Sistemi
+- **Quiz Oyunları**: Güncel olaylar hakkında sorular
+- **Hafıza Oyunları**: Haber başlıklarını eşleştirme
+- **Kelime Oyunları**: Haber temalı kelime bulmacaları
+- **Timeline Oyunları**: Olayları kronolojik sıraya koyma
+- **Görsel Oyunlar**: Fark bulma ve tahmin oyunları
+- **Multiplayer Oyunlar**: Çok oyunculu yarışmalar
+
+### 🎬 Medya İçerik Sistemi
+- **Reels**: Kısa video içerikler
+- **Podcast**: Ses içerikleri ve TTS desteği
+- **Görsel Galeri**: Haber fotoğrafları ve medya
+- **Sesli Okuma**: Text-to-Speech özelliği
+
+### 💬 Sosyal Özellikler
+- **Yorum Sistemi**: Haberler hakkında yorum yapma
+- **Emoji Tepkileri**: İçeriklere tepki verme
+- **Takip Sistemi**: Kullanıcı ve konu takibi
+- **Paylaşım**: Sosyal medya entegrasyonu
+
+### 📊 Kişisel Analist
+- **AI Analiz**: Kullanıcı davranış analizi
+- **Okuma Alışkanlıkları**: Detaylı istatistikler
+- **İlgi Alanları**: Otomatik kategori önerileri
+- **Günlük Raporlar**: Kişiselleştirilmiş özetler
+
+## 🏗️ Mimari Yapı
 
 ```
 nexachron/
 ├── apps/
-│   ├── web/              # Next.js 15 frontend (Port: 3000)
-│   ├── api/              # NestJS 11 backend API (Port: 4000)
-│   └── mobile/           # Flutter mobile app
-├── packages/
-│   ├── config/           # Shared configuration
-│   ├── schemas/          # Database schemas
-│   ├── shared-types/     # TypeScript type definitions
-│   └── ui/               # Shared UI components
-├── docs/
-│   ├── database/         # SQL şemaları ve migrasyonlar
-│   ├── DEPLOYMENT.md     # Production deployment kılavuzu
-│   ├── TEAM_GUIDE.md     # Ekip workflow'u
-│   └── LOCAL_DEVELOPMENT.md
-├── scripts/              # Otomasyon scriptleri
-└── .github/workflows/    # CI/CD pipeline'ları
+│   ├── web/                    # Next.js 15 Frontend (Port: 3000)
+│   │   ├── app/               # App Router yapısı
+│   │   │   ├── [locale]/      # Çoklu dil desteği
+│   │   │   │   ├── (auth)/    # Kimlik doğrulama sayfaları
+│   │   │   │   ├── (dashboard)/ # Ana uygulama sayfaları
+│   │   │   │   ├── explore/   # Keşif sayfası
+│   │   │   │   ├── podcast/   # Podcast sayfaları
+│   │   │   │   └── reel/      # Reels sayfaları
+│   │   │   └── api/           # API routes
+│   │   ├── components/        # React bileşenleri
+│   │   ├── contexts/          # React context'leri
+│   │   ├── hooks/              # Custom hooks
+│   │   ├── lib/               # Utility fonksiyonları
+│   │   └── i18n/              # Çeviri dosyaları
+│   ├── api/                   # NestJS 11 Backend (Port: 4000)
+│   │   ├── src/
+│   │   │   ├── modules/       # Feature modülleri
+│   │   │   │   ├── news/      # Haber yönetimi
+│   │   │   │   ├── users/     # Kullanıcı yönetimi
+│   │   │   │   ├── games/     # Oyun sistemi
+│   │   │   │   ├── auth/      # Kimlik doğrulama
+│   │   │   │   ├── analytics/ # Analitik
+│   │   │   │   ├── bookmarks/ # Yer imleri
+│   │   │   │   ├── reels/     # Video içerik
+│   │   │   │   └── media/     # Medya yönetimi
+│   │   │   ├── core/          # Core business logic
+│   │   │   ├── shared/        # Paylaşılan DTO'lar
+│   │   │   ├── common/        # Ortak utilities
+│   │   │   ├── supabase/      # Database bağlantısı
+│   │   │   ├── tts/           # Text-to-Speech
+│   │   │   ├── user-data/     # Kullanıcı veri toplama
+│   │   │   ├── recommendations/ # AI öneriler
+│   │   │   └── podcast/       # Podcast sistemi
+│   │   └── test/              # Test dosyaları
+│   └── mobile/                 # Flutter Mobile App
+│       ├── lib/
+│       │   ├── features/      # Feature-based yapı
+│       │   │   ├── auth/      # Kimlik doğrulama
+│       │   │   ├── news/      # Haber özellikleri
+│       │   │   ├── games/     # Oyun özellikleri
+│       │   │   └── podcast/   # Podcast özellikleri
+│       │   ├── core/          # Core utilities
+│       │   └── l10n/          # Lokalizasyon
+│       └── test/              # Test dosyaları
+├── packages/                   # Shared packages
+│   └── shared-types/          # TypeScript types
+├── docs/                      # Dokümantasyon
+│   ├── database/              # Database schemas
+│   ├── DEPLOYMENT.md          # Deployment guide
+│   ├── TEAM_GUIDE.md          # Team workflow
+│   └── LOCAL_DEVELOPMENT.md   # Local development
+├── scripts/                   # Automation scripts
+│   ├── check-deploy.sh        # Deployment kontrolü
+│   ├── test-production.sh     # Production testleri
+│   └── setup-reels-environment.sh # Reels kurulumu
+└── .github/workflows/         # CI/CD pipelines
 ```
 
 ## 🛠️ Teknoloji Stack'i
 
 ### Backend (NestJS 11)
-- **NestJS** - Ölçeklenebilir Node.js framework'ü
-- **Supabase** - Database + Auth + Realtime
-- **PostgreSQL** - Gelişmiş veritabanı özellikleri
-- **TypeScript** - Tam tip güvenliği
-- **Prisma** - ORM ve veritabanı yönetimi
-- **OpenAI** - AI destekli özellikler
-- **RSS Parser** - Haber içerik toplama
-- **Cheerio** - Web scraping
+- **Framework**: NestJS 11 - Modüler, ölçeklenebilir Node.js framework
+- **Database**: Supabase (PostgreSQL) - Real-time database
+- **Authentication**: Supabase Auth - JWT tabanlı kimlik doğrulama
+- **ORM**: Prisma - Type-safe database client
+- **AI Integration**: OpenAI API - GPT ve TTS servisleri
+- **Web Scraping**: Cheerio - HTML parsing
+- **RSS Parsing**: RSS Parser - Haber feed'leri
+- **Validation**: Class Validator - DTO validation
+- **Logging**: Pino - Yüksek performanslı logging
+- **Scheduling**: NestJS Schedule - Cron jobs
+- **HTTP Client**: Axios - HTTP istekleri
 
 ### Frontend (Next.js 15)
-- **Next.js 15** - App Router ile React
-- **Tailwind CSS 4** - Utility-first styling
-- **TypeScript** - Statik tip kontrolü
-- **Supabase Client** - Real-time veri
-- **TanStack Query** - Server state yönetimi
-- **Next-intl** - Çoklu dil desteği
-- **Recharts** - Grafik ve görselleştirme
-- **Lucide React** - İkon kütüphanesi
+- **Framework**: Next.js 15 - App Router ile React
+- **Styling**: Tailwind CSS 4 - Utility-first CSS
+- **State Management**: TanStack Query - Server state
+- **Authentication**: Supabase Auth Helpers - Next.js entegrasyonu
+- **Internationalization**: Next-intl - Çoklu dil desteği
+- **Charts**: Recharts - Veri görselleştirme
+- **Icons**: Lucide React - Modern ikon kütüphanesi
+- **Maps**: React Simple Maps - Harita görselleştirme
+- **Type Safety**: TypeScript - Statik tip kontrolü
 
 ### Mobile (Flutter)
-- **Flutter** - Cross-platform mobile framework
-- **Dart** - Flutter için programlama dili
-- **Supabase Flutter** - Real-time veritabanı & auth
-- **Riverpod** - State management
-- **Go Router** - Declarative navigation
-- **Flutter TTS** - Text-to-speech fonksiyonalitesi
-- **Cached Network Image** - Görsel önbellekleme
-- **Flutter Animate** - Animasyonlar
+- **Framework**: Flutter 3.9+ - Cross-platform mobile
+- **State Management**: Riverpod - Reactive state management
+- **Navigation**: Go Router - Declarative navigation
+- **Authentication**: Supabase Flutter - Auth entegrasyonu
+- **Localization**: Flutter Localizations - Çoklu dil
+- **TTS**: Flutter TTS - Text-to-speech
+- **Notifications**: Flutter Local Notifications - Push notifications
+- **Caching**: Cached Network Image - Görsel önbellekleme
+- **Animations**: Flutter Animate - Smooth animasyonlar
+- **Vibration**: Vibration - Haptic feedback
+- **Storage**: Shared Preferences - Local storage
 
-### Infrastructure
-- **Render** - Production hosting
-- **GitHub Actions** - CI/CD otomasyonu
-- **Turborepo** - Monorepo build sistemi
-- **PNPM** - Hızlı paket yöneticisi
-- **Supabase Cloud** - Database ve Auth servisleri
+### Infrastructure & DevOps
+- **Hosting**: Render - Production hosting
+- **CI/CD**: GitHub Actions - Otomatik deployment
+- **Monorepo**: Turborepo - Build optimization
+- **Package Manager**: PNPM - Hızlı paket yönetimi
+- **Database**: Supabase Cloud - Managed PostgreSQL
+- **Storage**: Supabase Storage - File storage
+- **Monitoring**: Render Dashboard - Uygulama monitoring
 
-## 🚀 Hızlı Başlangıç
+## 🚀 Kurulum ve Çalıştırma
 
 ### Gereksinimler
-- Node.js 20+
-- PNPM 10+
-- Flutter SDK 3.9+
-- Dart SDK
+- **Node.js**: 20.0.0+
+- **PNPM**: 10.17.0+
+- **Flutter**: 3.9.2+
+- **Dart**: 3.9.2+
+- **Git**: 2.0+
 
-### Geliştirme Kurulumu
+### Hızlı Başlangıç
 
 ```bash
-# Projeyi klonla ve bağımlılıkları yükle
-git clone <repo-url>
+# 1. Projeyi klonla
+git clone <repository-url>
 cd nexachron
+
+# 2. Bağımlılıkları yükle
 pnpm install
 
-# Geliştirme ortamını başlat (hem frontend + backend)
+# 3. Environment dosyalarını ayarla
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.local.example apps/web/.env.local
+
+# 4. Tüm servisleri başlat
 pnpm dev
 ```
 
-**Servisler:**
-- 🌐 Frontend: http://localhost:3000
-- 🔧 API: http://localhost:4000
-- 🗄️ Database: Supabase Cloud
+### Servis Portları
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:4000
+- **Database**: Supabase Cloud
+- **Mobile**: Flutter development server
 
-### Tekil Servisler
+### Tekil Servis Çalıştırma
 
 ```bash
-pnpm dev:api    # Sadece backend (port 4000)
-pnpm dev:web    # Sadece frontend (port 3000)
-pnpm dev:mobile # Flutter mobile app
+# Sadece backend
+pnpm dev:api
+
+# Sadece frontend
+pnpm dev:web
+
+# Sadece mobile
+pnpm dev:mobile
 ```
 
 ### Mobile Geliştirme
 
 ```bash
-# Flutter mobile app kurulumu
+# Flutter bağımlılıklarını yükle
 cd apps/mobile
 flutter pub get
 
-# Cihaz/simülatörde çalıştır
+# Android'de çalıştır
 flutter run
 
-# APK build (Android)
+# iOS'ta çalıştır (macOS gerekli)
+flutter run -d ios
+
+# APK build
 flutter build apk
 
 # iOS build
@@ -128,161 +227,209 @@ flutter build ios
 
 ## 📊 Veritabanı Şeması
 
-Gelişmiş şemamız şunları içerir:
+### Ana Tablolar
+- **users**: Kullanıcı profilleri
+- **user_stats**: XP, streak, rütbe bilgileri
+- **news**: Haber içerikleri
+- **news_media**: Haber medya dosyaları
+- **categories**: Haber kategorileri
+- **comments**: Yorumlar
+- **reactions**: Emoji tepkileri
+- **bookmarks**: Yer imleri
+- **games**: Oyun kayıtları
+- **game_results**: Oyun sonuçları
+- **cards**: Koleksiyon kartları
+- **user_cards**: Kullanıcı kart koleksiyonları
+- **quizzes**: Quiz soruları
+- **user_quizzes**: Kullanıcı quiz cevapları
+- **predictions**: Tahmin oyunları
+- **reels**: Video içerikler
+- **podcasts**: Ses içerikleri
+- **tts_audio**: Text-to-speech dosyaları
+- **user_events**: Kullanıcı etkileşim verileri
+- **analytics**: Analitik veriler
 
-- **Users & Stats** - XP, streak, sıralamalar
-- **News System** - Konum verisi ile çok modlu içerik
-- **Gamification** - Kartlar, quizler, tahminler
-- **Social Features** - Yorumlar, tepkiler, konular
-- **Security** - Row Level Security (RLS) politikaları
-- **Reels System** - Video içerik yönetimi
-- **Podcast System** - Ses içerik yönetimi
-- **Analytics** - Kullanıcı davranış analizi
-
-`docs/database/` klasöründe tam şema bulunmaktadır.
+### İlişkiler
+- **One-to-Many**: User → News, User → Comments, User → Games
+- **Many-to-Many**: Users ↔ Cards, Users ↔ Categories
+- **One-to-One**: User ↔ UserStats
 
 ## 🧪 API Endpoints
 
 ### Haber API'si
 ```bash
-GET  /api/news                    # Tüm haberler
-GET  /api/news/popular            # Popüler içerik
-GET  /api/news/mode/happy         # Ruh haline dayalı filtreleme
-GET  /api/news?city=IST&limit=10  # Konum filtreleme
-POST /api/news/:id/comment         # Yorum ekle
-POST /api/news/:id/reaction       # Emoji tepkisi ekle
+GET    /api/news                    # Tüm haberler
+GET    /api/news/popular           # Popüler haberler
+GET    /api/news/mode/{mode}        # Ruh haline göre filtreleme
+GET    /api/news/category/{cat}     # Kategoriye göre filtreleme
+GET    /api/news/search             # Arama
+GET    /api/news/{id}               # Haber detayı
+POST   /api/news/{id}/comment        # Yorum ekle
+POST   /api/news/{id}/reaction       # Tepki ekle
+POST   /api/news/{id}/bookmark       # Yer imine ekle
+```
+
+### Kullanıcı API'si
+```bash
+GET    /api/users/profile           # Kullanıcı profili
+PUT    /api/users/profile           # Profil güncelle
+GET    /api/users/stats             # Kullanıcı istatistikleri
+GET    /api/users/leaderboard       # Liderlik tablosu
 ```
 
 ### Oyun API'si
 ```bash
-GET  /api/games                   # Oyun listesi
-POST /api/games/quiz               # Quiz başlat
-GET  /api/games/leaderboard        # Liderlik tablosu
+GET    /api/games                   # Oyun listesi
+POST   /api/games/quiz              # Quiz başlat
+POST   /api/games/quiz/{id}/answer  # Quiz cevabı
+GET    /api/games/leaderboard       # Oyun liderlik tablosu
+GET    /api/games/cards             # Kart koleksiyonu
 ```
 
 ### Reels API'si
 ```bash
-GET  /api/reels                   # Reels listesi
-POST /api/reels/generate           # Reel oluştur
-GET  /api/reels/:id                # Reel detayı
+GET    /api/reels                   # Reels listesi
+POST   /api/reels/generate          # Reel oluştur
+GET    /api/reels/{id}              # Reel detayı
+POST   /api/reels/{id}/like         # Reel beğen
 ```
 
 ### Podcast API'si
 ```bash
-GET  /api/podcasts                # Podcast listesi
-GET  /api/podcasts/:id/audio       # Ses dosyası
-POST /api/podcasts/:id/bookmark    # Podcast kaydet
+GET    /api/podcasts                # Podcast listesi
+GET    /api/podcasts/{id}           # Podcast detayı
+GET    /api/podcasts/{id}/audio     # Ses dosyası
+POST   /api/podcasts/{id}/bookmark  # Podcast kaydet
 ```
 
-### Sistem
+### TTS API'si
 ```bash
-GET  /health              # API sağlık kontrolü
-GET  /api/supabase-test   # Veritabanı bağlantı testi
+POST   /api/tts/generate            # TTS oluştur
+GET    /api/tts/{id}                # TTS detayı
+GET    /api/tts/news/{newsId}        # Haber TTS'leri
 ```
 
-## 🌐 Production URL'leri
+### Analitik API'si
+```bash
+POST   /api/v1/user-data/events     # Kullanıcı etkileşim verisi
+GET    /api/v1/user-data/preferences # Kullanıcı tercihleri
+PUT    /api/v1/user-data/preferences # Tercih güncelle
+```
+
+### Sistem API'si
+```bash
+GET    /health                      # API sağlık kontrolü
+GET    /api/supabase-test           # Database bağlantı testi
+```
+
+## 🌐 Production URLs
 
 - **Frontend**: https://nexachron-web.onrender.com
 - **API**: https://nexachron-api.onrender.com
 - **Database**: Supabase Cloud
-
-## 📋 Geliştirme Workflow'u
-
-### Günlük Geliştirme
-```bash
-pnpm dev                    # Her şeyi başlat
-# apps/api veya apps/web'de değişiklik yap
-# Hot reload gerisini halleder ✨
-```
-
-### Commit Öncesi
-```bash
-pnpm lint        # Kod kalitesi
-pnpm typecheck   # Tip güvenliği
-pnpm build       # Production testi
-```
-
-### Deployment
-```bash
-git push origin main  # Otomatik deployment tetikler
-```
+- **Documentation**: GitHub README
 
 ## 🔧 Environment Yönetimi
 
-### Local Environment Dosyaları
+### Backend Environment (.env)
 ```bash
-apps/api/.env          # Backend config
-apps/web/.env.local    # Frontend config
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-key
+
+# Azure Speech (TTS)
+AZURE_SPEECH_KEY=your-azure-key
+AZURE_SPEECH_REGION=your-region
+
+# Application
+NODE_ENV=production
+PORT=4000
+FRONTEND_URL=https://nexachron-web.onrender.com
 ```
 
-### Environment Değişkenleri
+### Frontend Environment (.env.local)
 ```bash
-# API için (.env):
-SUPABASE_URL=https://tfqnfkyntjreanffixti.supabase.co
-SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
+# API Configuration
+NEXT_PUBLIC_API_URL=https://nexachron-api.onrender.com
 
-# Web için (.env.local):
-NEXT_PUBLIC_API_URL=http://localhost:4000
-NEXT_PUBLIC_SUPABASE_URL=https://tfqnfkyntjreanffixti.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
 
-# Mobile için (dart-define):
+### Mobile Environment (dart-define)
+```bash
 flutter run \
-  --dart-define=SUPABASE_URL=https://tfqnfkyntjreanffixti.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=eyJ... \
-  --dart-define=API_URL=http://localhost:4000
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your-anon-key \
+  --dart-define=API_URL=https://nexachron-api.onrender.com
 ```
 
-## 🎯 Ana Modüller
+## 🎮 Oyun Türleri
 
-### Backend Modülleri
-- **NewsModule** - Haber yönetimi ve filtreleme
-- **UsersModule** - Kullanıcı profilleri ve istatistikler
-- **GamesModule** - Quiz ve oyun sistemi
-- **AnalyticsModule** - Kullanıcı davranış analizi
-- **ReelsModule** - Video içerik yönetimi
-- **PodcastModule** - Ses içerik yönetimi
-- **AuthModule** - Kimlik doğrulama
-- **UserDataModule** - Kullanıcı veri toplama
-- **RecommendationsModule** - AI destekli öneriler
-- **BookmarksModule** - Kayıtlı içerikler
-- **TTSModule** - Text-to-speech
+### Quiz Oyunları
+- **News Quiz**: Güncel olaylar hakkında sorular
+- **Memory Game**: Haber başlıklarını eşleştirme
+- **Word Puzzle**: Haber temalı kelime bulmacaları
+- **Timeline Challenge**: Olayları kronolojik sıraya koyma
+- **Spot the Difference**: Haber fotoğraflarında farkları bulma
 
-### Frontend Sayfaları
-- **Dashboard** - Ana kontrol paneli
-- **Games** - Oyun sayfası
-- **Analyst** - Kişisel analist
-- **Profile** - Kullanıcı profili
-- **Leaderboard** - Liderlik tablosu
-- **Reels** - Video keşif
-- **Audio** - Ses içerikleri
-- **Reports** - Raporlar
-- **Briefs** - Günlük özetler
+### Arcade Oyunları
+- **Wordle**: Günlük kelime tahmin oyunu
+- **NewsGuessr**: Haber kaynağını tahmin etme
+- **Flappy Bird**: Haber temalı arcade oyunu
+- **News Trivia**: Hızlı soru-cevap yarışması
 
-### Mobile Özellikleri
-- **Landing Page** - Giriş sayfası
-- **Onboarding** - Kullanıcı tanıtımı
-- **Main Navigation** - Ana navigasyon
-- **News Feed** - Haber akışı
-- **Games** - Oyun modülleri
-- **Profile** - Kullanıcı profili
+### Multiplayer Oyunlar
+- **Quiz Battles**: Çok oyunculu quiz yarışmaları
+- **Memory Competitions**: Hafıza yarışmaları
+- **Word Challenges**: Kelime yarışmaları
 
-## 🧪 Test & Kalite
+## 📱 Mobile Özellikleri
 
-### Testleri Çalıştırma
+### Ana Özellikler
+- **Offline Reading**: Çevrimdışı haber okuma
+- **Text-to-Speech**: Sesli haber dinleme
+- **Push Notifications**: Anlık bildirimler
+- **Localization**: Türkçe/İngilizce dil desteği
+- **Cached Images**: Görsel önbellekleme
+- **Vibration Feedback**: Titreşim geri bildirimi
+- **Dark Mode**: Koyu tema desteği
+
+### Navigasyon
+- **Bottom Navigation**: Ana sekmeler
+- **Dashboard**: Haber akışı
+- **Podcast**: Ses içerikleri
+- **Games**: Oyun modülleri
+- **Bookmarks**: Kayıtlı içerikler
+- **Profile**: Kullanıcı profili
+
+### Oyun Entegrasyonu
+- **Quiz Games**: Mobil quiz deneyimi
+- **Memory Games**: Dokunmatik hafıza oyunları
+- **Word Games**: Mobil kelime oyunları
+- **Multiplayer**: Çok oyunculu oyunlar
+
+## 🧪 Test & Kalite Kontrolü
+
+### Test Komutları
 ```bash
 # Tüm testler
 pnpm test
 
-# Sadece API testleri
+# Backend testleri
 pnpm --filter api test
+pnpm --filter api test:cov
 
-# Sadece Web testleri
+# Frontend testleri
 pnpm --filter web test
 
-# Coverage ile test
-pnpm --filter api test:cov
+# E2E testleri
+pnpm --filter api test:e2e
 ```
 
 ### Kod Kalitesi
@@ -293,23 +440,31 @@ pnpm lint
 # Type checking
 pnpm typecheck
 
+# Format kontrolü
+pnpm format
+
 # Tüm kontroller
 pnpm check
 ```
 
+### Test Coverage
+- **Backend**: Jest + Supertest
+- **Frontend**: Vitest + Testing Library
+- **Mobile**: Flutter Test
+
 ## 🔄 Git Workflow
 
-### 1. Feature Branch Oluşturma
+### Branch Stratejisi
 ```bash
-git checkout main
-git pull origin main
-git checkout -b feature/[trello-kart-ismi]
+main                 # Production branch
+├── develop          # Development branch
+├── feature/*        # Feature branches
+├── bugfix/*         # Bug fix branches
+└── hotfix/*         # Hotfix branches
 ```
 
-### 2. Commit Mesaj Formatı
+### Commit Kuralları
 ```bash
-# Format: <type>: <description>
-
 feat: Yeni özellik eklendi
 fix: Bug düzeltildi
 docs: Dokümantasyon güncellendi
@@ -319,166 +474,147 @@ test: Test eklendi/düzeltildi
 chore: Build/config güncellendi
 ```
 
-### 3. Pull Request Açma
-1. Branch'inizi push edin: `git push origin feature/branch-name`
-2. GitHub'da PR açın
-3. En az 1 review bekleyin
-4. CI/CD testlerinin geçmesini bekleyin
-5. Merge edildiğinde otomatik deploy olacak
+### Pull Request Süreci
+1. Feature branch oluştur
+2. Değişiklikleri yap
+3. Testleri çalıştır
+4. Pull request aç
+5. Code review bekle
+6. Merge et
 
-## 🚀 Production Testing
+## 🚀 Deployment
 
-### Local'den Production Test
+### Otomatik Deployment
+- **Trigger**: `git push origin main`
+- **Platform**: Render
+- **Build**: PNPM + Turborepo
+- **Database**: Supabase Cloud
+
+### Manuel Deployment
 ```bash
-# Production API'yi test et:
-curl https://nexachron-api.onrender.com/health
+# Production build
+pnpm build
 
-# Production Web:
-# https://nexachron-web.onrender.com
+# Deploy to Render
+git push origin main
 ```
 
-## 🎮 Oyun Türleri
-
-### Quiz Oyunları
-- **News Quiz** - Güncel olaylar hakkında sorular
-- **Memory Game** - Haber başlıklarını eşleştir
-- **Word Puzzle** - Haber temalı kelime bulmacaları
-- **Timeline Challenge** - Olayları kronolojik sıraya koy
-- **Spot the Difference** - Haber fotoğraflarında farkları bul
-
-### Arcade Oyunları
-- **Wordle** - Günlük kelime tahmin oyunu
-- **NewsGuessr** - Haber kaynağını tahmin et
-- **Flappy Bird** - Haber temalı arcade oyunu
-- **News Trivia** - Hızlı soru-cevap
-
-## 📱 Mobile Özellikleri
-
-### Ana Özellikler
-- **Offline Reading** - Çevrimdışı okuma
-- **Text-to-Speech** - Sesli okuma
-- **Push Notifications** - Bildirimler
-- **Localization** - Çoklu dil desteği
-- **Cached Images** - Görsel önbellekleme
-- **Vibration Feedback** - Titreşim geri bildirimi
-
-### Oyun Entegrasyonu
-- **Quiz Games** - Mobil quiz deneyimi
-- **Memory Games** - Dokunmatik hafıza oyunları
-- **Word Games** - Mobil kelime oyunları
-- **Multiplayer** - Çok oyunculu oyunlar
+### Environment Variables
+- **Render Dashboard**: Environment variables ayarla
+- **Supabase**: Database ve auth konfigürasyonu
+- **OpenAI**: AI servisleri için API key
 
 ## 🔐 Güvenlik
 
 ### Authentication
-- **Supabase Auth** - Güvenli kimlik doğrulama
-- **JWT Tokens** - Token tabanlı auth
-- **Row Level Security** - Veritabanı seviyesinde güvenlik
-- **CORS Configuration** - Cross-origin güvenlik
+- **Supabase Auth**: JWT tabanlı kimlik doğrulama
+- **Row Level Security**: Veritabanı seviyesinde güvenlik
+- **CORS Configuration**: Cross-origin güvenlik
+- **Rate Limiting**: API hız sınırlaması
 
 ### Data Protection
-- **Environment Variables** - Hassas veri koruması
-- **Input Validation** - Girdi doğrulama
-- **SQL Injection Protection** - Veritabanı güvenliği
-- **XSS Protection** - Cross-site scripting koruması
+- **Environment Variables**: Hassas veri koruması
+- **Input Validation**: Girdi doğrulama
+- **SQL Injection Protection**: Veritabanı güvenliği
+- **XSS Protection**: Cross-site scripting koruması
 
 ## 📊 Analytics & Monitoring
 
 ### Kullanıcı Analizi
-- **XP Tracking** - Kullanıcı ilerlemesi
-- **Engagement Metrics** - Etkileşim metrikleri
-- **Content Performance** - İçerik performansı
-- **User Behavior** - Kullanıcı davranış analizi
+- **XP Tracking**: Kullanıcı ilerlemesi
+- **Engagement Metrics**: Etkileşim metrikleri
+- **Content Performance**: İçerik performansı
+- **User Behavior**: Kullanıcı davranış analizi
 
 ### System Monitoring
-- **Health Checks** - Sistem sağlık kontrolü
-- **Error Tracking** - Hata takibi
-- **Performance Metrics** - Performans metrikleri
-- **Database Monitoring** - Veritabanı izleme
+- **Health Checks**: Sistem sağlık kontrolü
+- **Error Tracking**: Hata takibi
+- **Performance Metrics**: Performans metrikleri
+- **Database Monitoring**: Veritabanı izleme
 
 ## 🌍 Çoklu Dil Desteği
 
 ### Desteklenen Diller
-- **Türkçe** (tr) - Ana dil
-- **İngilizce** (en) - İkinci dil
+- **Türkçe (tr)**: Ana dil
+- **İngilizce (en)**: İkinci dil
 
 ### Lokalizasyon
-- **Frontend** - Next-intl ile çoklu dil
-- **Mobile** - Flutter localization
-- **API** - Backend mesaj lokalizasyonu
+- **Frontend**: Next-intl ile çoklu dil
+- **Mobile**: Flutter localization
+- **Backend**: API mesaj lokalizasyonu
 
 ## 🎨 UI/UX Tasarım
 
 ### Design System
-- **Tailwind CSS** - Utility-first styling
-- **Dark Theme** - Koyu tema
-- **Responsive Design** - Mobil uyumlu
-- **Accessibility** - Erişilebilirlik standartları
+- **Tailwind CSS**: Utility-first styling
+- **Dark Theme**: Koyu tema
+- **Responsive Design**: Mobil uyumlu
+- **Accessibility**: Erişilebilirlik standartları
 
 ### Component Library
-- **Shared UI** - Ortak bileşenler
-- **Reusable Components** - Yeniden kullanılabilir bileşenler
-- **Icon System** - Lucide React ikonları
-- **Animation Library** - Flutter Animate
+- **Shared UI**: Ortak bileşenler
+- **Reusable Components**: Yeniden kullanılabilir bileşenler
+- **Icon System**: Lucide React ikonları
+- **Animation Library**: Flutter Animate
 
 ## 📈 Performans Optimizasyonu
 
 ### Frontend Optimizasyonu
-- **Next.js 15** - App Router optimizasyonu
-- **Turbopack** - Hızlı build sistemi
-- **Image Optimization** - Görsel optimizasyonu
-- **Code Splitting** - Kod bölme
-- **Lazy Loading** - Gecikmeli yükleme
+- **Next.js 15**: App Router optimizasyonu
+- **Turbopack**: Hızlı build sistemi
+- **Image Optimization**: Görsel optimizasyonu
+- **Code Splitting**: Kod bölme
+- **Lazy Loading**: Gecikmeli yükleme
 
 ### Backend Optimizasyonu
-- **NestJS** - Modüler mimari
-- **Database Indexing** - Veritabanı indeksleme
-- **Caching** - Önbellekleme stratejileri
-- **API Rate Limiting** - API hız sınırlaması
+- **NestJS**: Modüler mimari
+- **Database Indexing**: Veritabanı indeksleme
+- **Caching**: Önbellekleme stratejileri
+- **API Rate Limiting**: API hız sınırlaması
 
 ### Mobile Optimizasyonu
-- **Flutter** - Native performans
-- **Image Caching** - Görsel önbellekleme
-- **State Management** - Riverpod optimizasyonu
-- **Memory Management** - Bellek yönetimi
+- **Flutter**: Native performans
+- **Image Caching**: Görsel önbellekleme
+- **State Management**: Riverpod optimizasyonu
+- **Memory Management**: Bellek yönetimi
 
 ## 🔧 Geliştirme Araçları
 
 ### Code Quality
-- **ESLint** - JavaScript/TypeScript linting
-- **Prettier** - Kod formatlama
-- **TypeScript** - Statik tip kontrolü
-- **Jest** - Test framework'ü
+- **ESLint**: JavaScript/TypeScript linting
+- **Prettier**: Kod formatlama
+- **TypeScript**: Statik tip kontrolü
+- **Jest**: Test framework'ü
 
 ### Build Tools
-- **Turborepo** - Monorepo build sistemi
-- **PNPM** - Hızlı paket yöneticisi
-- **Webpack** - Module bundler
-- **Vite** - Hızlı build tool
+- **Turborepo**: Monorepo build sistemi
+- **PNPM**: Hızlı paket yöneticisi
+- **Webpack**: Module bundler
+- **Vite**: Hızlı build tool
 
 ### Development Tools
-- **Hot Reload** - Canlı yeniden yükleme
-- **Debug Tools** - Hata ayıklama araçları
-- **API Testing** - Postman koleksiyonu
-- **Database Tools** - Supabase dashboard
+- **Hot Reload**: Canlı yeniden yükleme
+- **Debug Tools**: Hata ayıklama araçları
+- **API Testing**: Postman koleksiyonu
+- **Database Tools**: Supabase dashboard
 
 ## 📚 Dokümantasyon
 
 ### Proje Dokümantasyonu
-- **README.md** - Bu dosya
-- **LOCAL_DEVELOPMENT.md** - Local geliştirme kılavuzu
-- **TEAM_GUIDE.md** - Ekip çalışma kılavuzu
-- **DEPLOYMENT.md** - Deployment kılavuzu
+- **README.md**: Bu dosya
+- **LOCAL_DEVELOPMENT.md**: Local geliştirme kılavuzu
+- **TEAM_GUIDE.md**: Ekip çalışma kılavuzu
+- **DEPLOYMENT.md**: Deployment kılavuzu
 
 ### API Dokümantasyonu
-- **Postman Collection** - API test koleksiyonu
-- **Swagger/OpenAPI** - API dokümantasyonu
-- **Database Schema** - Veritabanı şeması
+- **Postman Collection**: API test koleksiyonu
+- **Swagger/OpenAPI**: API dokümantasyonu
+- **Database Schema**: Veritabanı şeması
 
 ### Kod Dokümantasyonu
-- **Inline Comments** - Kod içi yorumlar
-- **Type Definitions** - Tip tanımları
-- **JSDoc** - JavaScript dokümantasyonu
+- **Inline Comments**: Kod içi yorumlar
+- **Type Definitions**: Tip tanımları
+- **JSDoc**: JavaScript dokümantasyonu
 
 ## 🤝 Katkıda Bulunma
 
@@ -499,14 +635,14 @@ curl https://nexachron-api.onrender.com/health
 ## 📞 İletişim & Destek
 
 ### Teknik Destek
-- **GitHub Issues** - Bug raporları
-- **Pull Requests** - Özellik istekleri
-- **Discussions** - Genel tartışmalar
+- **GitHub Issues**: Bug raporları
+- **Pull Requests**: Özellik istekleri
+- **Discussions**: Genel tartışmalar
 
 ### Ekip İletişimi
-- **Slack/Discord** - Günlük iletişim
-- **GitHub** - Kod review
-- **Trello** - Proje yönetimi
+- **Slack/Discord**: Günlük iletişim
+- **GitHub**: Kod review
+- **Trello**: Proje yönetimi
 
 ## 📄 Lisans
 
@@ -520,9 +656,14 @@ Bu proje özel lisans altındadır. Detaylar için lisans dosyasına bakın.
 - **Flutter Team** - Mobile framework
 - **Next.js Team** - Frontend framework
 - **NestJS Team** - Backend framework
+- **OpenAI** - AI servisleri
 
 ---
 
 **Nexachron** - Gamified News Platform 🚀
 
 *AI destekli, gamified haber deneyimi ile bilgiyi eğlenceli hale getiriyoruz.*
+
+**Versiyon**: 1.0.0  
+**Son Güncelleme**: 2024  
+**Platform**: Web, Mobile, API
