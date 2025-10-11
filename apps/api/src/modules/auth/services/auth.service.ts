@@ -8,6 +8,8 @@ import { SupabaseService } from '../../../supabase/supabase.service';
 import { AuthSessionRepository } from '../../../core/repositories/auth-session.repository';
 import { AuthTokenRepository } from '../../../core/repositories/auth-token.repository';
 import { AuthLoginAttemptRepository } from '../../../core/repositories/auth-login-attempt.repository';
+import { UserRepository } from '../../../core/repositories/user.repository';
+import { UserStatsRepository } from '../../../core/repositories/user-stats.repository';
 import { AuthSessionEntity } from '../../../core/entities/auth-session.entity';
 import { AuthTokenEntity, TokenType, TokenStatus } from '../../../core/entities/auth-token.entity';
 import { AuthLoginAttemptEntity, LoginAttemptStatus, LoginAttemptType } from '../../../core/entities/auth-login-attempt.entity';
@@ -40,6 +42,8 @@ export class AuthService {
     private readonly authSessionRepository: AuthSessionRepository,
     private readonly authTokenRepository: AuthTokenRepository,
     private readonly authLoginAttemptRepository: AuthLoginAttemptRepository,
+    private readonly userRepository: UserRepository,
+    private readonly userStatsRepository: UserStatsRepository,
   ) {}
 
   async login(loginDto: LoginRequestDto): Promise<AuthResponseDto> {
@@ -101,6 +105,8 @@ export class AuthService {
 
   async register(registerDto: RegisterRequestDto): Promise<AuthResponseDto> {
     try {
+      console.log('Starting user registration for:', registerDto.email);
+      
       // Register with Supabase
       const { data, error } = await this.supabaseService.supabase.auth.signUp({
         email: registerDto.email,
@@ -112,13 +118,62 @@ export class AuthService {
         },
       });
 
-      if (error || !data.user) {
+      console.log('Supabase auth signup result:', { 
+        data: !!data, 
+        user: !!data?.user, 
+        session: !!data?.session,
+        error: error?.message,
+        errorCode: error?.code 
+      });
+
+      if (error) {
+        console.error('Supabase auth signup failed:', error);
         throw new ConflictException('Registration failed: ' + (error?.message || 'Unknown error'));
       }
 
-      // Create session
-      const session = await this.createSession(data.user.id, registerDto.deviceInfo);
+      if (!data.user) {
+        console.error('No user returned from Supabase auth signup');
+        throw new ConflictException('Registration failed: No user returned');
+      }
 
+      // Create user in our database
+      try {
+        console.log('Creating user in database:', data.user.id);
+        
+        // Check if user already exists in our database
+        const existingUser = await this.userRepository.findById(data.user.id);
+        if (existingUser) {
+          console.log('User already exists in database, skipping creation');
+        } else {
+          await this.userRepository.create({
+            id: data.user.id,
+            email: registerDto.email,
+            username: registerDto.email.split('@')[0], // Use email prefix as username
+          });
+          console.log('User created successfully');
+        }
+
+        // Check if user stats already exist
+        const existingStats = await this.userStatsRepository.findById(data.user.id);
+        if (existingStats) {
+          console.log('User stats already exist, skipping creation');
+        } else {
+          console.log('Creating user stats for:', data.user.id);
+          // Create default user stats
+          await this.userStatsRepository.create({
+            userId: data.user.id,
+            xp: 0,
+            streak: 0,
+            rankLevel: 1,
+          });
+          console.log('User stats created successfully');
+        }
+      } catch (dbError) {
+        console.error('Failed to create user in database:', dbError);
+        // Continue with auth even if DB creation fails
+      }
+
+      // Use Supabase Auth session (no need for custom session table)
       return {
         accessToken: data.session?.access_token || '',
         refreshToken: data.session?.refresh_token || '',

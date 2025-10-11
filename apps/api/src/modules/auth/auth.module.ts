@@ -12,6 +12,8 @@ import { AuthService } from './services/auth.service';
 import { AuthSessionRepository } from '../../core/repositories/auth-session.repository';
 import { AuthTokenRepository } from '../../core/repositories/auth-token.repository';
 import { AuthLoginAttemptRepository } from '../../core/repositories/auth-login-attempt.repository';
+import { UserRepository } from '../../core/repositories/user.repository';
+import { UserStatsRepository } from '../../core/repositories/user-stats.repository';
 import { SupabaseModule } from '../../supabase/supabase.module';
 
 @Module({
@@ -27,12 +29,16 @@ import { SupabaseModule } from '../../supabase/supabase.module';
     AuthSessionRepository,
     AuthTokenRepository,
     AuthLoginAttemptRepository,
+    UserRepository,
+    UserStatsRepository,
   ],
   exports: [
     AuthService,
     AuthSessionRepository,
     AuthTokenRepository,
     AuthLoginAttemptRepository,
+    UserRepository,
+    UserStatsRepository,
   ],
 })
 export class AuthModule {}

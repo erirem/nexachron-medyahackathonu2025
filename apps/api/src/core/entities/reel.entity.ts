@@ -38,6 +38,7 @@ export interface CreateReelData {
   content: {
     headline: string;
     summarySentences: string[];
+    summary_sentences?: string[]; // Database field
     hashtags: string[];
     captions?: string;
     callToAction?: string;
@@ -61,6 +62,7 @@ export interface UpdateReelData {
   content?: {
     headline?: string;
     summarySentences?: string[];
+    summary_sentences?: string[];
     hashtags?: string[];
     captions?: string;
     callToAction?: string;
@@ -79,14 +81,32 @@ export interface UpdateReelData {
 export class ReelEntity {
   id: string;
   newsId?: string;
-  title: string;
-  description?: string;
+  get title(): string {
+    return this.content?.headline || 'Untitled Reel';
+  }
+  get description(): string {
+    // summary_sentences array'ini birleştir
+    if (this.content?.summary_sentences && Array.isArray(this.content.summary_sentences)) {
+      return this.content.summary_sentences.join(' ');
+    }
+    // Fallback: summarySentences array'ini birleştir
+    if (this.content?.summarySentences && Array.isArray(this.content.summarySentences)) {
+      return this.content.summarySentences.join(' ');
+    }
+    // Fallback: captions
+    if (this.content?.captions) {
+      return this.content.captions;
+    }
+    // Fallback: title
+    return this.title || '';
+  }
   sourceType: ReelSourceType;
   template: ReelTemplate;
   status: ReelStatus;
   content: {
     headline: string;
     summarySentences: string[];
+    summary_sentences?: string[]; // Database field
     hashtags: string[];
     captions?: string;
     callToAction?: string;
@@ -115,8 +135,6 @@ export class ReelEntity {
   constructor(data: {
     id: string;
     news_id?: string;
-    title: string;
-    description?: string;
     source_type: ReelSourceType;
     template: ReelTemplate;
     status: ReelStatus;
@@ -137,10 +155,9 @@ export class ReelEntity {
     published_at?: string;
     archived_at?: string;
   }) {
+    console.log('ReelEntity constructor - data.content:', JSON.stringify(data.content, null, 2));
     this.id = data.id;
     this.newsId = data.news_id;
-    this.title = data.title;
-    this.description = data.description;
     this.sourceType = data.source_type;
     this.template = data.template;
     this.status = data.status;

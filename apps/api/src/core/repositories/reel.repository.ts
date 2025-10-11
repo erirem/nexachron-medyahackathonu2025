@@ -136,13 +136,34 @@ export class ReelRepository extends BaseRepository<ReelEntity> {
         query = query.eq('template', options.template);
       }
       if (typeof options?.isPublic === 'boolean') {
-        query = query.eq('is_public', options.isPublic);
+        if (options.isPublic) {
+          query = query.not('published_at', 'is', null);
+        } else {
+          query = query.is('published_at', null);
+        }
       }
       if (options?.createdBy) {
         query = query.eq('created_by', options.createdBy);
       }
       if (options?.sortBy) {
-        query = query.order(options.sortBy, { ascending: options.sortOrder === 'asc' });
+        // Map camelCase field names to snake_case database column names
+        const dbFieldMap: Record<string, string> = {
+          'createdAt': 'created_at',
+          'updatedAt': 'updated_at',
+          'publishedAt': 'published_at',
+          'sourceType': 'source_type',
+          'createdBy': 'created_by',
+          'isPublic': 'is_public',
+          'fileSize': 'file_size',
+          'qualityScore': 'quality_score',
+          'views': 'views',
+          'likes': 'likes',
+          'shares': 'shares',
+          'duration': 'duration_seconds',
+          'engagementScore': 'engagement_score',
+        };
+        const dbField = dbFieldMap[options.sortBy] || options.sortBy;
+        query = query.order(dbField, { ascending: options.sortOrder === 'asc' });
       } else {
         query = query.order('created_at', { ascending: false });
       }
@@ -259,8 +280,8 @@ export class ReelRepository extends BaseRepository<ReelEntity> {
       const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
-        .eq('is_public', true)
         .eq('status', ReelStatus.COMPLETED)
+        .order('engagement_score', { ascending: false })
         .order('views', { ascending: false })
         .order('likes', { ascending: false })
         .order('created_at', { ascending: false })
@@ -277,6 +298,7 @@ export class ReelRepository extends BaseRepository<ReelEntity> {
 
   async findRecent(limit: number = 50): Promise<ReelEntity[]> {
     try {
+      console.log(`Finding recent reels with limit: ${limit}`);
       const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
@@ -285,10 +307,14 @@ export class ReelRepository extends BaseRepository<ReelEntity> {
         .limit(limit);
 
       if (error) {
+        console.error('Supabase error in findRecent:', error);
         this.handleError(error, 'findRecent');
       }
+      
+      console.log(`Found ${data?.length || 0} recent reels`);
       return data ? data.map(row => new ReelEntity(row)) : [];
     } catch (error) {
+      console.error('Error in findRecent:', error);
       this.handleError(error, 'findRecent');
     }
   }

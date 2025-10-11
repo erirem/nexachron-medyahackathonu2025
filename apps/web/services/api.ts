@@ -709,7 +709,15 @@ export async function fetchExploreFeed(
   } = {},
   config: RequestConfig = {},
 ): Promise<ExploreFeedResponse> {
-  const response = await apiFetch<ExploreFeedResponse>(
+  const response = await apiFetch<{
+    success: boolean;
+    data: {
+      items: any[];
+      hasMore: boolean;
+      total: number;
+    };
+    message: string;
+  }>(
     '/api/reels/feed',
     {
       query: {
@@ -722,7 +730,33 @@ export async function fetchExploreFeed(
     },
   );
 
-  return response;
+  console.log('fetchExploreFeed response:', response);
+
+  // Transform backend response to frontend format
+  if (response.success && response.data) {
+    return {
+      items: response.data.items.map(item => ({
+        kind: 'reel' as const,
+        id: item.id,
+        title: item.title,
+        summary: item.summary || '',
+        category: item.category || 'general',
+        videoUrl: item.assets?.video_url || item.videoUrl || '',
+        thumbUrl: item.assets?.thumbnail_url || item.thumbUrl || '',
+        durationSec: item.durationSec || 30,
+        hrefId: item.hrefId || item.id,
+      })),
+      nextCursor: response.data.hasMore ? (params.cursor ? (parseInt(params.cursor) + (params.limit || 24)).toString() : '24') : undefined,
+      hasMore: response.data.hasMore,
+    };
+  }
+
+  // Fallback for error cases
+  return {
+    items: [],
+    nextCursor: undefined,
+    hasMore: false,
+  };
 }
 
 export interface ReelListItem {

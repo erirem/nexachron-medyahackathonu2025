@@ -262,7 +262,9 @@ export class ReelService {
       const reelFeedItems = reels.map(reel => this.mapReelEntityToFeedItem(reel));
 
       return {
-        reels: reelFeedItems,
+        items: reelFeedItems,
+        nextCursor: page < Math.ceil(total / pageSize) ? (page + 1).toString() : undefined,
+        hasMore: page < Math.ceil(total / pageSize),
         total,
       };
     } catch (error) {
@@ -407,8 +409,16 @@ export class ReelService {
 
   private mapReelEntityToFeedItem(reel: ReelEntity): any {
     return {
+      kind: 'reel',
       id: reel.id,
       title: reel.title,
+      summary: reel.description,
+      category: reel.metadata?.category || 'general',
+      videoUrl: reel.assets?.videoUrl || '',
+      thumbUrl: reel.assets?.thumbnailUrl || '',
+      durationSec: reel.duration || 30,
+      hrefId: reel.id,
+      // Additional fields for compatibility
       description: reel.description,
       sourceType: reel.sourceType,
       template: reel.template,
@@ -417,7 +427,6 @@ export class ReelService {
       views: reel.views,
       likes: reel.likes,
       shares: reel.shares,
-      duration: reel.duration,
       qualityScore: reel.qualityScore,
       createdAt: reel.createdAt.toISOString(),
       publishedAt: reel.publishedAt?.toISOString(),

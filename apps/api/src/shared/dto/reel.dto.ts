@@ -440,8 +440,14 @@ export class PaginatedReelResponseDto {
 }
 
 export class ReelFeedResponseDto {
-  @ApiProperty({ description: 'Reels', type: [ReelFeedItem] })
-  reels: ReelFeedItem[];
+  @ApiProperty({ description: 'Items', type: [ReelFeedItem] })
+  items: ReelFeedItem[];
+
+  @ApiPropertyOptional({ description: 'Next cursor for pagination' })
+  nextCursor?: string;
+
+  @ApiProperty({ description: 'Has more items' })
+  hasMore: boolean;
 
   @ApiProperty({ description: 'Total count' })
   total: number;

@@ -1,28 +1,24 @@
 import { NextRequest } from 'next/server';
 
-/**
- * Deprecated: This route now proxies to the backend API
- * Direct usage: Use /api/reels/explore from backend instead
- */
 export async function GET(req: NextRequest) {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
     // Forward all query params to backend
-    const limit = req.nextUrl.searchParams.get('limit') || '24';
-    const cursor = req.nextUrl.searchParams.get('cursor') || '0';
+    const pageSize = req.nextUrl.searchParams.get('pageSize') || '24';
+    const page = req.nextUrl.searchParams.get('page') || '1';
+    const sort = req.nextUrl.searchParams.get('sort') || 'recent';
     const category = req.nextUrl.searchParams.get('category');
-    const userId = req.nextUrl.searchParams.get('userId');
 
     const params = new URLSearchParams({
-        limit,
-        cursor,
+        pageSize,
+        page,
+        sort,
     });
 
     if (category) params.append('category', category);
-    if (userId) params.append('userId', userId);
 
     try {
-        const response = await fetch(`${API_URL}/api/reels/explore?${params.toString()}`, {
+        const response = await fetch(`${API_URL}/api/reels/feed?${params.toString()}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -41,12 +37,14 @@ export async function GET(req: NextRequest) {
 
         // Return empty response on error
         return Response.json({
-            items: [],
-            nextCursor: undefined,
-            hasMore: false,
+            success: true,
+            data: {
+                items: [],
+                nextCursor: undefined,
+                hasMore: false,
+                total: 0
+            },
+            message: 'Reel feed retrieved successfully'
         });
     }
 }
-
-
-

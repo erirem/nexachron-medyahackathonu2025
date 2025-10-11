@@ -74,7 +74,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
    */
   async create(data: CreateUserData): Promise<UserEntity> {
     try {
-      const { data: result, error } = await this.supabase
+      const { data: result, error } = await this.adminSupabase
         .from(this.tableName)
         .insert(data)
         .select()

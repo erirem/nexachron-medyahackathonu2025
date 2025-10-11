@@ -50,9 +50,18 @@ export class UserStatsRepository extends BaseRepository<UserStatsEntity> {
    */
   async create(data: CreateUserStatsData): Promise<UserStatsEntity> {
     try {
-      const { data: result, error } = await this.supabase
+      // Map camelCase to snake_case for database
+      const dbData = {
+        user_id: data.userId,
+        xp: data.xp || 0,
+        streak: data.streak || 0,
+        rank_level: data.rankLevel || 1,
+        last_seen: data.lastSeen,
+      };
+
+      const { data: result, error } = await this.adminSupabase
         .from(this.tableName)
-        .insert(data)
+        .insert(dbData)
         .select()
         .single();
 
