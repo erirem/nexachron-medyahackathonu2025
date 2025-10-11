@@ -1,20 +1,29 @@
 "use client";
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { getProfileVector, serializeProfileVector } from '../../lib/recommend';
-import type { ExplorePage } from '../../lib/types/reels';
+import { fetchExploreFeed } from '../../services/api';
+import type { ExploreFeedResponse } from '../../services/api';
 
-export function useReelFeed() {
-    return useInfiniteQuery<ExplorePage>({
-        queryKey: ['explore', getProfileVector()],
+export function useReelFeed(options?: {
+    category?: string;
+    userId?: string;
+}) {
+    return useInfiniteQuery<ExploreFeedResponse>({
+        queryKey: ['explore-feed', options?.category, options?.userId],
         queryFn: async ({ pageParam }) => {
-            const profile = serializeProfileVector();
-            const url = `/api/explore?limit=24&profile=${profile}${pageParam ? `&cursor=${pageParam}` : ''}`;
-            const res = await fetch(url, { cache: 'no-store' });
-            if (!res.ok) throw new Error('failed');
-            return res.json();
+            const response = await fetchExploreFeed({
+                limit: 24,
+                cursor: pageParam as string | undefined,
+                category: options?.category,
+                userId: options?.userId,
+            });
+            return response;
         },
         initialPageParam: '0',
-        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        getNextPageParam: (lastPage) => {
+            return lastPage.hasMore ? lastPage.nextCursor : undefined;
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes cache
+        gcTime: 1000 * 60 * 10, // 10 minutes garbage collection
     });
 }
 

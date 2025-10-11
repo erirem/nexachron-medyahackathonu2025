@@ -234,35 +234,35 @@ export const RANK_THRESHOLDS = {
 export const RANK_INFO = {
   [UserRank.NEW_MEMBER]: {
     name: 'Yeni Katılımcı',
-    emoji: '🟢',
+    icon: 'circle',
     color: 'text-green-400',
     bgColor: 'bg-green-400/20',
     borderColor: 'border-green-400/30'
   },
   [UserRank.ACTIVE_READER]: {
     name: 'Aktif Okur',
-    emoji: '🔵',
+    icon: 'circle',
     color: 'text-blue-400',
     bgColor: 'bg-blue-400/20',
     borderColor: 'border-blue-400/30'
   },
   [UserRank.KNOWLEDGE_SHARER]: {
     name: 'Bilgi Paylaşımcısı',
-    emoji: '🟡',
+    icon: 'circle',
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-400/20',
     borderColor: 'border-yellow-400/30'
   },
   [UserRank.EXPERT_COMMENTER]: {
     name: 'Uzman Yorumcu',
-    emoji: '🔴',
+    icon: 'circle',
     color: 'text-red-400',
     bgColor: 'bg-red-400/20',
     borderColor: 'border-red-400/30'
   },
   [UserRank.COMMUNITY_LEADER]: {
     name: 'Topluluk Lideri',
-    emoji: '🟣',
+    icon: 'circle',
     color: 'text-purple-400',
     bgColor: 'bg-purple-400/20',
     borderColor: 'border-purple-400/30'
@@ -273,28 +273,28 @@ export const RANK_INFO = {
 export const LEAGUE_INFO = {
   [League.BRONZE]: {
     name: 'Bronz',
-    emoji: '🥉',
+    icon: 'award',
     color: 'text-orange-600',
     bgColor: 'bg-orange-600/20',
     borderColor: 'border-orange-600/30'
   },
   [League.SILVER]: {
     name: 'Gümüş',
-    emoji: '🥈',
+    icon: 'award',
     color: 'text-gray-400',
     bgColor: 'bg-gray-400/20',
     borderColor: 'border-gray-400/30'
   },
   [League.GOLD]: {
     name: 'Altın',
-    emoji: '🥇',
+    icon: 'award',
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-400/20',
     borderColor: 'border-yellow-400/30'
   },
   [League.DIAMOND]: {
     name: 'Elmas',
-    emoji: '💎',
+    icon: 'award',
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-400/20',
     borderColor: 'border-cyan-400/30'

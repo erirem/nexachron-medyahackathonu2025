@@ -112,7 +112,8 @@ export function LoginForm(): JSX.Element {
       try {
         const token = (await getAccessToken(true)) ?? (await getAccessToken(false));
         if (token) {
-          router.replace(`/${locale}/dashboard`);
+          // Mevcut session varsa dashboard'a yönlendir
+          window.location.href = `/${locale}/dashboard`;
         }
       } catch (error) {
         console.error('Error detecting existing session:', error);
@@ -120,7 +121,7 @@ export function LoginForm(): JSX.Element {
     };
 
     void detectExistingSession();
-  }, [locale, router]);
+  }, [locale]);
 
   const isSubmitting = formState.status === "submitting";
   const isSuccess = formState.status === "success";
@@ -172,8 +173,10 @@ export function LoginForm(): JSX.Element {
         message: statusMessages.success,
       });
 
+      // Başarılı login sonrası dashboard'a yönlendir
       window.setTimeout(() => {
-        router.push(`/${locale}/dashboard`);
+        // window.location.href kullanarak tam sayfa yenileme yap
+        window.location.href = `/${locale}/dashboard`;
       }, 400);
     } catch (error) {
       console.error("Supabase login failed", error);

@@ -76,6 +76,7 @@ export class NewsController {
     @Query('pageSize') pageSize?: string,
     @Query('limit') limit?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('categoryIds') categoryIds?: string, // Çoklu kategori desteği
     @Query('city') city?: string,
     @Query('isPopular') isPopular?: string,
     @Headers('accept-language') acceptLanguage?: string,
@@ -94,12 +95,18 @@ export class NewsController {
       : this.parsePositiveNumber(limit ?? '', undefined);
     const isPopularValue = this.parseBoolean(isPopular);
 
+    // Parse categoryIds from comma-separated string
+    const categoryIdsArray = categoryIds 
+      ? categoryIds.split(',').map(id => id.trim()).filter(id => id.length > 0)
+      : undefined;
+
     try {
       const result = await this.newsService.findAll({
         page: pageValue,
         pageSize: pageSizeValue,
         limit: limitValue,
         categoryId: categoryId ?? undefined,
+        categoryIds: categoryIdsArray,
         city: city ?? undefined,
         isPopular: isPopularValue,
         includeCount: hasPagination,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile/l10n/gen/app_localizations.dart';
 
 import 'core/config/app_config.dart';
@@ -19,6 +20,14 @@ import 'features/news/presentation/pages/main_navigation.dart';
 import 'features/games/presentation/pages/quizzes_page.dart';
 import 'features/games/presentation/pages/wordle_page.dart';
 import 'features/games/presentation/pages/news_guessr_page.dart';
+import 'features/games/presentation/pages/memory_game_page.dart';
+import 'features/games/presentation/pages/word_puzzle_page.dart';
+import 'features/games/presentation/pages/timeline_game_page.dart';
+import 'features/games/presentation/pages/spot_difference_page.dart';
+import 'features/games/presentation/pages/flappy_bird_page.dart';
+import 'features/games/presentation/pages/news_trivia_page.dart';
+import 'features/games/presentation/pages/multiplayer_lobby_page.dart';
+import 'features/games/presentation/providers/game_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,13 +35,22 @@ Future<void> main() async {
   final localeController = LocaleController();
   await localeController.loadSavedLocale();
 
+  // Initialize SharedPreferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
 
   runApp(
-    ProviderScope(child: NexachronApp(localeController: localeController)),
+    ProviderScope(
+      overrides: [
+        // Override SharedPreferences provider
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: NexachronApp(localeController: localeController),
+    ),
   );
 }
 
@@ -79,6 +97,13 @@ class NexachronApp extends StatelessWidget {
               '/quizzes': (context) => const QuizzesPage(),
               '/wordle': (context) => const WordlePage(),
               '/news-guessr': (context) => const NewsGuessrPage(),
+              '/memory-game': (context) => const MemoryGamePage(),
+              '/word-puzzle': (context) => const WordPuzzlePage(),
+              '/timeline-game': (context) => const TimelineGamePage(),
+              '/spot-difference': (context) => const SpotDifferencePage(),
+              '/flappy-bird': (context) => const FlappyBirdPage(),
+              '/news-trivia': (context) => const NewsTriviaPage(),
+              '/multiplayer': (context) => const MultiplayerLobbyPage(),
             },
           ),
         );
