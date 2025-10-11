@@ -1395,7 +1395,7 @@ function transformNewsItem(item: NewsWithMediaDto): DashboardNewsItem {
     }
   } else {
     // Fallback to other media sources
-    const orderedMedia = [...item.media].sort((a, b) => {
+    const orderedMedia = [...(item.media || [])].sort((a, b) => {
       const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
       const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
       return orderA - orderB;
