@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
-import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
+import { Body, Controller, Get, Post, Put, Req } from '@nestjs/common';
 import { UserDataService } from './user-data.service';
 
 @Controller('v1/user-data')
@@ -12,16 +11,14 @@ export class UserDataController {
     return this.userDataService.ingestEvents(body, req?.user?.id);
   }
 
-  @UseGuards(SupabaseAuthGuard)
   @Get('preferences')
   async getPreferences(@Req() req: any) {
-    return this.userDataService.getPreferences(req.user?.id, req.accessToken);
+    return this.userDataService.getPreferences();
   }
 
-  @UseGuards(SupabaseAuthGuard)
   @Put('preferences')
   async upsertPreferences(@Req() req: any, @Body() body: any) {
-    return this.userDataService.upsertPreferences(req.user?.id, body, req.accessToken);
+    return this.userDataService.upsertPreferences(body);
   }
 }
 

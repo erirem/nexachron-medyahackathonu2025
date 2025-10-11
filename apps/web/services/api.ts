@@ -637,14 +637,12 @@ export async function startGame(
   request: StartGameRequest,
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<Game>>(
     '/api/games/start',
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
       },
       body: JSON.stringify(request),
       signal: config.signal,
@@ -659,7 +657,6 @@ export async function answerQuestion(
   request: AnswerQuestionRequest,
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
     isCorrect: boolean;
     correctAnswer: string;
@@ -672,7 +669,6 @@ export async function answerQuestion(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
       },
       body: JSON.stringify(request),
       signal: config.signal,
@@ -686,7 +682,6 @@ export async function getGameHistory(
   gameType?: string,
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
     games: Array<{
       id: string;
@@ -699,7 +694,9 @@ export async function getGameHistory(
     '/api/games/history',
     {
       query: gameType ? { gameType } : undefined,
-      headers: authHeaders,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       signal: config.signal,
     },
   );
@@ -733,7 +730,6 @@ export async function getGameRooms(
   limit = 20,
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
     rooms: Array<{
       id: string;
@@ -750,7 +746,9 @@ export async function getGameRooms(
     '/api/games/rooms',
     {
       query: { gameType, status, limit },
-      headers: authHeaders,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       signal: config.signal,
     },
   );
@@ -768,7 +766,6 @@ export async function createGameRoom(
   },
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
     room: {
       id: string;
@@ -787,7 +784,6 @@ export async function createGameRoom(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
       },
       body: JSON.stringify(request),
       signal: config.signal,
@@ -805,7 +801,6 @@ export async function joinGameRoom(
   },
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
     participant: {
       id: string;
@@ -822,7 +817,6 @@ export async function joinGameRoom(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
       },
       body: JSON.stringify(request),
       signal: config.signal,
@@ -836,14 +830,15 @@ export async function leaveGameRoom(
   roomId: string,
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
     message: string;
   }>>(
     `/api/games/rooms/${roomId}/leave`,
     {
       method: 'POST',
-      headers: authHeaders,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       signal: config.signal,
     },
   );
@@ -855,7 +850,6 @@ export async function getGameRoomDetails(
   roomId: string,
   config: RequestConfig = {},
 ) {
-  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
     room: {
       id: string;
@@ -880,7 +874,9 @@ export async function getGameRoomDetails(
   }>>(
     `/api/games/rooms/${roomId}`,
     {
-      headers: authHeaders,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       signal: config.signal,
     },
   );

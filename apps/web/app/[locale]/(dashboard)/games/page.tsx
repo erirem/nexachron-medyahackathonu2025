@@ -136,7 +136,7 @@ const XPProgressBar = ({ currentXP, currentRank }: { currentXP: number; currentR
               {getRankDisplayName(levelInfo.currentRank)}
             </h3>
             <p className="text-white/60 text-xs">
-              {currentXP.toLocaleString()} XP
+              {currentXP.toLocaleString('en-US')} XP
             </p>
           </div>
         </div>
@@ -157,10 +157,10 @@ const XPProgressBar = ({ currentXP, currentRank }: { currentXP: number; currentR
         <div className="space-y-2">
           <div className="flex justify-between items-center text-xs">
             <span className="text-white/60">
-              {levelInfo.currentThreshold.toLocaleString()} XP
+              {levelInfo.currentThreshold.toLocaleString('en-US')} XP
             </span>
             <span className="text-white/60">
-              {levelInfo.nextThreshold!.toLocaleString()} XP
+              {levelInfo.nextThreshold!.toLocaleString('en-US')} XP
             </span>
           </div>
           

@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   Request,
   HttpException,
   HttpStatus,
@@ -16,7 +15,6 @@ import { GamesService } from './games.service';
 import { QuizGameService } from './services/quiz-game.service';
 import { MultiplayerService } from './services/multiplayer.service';
 import { QuestionGenerationService } from './services/question-generation.service';
-import { SupabaseAuthGuard, type AuthenticatedRequest } from '../auth/supabase-auth.guard';
 import type {
   StartGameRequest,
   AnswerQuestionRequest,
@@ -65,18 +63,11 @@ export class GamesController {
    * Yeni oyun başlat
    * POST /api/games/start
    */
-  @UseGuards(SupabaseAuthGuard)
   @Post('start')
   async startGame(
     @Body() startRequest: StartGameRequest,
-    @Request() req: AuthenticatedRequest,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    const game = await this.gamesService.startGame(startRequest, userId);
+    const game = await this.gamesService.startGame(startRequest);
     return {
       success: true,
       data: game,
@@ -91,14 +82,8 @@ export class GamesController {
   async joinGame(
     @Param('gameId') gameId: string,
     @Body() body: { playerName: string; password?: string },
-    @Request() req: any,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    return this.multiplayerService.joinGame(gameId, userId, body.playerName, body.password);
+    return this.multiplayerService.joinGame(gameId, body.playerName, body.password);
   }
 
   /**
@@ -106,13 +91,8 @@ export class GamesController {
    * POST /api/games/:gameId/leave
    */
   @Post(':gameId/leave')
-  async leaveGame(@Param('gameId') gameId: string, @Request() req: any) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    return this.multiplayerService.leaveGame(gameId, userId);
+  async leaveGame(@Param('gameId') gameId: string) {
+    return this.multiplayerService.leaveGame(gameId);
   }
 
   /**
@@ -120,32 +100,20 @@ export class GamesController {
    * POST /api/games/:gameId/start
    */
   @Post(':gameId/start')
-  async startMultiplayerGame(@Param('gameId') gameId: string, @Request() req: any) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    return this.multiplayerService.startGame(gameId, userId);
+  async startMultiplayerGame(@Param('gameId') gameId: string) {
+    return this.multiplayerService.startGame(gameId);
   }
 
   /**
    * Soru cevapla
    * POST /api/games/:gameId/answer
    */
-  @UseGuards(SupabaseAuthGuard)
   @Post(':gameId/answer')
   async answerQuestion(
     @Param('gameId') gameId: string,
     @Body() answerRequest: AnswerQuestionRequest,
-    @Request() req: AuthenticatedRequest,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    const result = await this.gamesService.answerQuestion(gameId, userId, answerRequest);
+    const result = await this.gamesService.answerQuestion(gameId, answerRequest);
     return {
       success: true,
       data: result,
@@ -157,13 +125,8 @@ export class GamesController {
    * POST /api/games/:gameId/complete
    */
   @Post(':gameId/complete')
-  async completeGame(@Param('gameId') gameId: string, @Request() req: any) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    return this.gamesService.completeGame(gameId, userId);
+  async completeGame(@Param('gameId') gameId: string) {
+    return this.gamesService.completeGame(gameId);
   }
 
   /**
@@ -171,13 +134,8 @@ export class GamesController {
    * GET /api/games/:gameId/status
    */
   @Get(':gameId/status')
-  async getGameStatus(@Param('gameId') gameId: string, @Request() req: any) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    return this.gamesService.getGameStatus(gameId, userId);
+  async getGameStatus(@Param('gameId') gameId: string) {
+    return this.gamesService.getGameStatus(gameId);
   }
 
   /**
@@ -186,17 +144,11 @@ export class GamesController {
    */
   @Get('history')
   async getGameHistory(
-    @Request() req: any,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('gameType') gameType?: GameType,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    return this.gamesService.getGameHistory(userId, { page, limit, gameType });
+    return this.gamesService.getGameHistory({ page, limit, gameType });
   }
 
   /**
@@ -242,7 +194,6 @@ export class GamesController {
    * Yeni multiplayer oda oluştur
    * POST /api/games/rooms
    */
-  @UseGuards(SupabaseAuthGuard)
   @Post('rooms')
   async createGameRoom(
     @Body() body: {
@@ -253,13 +204,7 @@ export class GamesController {
       password?: string;
       filter?: QuestionPoolFilter;
     },
-    @Request() req: AuthenticatedRequest,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
     const room = await this.multiplayerService.createGameRoom({
       gameType: body.gameType,
       roomName: body.roomName,
@@ -267,7 +212,7 @@ export class GamesController {
       isPrivate: body.isPrivate || false,
       password: body.password,
       filter: body.filter,
-      createdBy: userId,
+      createdBy: 'anonymous',
     });
 
     return {
@@ -280,17 +225,10 @@ export class GamesController {
    * Oda detaylarını getir
    * GET /api/games/rooms/:roomId
    */
-  @UseGuards(SupabaseAuthGuard)
   @Get('rooms/:roomId')
   async getGameRoomDetails(
     @Param('roomId') roomId: string,
-    @Request() req: AuthenticatedRequest,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
     const roomDetails = await this.multiplayerService.getGameRoomDetails(roomId);
     return {
       success: true,
@@ -302,21 +240,13 @@ export class GamesController {
    * Odaya katıl
    * POST /api/games/rooms/:roomId/join
    */
-  @UseGuards(SupabaseAuthGuard)
   @Post('rooms/:roomId/join')
   async joinGameRoom(
     @Param('roomId') roomId: string,
     @Body() body: { playerName: string; password?: string },
-    @Request() req: AuthenticatedRequest,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
     const participant = await this.multiplayerService.joinGame(
       roomId,
-      userId,
       body.playerName,
       body.password,
     );
@@ -331,18 +261,11 @@ export class GamesController {
    * Odadan ayrıl
    * POST /api/games/rooms/:roomId/leave
    */
-  @UseGuards(SupabaseAuthGuard)
   @Post('rooms/:roomId/leave')
   async leaveGameRoom(
     @Param('roomId') roomId: string,
-    @Request() req: AuthenticatedRequest,
   ) {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    await this.multiplayerService.leaveGame(roomId, userId);
+    await this.multiplayerService.leaveGame(roomId);
     return {
       success: true,
       data: { message: 'Successfully left the room' },

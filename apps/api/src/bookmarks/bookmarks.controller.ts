@@ -1,32 +1,24 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
-import { SupabaseAuthGuard, type AuthenticatedRequest } from '../auth/supabase-auth.guard';
+import { Body, Controller, Delete, Get, Param, Post, Req } from '@nestjs/common';
 import { BookmarksService } from './bookmarks.service';
 
-@UseGuards(SupabaseAuthGuard)
 @Controller('bookmarks')
 export class BookmarksController {
   constructor(private readonly bookmarksService: BookmarksService) {}
 
   @Get()
-  async list(@Req() req: AuthenticatedRequest) {
-    const userId = req.user?.id!;
-    const token = req.accessToken!;
-    return { success: true, data: await this.bookmarksService.list(userId, token) };
+  async list(@Req() req: any) {
+    return { success: true, data: await this.bookmarksService.list() };
   }
 
   @Post(':newsId')
-  async add(@Req() req: AuthenticatedRequest, @Param('newsId') newsId: string) {
-    const userId = req.user?.id!;
-    const token = req.accessToken!;
-    await this.bookmarksService.add(userId, newsId, token, req.user);
+  async add(@Req() req: any, @Param('newsId') newsId: string) {
+    await this.bookmarksService.add(newsId);
     return { success: true, data: { newsId } };
   }
 
   @Delete(':newsId')
-  async remove(@Req() req: AuthenticatedRequest, @Param('newsId') newsId: string) {
-    const userId = req.user?.id!;
-    const token = req.accessToken!;
-    await this.bookmarksService.remove(userId, newsId, token);
+  async remove(@Req() req: any, @Param('newsId') newsId: string) {
+    await this.bookmarksService.remove(newsId);
     return { success: true, data: { newsId } };
   }
 }

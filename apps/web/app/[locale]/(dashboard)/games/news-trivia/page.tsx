@@ -58,6 +58,8 @@ interface Player {
   isReady: boolean;
   hasAnswered: boolean;
   currentAnswer?: string;
+  isCorrect?: boolean;
+  ropePosition: number; // 0-100, halat pozisyonu
 }
 
 interface MultiplayerState {
@@ -67,6 +69,13 @@ interface MultiplayerState {
   isWaitingForPlayers: boolean;
   gameStarted: boolean;
   showLobby: boolean;
+  currentQuestion: number;
+  totalQuestions: number;
+  team1Score: number;
+  team2Score: number;
+  ropePosition: number; // 0-100, genel halat pozisyonu
+  timeLeft: number;
+  gameId: string | null;
 }
 
 const GAME_DURATION = 300; // 5 minutes in seconds
@@ -92,6 +101,13 @@ export default function NewsTriviaPage(): JSX.Element {
     isWaitingForPlayers: true,
     gameStarted: false,
     showLobby: false,
+    currentQuestion: 0,
+    totalQuestions: 0,
+    team1Score: 0,
+    team2Score: 0,
+    ropePosition: 50, // Başlangıçta ortada
+    timeLeft: GAME_DURATION,
+    gameId: null,
   });
 
   const [currentUser, setCurrentUser] = useState<{ id: string; username: string; displayName: string } | null>(null);
@@ -181,6 +197,7 @@ export default function NewsTriviaPage(): JSX.Element {
         score: data.participant.current_score || data.participant.currentScore || 0,
         isReady: data.participant.is_ready || data.participant.isReady || false,
         hasAnswered: false,
+        ropePosition: 50,
       };
       
       console.log('🔵 Mapped player object:', player);
@@ -286,6 +303,7 @@ export default function NewsTriviaPage(): JSX.Element {
         score: data.participant.current_score || data.participant.currentScore || 0,
         isReady: data.participant.is_ready || data.participant.isReady || false,
         hasAnswered: false,
+        ropePosition: 50,
       };
       
       console.log('🔵 Mapped player object:', player);
@@ -435,8 +453,6 @@ export default function NewsTriviaPage(): JSX.Element {
         selectedAnswer: null,
         showResult: false,
         gameId: gameData.id,
-        showHint: false,
-        hintUsed: false,
       });
       
       // Start the timer
@@ -482,27 +498,62 @@ export default function NewsTriviaPage(): JSX.Element {
           score: prev.score + 1,
         }));
 
-        // Update multiplayer player score
+        // Update multiplayer player score with tug-of-war logic
         if (gameMode === 'multiplayer') {
-          setMultiplayerState(prev => ({
+          setMultiplayerState(prev => {
+            const currentPlayerIndex = prev.players.findIndex(p => p.id === clientIdRef.current);
+            const isTeam1 = currentPlayerIndex % 2 === 0;
+            
+            // Calculate rope movement (correct answer pulls rope 10 units towards team)
+            const ropeMovement = isTeam1 ? -10 : 10;
+            const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
+            
+            return {
             ...prev,
-            players: prev.players.map(p => 
-              p.id === clientIdRef.current 
-                ? { ...p, score: p.score + 1, hasAnswered: true }
-                : p
-            ),
-          }));
+              ropePosition: newRopePosition,
+              team1Score: isTeam1 ? prev.team1Score + 1 : prev.team1Score,
+              team2Score: isTeam1 ? prev.team2Score : prev.team2Score + 1,
+              players: prev.players.map((p, idx) => {
+                if (p.id === clientIdRef.current) {
+                  return { 
+                    ...p, 
+                    score: p.score + 1, 
+                    hasAnswered: true,
+                    isCorrect: true,
+                    ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? -10 : 10)))
+                  };
+                }
+                return p;
+              }),
+            };
+          });
         }
       } else if (gameMode === 'multiplayer') {
-        // Update multiplayer player as answered
-        setMultiplayerState(prev => ({
+        // Update multiplayer player as answered (incorrect)
+        setMultiplayerState(prev => {
+          const currentPlayerIndex = prev.players.findIndex(p => p.id === clientIdRef.current);
+          const isTeam1 = currentPlayerIndex % 2 === 0;
+          
+          // Incorrect answer: opponent gains ground (5 units)
+          const ropeMovement = isTeam1 ? 5 : -5;
+          const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
+          
+          return {
           ...prev,
-          players: prev.players.map(p => 
-            p.id === clientIdRef.current 
-              ? { ...p, hasAnswered: true }
-              : p
-          ),
-        }));
+            ropePosition: newRopePosition,
+            players: prev.players.map((p, idx) => {
+              if (p.id === clientIdRef.current) {
+                return { 
+                  ...p, 
+                  hasAnswered: true,
+                  isCorrect: false,
+                  ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? 5 : -5)))
+                };
+              }
+              return p;
+            }),
+          };
+        });
       }
 
       // Send answer via WebSocket for multiplayer
@@ -519,22 +570,105 @@ export default function NewsTriviaPage(): JSX.Element {
     }
   };
 
-  const handleUseHint = () => {
-    if (useHint()) {
-      setGameState(prev => ({
-        ...prev,
-        showHint: true,
-        hintUsed: true,
-      }));
-    }
-  };
+  // Hint feature removed for now
+  // const handleUseHint = () => {
+  //   setGameState(prev => ({
+  //     ...prev,
+  //     showHint: true,
+  //     hintUsed: true,
+  //   }));
+  // };
 
   const nextQuestion = () => {
-    if (gameMode === 'multiplayer' && socketActions && multiplayerState.roomId) {
-      // Multiplayer: Use WebSocket
-      socketActions.nextQuestion({
-        roomId: multiplayerState.roomId,
-      });
+    if (gameMode === 'multiplayer') {
+      // Multiplayer: Local logic with AI opponent
+      if (gameState.currentQuestion < (game?.questions.length || 0) - 1) {
+        // Move to next question
+      setGameState(prev => ({
+        ...prev,
+          currentQuestion: prev.currentQuestion + 1,
+          selectedAnswer: null,
+          showResult: false,
+        }));
+        
+        // Simulate AI opponent's answer after 2-4 seconds
+        setTimeout(() => {
+          const currentQ = game?.questions[gameState.currentQuestion + 1];
+          if (!currentQ) return;
+          
+          // AI has 70% chance to answer correctly
+          const aiCorrect = Math.random() < 0.7;
+          
+          // AI selects a random option
+          const randomOption = currentQ.options?.[Math.floor(Math.random() * (currentQ.options?.length || 1))];
+          
+          setMultiplayerState(prev => {
+            const aiPlayerIndex = prev.players.findIndex(p => p.id === 'ai-player-1');
+            if (aiPlayerIndex === -1) return prev;
+            
+            const isTeam1 = aiPlayerIndex % 2 === 0;
+            
+            if (aiCorrect) {
+              // AI answered correctly
+              const ropeMovement = isTeam1 ? -10 : 10;
+              const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
+              
+              return {
+                ...prev,
+                ropePosition: newRopePosition,
+                team1Score: isTeam1 ? prev.team1Score + 1 : prev.team1Score,
+                team2Score: isTeam1 ? prev.team2Score : prev.team2Score + 1,
+                players: prev.players.map((p, idx) => {
+                  if (p.id === 'ai-player-1') {
+                    return {
+                      ...p,
+                      score: p.score + 1,
+                      hasAnswered: true,
+                      isCorrect: true,
+                      currentAnswer: randomOption,
+                      ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? -10 : 10)))
+                    };
+                  }
+                  return { ...p, hasAnswered: false };
+                }),
+              };
+            } else {
+              // AI answered incorrectly
+              const ropeMovement = isTeam1 ? 5 : -5;
+              const newRopePosition = Math.max(0, Math.min(100, prev.ropePosition + ropeMovement));
+              
+              return {
+                ...prev,
+                ropePosition: newRopePosition,
+                players: prev.players.map((p, idx) => {
+                  if (p.id === 'ai-player-1') {
+                    return {
+                      ...p,
+                      hasAnswered: true,
+                      isCorrect: false,
+                      currentAnswer: randomOption,
+                      ropePosition: Math.max(0, Math.min(100, p.ropePosition + (idx % 2 === 0 ? 5 : -5)))
+                    };
+                  }
+                  return { ...p, hasAnswered: false };
+                }),
+              };
+            }
+          });
+        }, Math.random() * 3000 + 3000); // 3-6 seconds
+      } else {
+        // Game complete
+        setGameState(prev => ({
+          ...prev,
+          isGameActive: false,
+          isGameComplete: true,
+        }));
+
+        // Award XP
+        if (game) {
+          completeQuiz('news-trivia', gameState.score, game.questions.length);
+        }
+      }
     } else {
       // Single player: Local logic
       if (gameState.currentQuestion < (game?.questions.length || 0) - 1) {
@@ -692,7 +826,34 @@ export default function NewsTriviaPage(): JSX.Element {
 
             {/* Multiplayer Mode */}
             <div 
-              onClick={() => setGameMode('multiplayer')}
+              onClick={() => {
+                setGameMode('multiplayer');
+                // Add fake players for multiplayer mode
+                const fakeRoomId = `room-${Date.now()}`;
+                setMultiplayerState(prev => ({
+                  ...prev,
+                  roomId: fakeRoomId,
+                  isHost: true,
+                  players: [
+                    {
+                      id: clientIdRef.current || 'player-1',
+                      name: currentUser?.displayName || 'Sen',
+                      score: 0,
+                      isReady: true,
+                      hasAnswered: false,
+                      ropePosition: 50
+                    },
+                    {
+                      id: 'ai-player-1',
+                      name: 'Ali Cabbar',
+                      score: 0,
+                      isReady: true,
+                      hasAnswered: false,
+                      ropePosition: 50
+                    }
+                  ]
+                }));
+              }}
               className="bg-gradient-to-br from-purple-900/20 to-indigo-800/10 border border-purple-500/30 rounded-2xl p-8 text-center cursor-pointer hover:border-purple-400/50 transition-all duration-200 group"
             >
               <div className="w-16 h-16 mx-auto bg-gradient-to-b from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -840,14 +1001,58 @@ export default function NewsTriviaPage(): JSX.Element {
               <div className="text-center">
                 <button
                   onClick={async () => {
-                    // Start multiplayer game via WebSocket
+                    // Start multiplayer game
                     try {
                       setIsLoading(true);
                       
-                      if (socketActions && multiplayerState.roomId) {
-                        socketActions.startGame({
-                          roomId: multiplayerState.roomId,
-                        });
+                      // Start game via API
+                      const game = await startGame({
+                        gameType: 'news_trivia',
+                        mode: 'multiplayer',
+                        filter: {
+                          gameType: 'news_trivia',
+                          limit: 10
+                        }
+                      });
+
+                      if (game) {
+                        
+                        // Update multiplayer state with game data
+                        setMultiplayerState(prev => ({
+                          ...prev,
+                          gameStarted: true,
+                          gameId: game.id,
+                          totalQuestions: game.questions.length,
+                          currentQuestion: 0,
+                          timeLeft: GAME_DURATION,
+                          ropePosition: 50,
+                          team1Score: 0,
+                          team2Score: 0,
+                          players: prev.players.map(player => ({
+                            ...player,
+                            score: 0,
+                            hasAnswered: false,
+                            ropePosition: 50
+                          }))
+                        }));
+
+                        setGame(game);
+                        
+                        // Set game state for multiplayer
+                        setGameState(prev => ({
+                          ...prev,
+                          gameId: game.id,
+                          isGameActive: true,
+                          currentQuestion: 0,
+                          score: 0,
+                          timeLeft: GAME_DURATION,
+                          selectedAnswer: null,
+                          showResult: false,
+                          isGameComplete: false,
+                        }));
+                        
+                        // Start the timer for multiplayer
+                        setShouldStartTimer(true);
                       }
                     } catch (error) {
                       console.error('Failed to start multiplayer game:', error);
@@ -1006,43 +1211,98 @@ export default function NewsTriviaPage(): JSX.Element {
 
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] p-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <button
-              onClick={() => setGameMode('select')}
-              className="text-white/70 hover:text-white transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Geri
-            </button>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-white">
-                {gameState.timeLeft}s
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Ali Cabbar - En Sol */}
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <div className="sticky top-4">
+                {multiplayerState.players
+                  .filter(player => player.name === 'Ali Cabbar')
+                  .map((player, index) => (
+                    <div key={player.id} className="bg-red-500/10 border-red-500/30 hover:bg-red-500/20 rounded-xl p-6 border transition-all duration-300">
+                      <div className="text-center mb-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold bg-red-500 text-white mx-auto mb-3">
+                          2
+                        </div>
+                        <span className="font-medium text-white text-lg">{player.name}</span>
+                      </div>
+                      
+                      <div className="text-center mb-4">
+                        <span className="text-3xl font-bold text-purple-400">{player.score}</span>
+                        {player.hasAnswered && (
+                          <div className="text-sm text-green-400 mt-2">✓</div>
+                        )}
+                      </div>
+                      
+                      {/* Player rope position indicator */}
+                      <div className="w-full bg-gray-700 rounded-full h-3">
+                        <div 
+                          className="h-3 rounded-full transition-all duration-300 bg-red-500"
+                          style={{ width: `${player.ropePosition}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
               </div>
-              <div className="text-sm text-white/60">Kalan Süre</div>
+            </div>
+
+            {/* Main Game Area */}
+            <div className="lg:col-span-3 order-1 lg:order-2">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <button
+                  onClick={() => setGameMode('select')}
+                  className="text-white/70 hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Geri
+                </button>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-white">
+                    {gameState.timeLeft}s
+                  </div>
+                  <div className="text-sm text-white/60">Kalan Süre</div>
+                </div>
+              </div>
+
+          {/* Tug of War Rope */}
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-600/20 to-red-600/20 rounded-2xl p-6 border border-white/10">
+              <div className="text-center mb-4">
+                <div className="flex justify-between text-sm text-white/60">
+                  <span>Takım 1: {multiplayerState.team1Score}</span>
+                  <span>Takım 2: {multiplayerState.team2Score}</span>
+                </div>
+              </div>
+              
+              {/* Rope Visual */}
+              <div className="relative h-8 bg-gray-800 rounded-full overflow-hidden">
+                {/* Rope */}
+                <div 
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-red-500 transition-all duration-500 ease-out"
+                  style={{ width: `${multiplayerState.ropePosition}%` }}
+                ></div>
+                
+                {/* Center line */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-white"></div>
+                
+                {/* Rope handle */}
+                <div 
+                  className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-gray-800"
+                  style={{ left: `${multiplayerState.ropePosition}%`, marginLeft: '-8px' }}
+                ></div>
+              </div>
+              
+              {/* Team indicators */}
+              <div className="flex justify-between mt-2 text-xs text-white/60">
+                <span>Takım 1</span>
+                <span>Takım 2</span>
+              </div>
             </div>
           </div>
 
-          {/* Multiplayer Players */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Oyuncular</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {multiplayerState.players.map((player) => (
-                <div key={player.id} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-white">{player.name}</span>
-                    <span className="text-lg font-bold text-purple-400">{player.score}</span>
-                  </div>
-                  {player.hasAnswered && (
-                    <div className="text-sm text-green-400 mt-1">Cevapladı</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Progress bar */}
           <div className="mb-6">
@@ -1066,6 +1326,10 @@ export default function NewsTriviaPage(): JSX.Element {
             
             <div className="space-y-3">
               {currentQ.options?.map((option, index) => {
+                // Check if Ali Cabbar selected this option
+                const aliCabbarSelected = multiplayerState.players
+                  .find(p => p.id === 'ai-player-1')?.currentAnswer === option;
+                
                 let buttonClass = "w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ";
                 
                 if (gameState.showResult) {
@@ -1073,13 +1337,19 @@ export default function NewsTriviaPage(): JSX.Element {
                     buttonClass += "border-green-500 bg-green-500/20 text-green-300";
                   } else if (gameState.selectedAnswer === option) {
                     buttonClass += "border-red-500 bg-red-500/20 text-red-300";
+                  } else if (aliCabbarSelected) {
+                    buttonClass += "border-orange-500 bg-orange-500/20 text-orange-300";
                   } else {
                     buttonClass += "border-white/20 bg-white/5 text-white/60";
                   }
                 } else {
-                  buttonClass += gameState.selectedAnswer === option
-                    ? "border-purple-500 bg-purple-500/20 text-purple-300"
-                    : "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30";
+                  if (gameState.selectedAnswer === option) {
+                    buttonClass += "border-purple-500 bg-purple-500/20 text-purple-300";
+                  } else if (aliCabbarSelected) {
+                    buttonClass += "border-orange-500 bg-orange-500/20 text-orange-300";
+                  } else {
+                    buttonClass += "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30";
+                  }
                 }
 
                 return (
@@ -1089,11 +1359,27 @@ export default function NewsTriviaPage(): JSX.Element {
                     disabled={gameState.showResult}
                     className={buttonClass}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-sm font-semibold">
-                        {String.fromCharCode(65 + index)}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-sm font-semibold">
+                          {String.fromCharCode(65 + index)}
+                        </div>
+                        <span>{option}</span>
                       </div>
-                      <span>{option}</span>
+                      
+                      {/* Show who selected this option */}
+                      <div className="flex items-center gap-2">
+                        {gameState.selectedAnswer === option && (
+                          <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                            Sen
+                          </span>
+                        )}
+                        {aliCabbarSelected && (
+                          <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">
+                            Ali Cabbar
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 );
@@ -1150,12 +1436,47 @@ export default function NewsTriviaPage(): JSX.Element {
               onBackToGames={() => setGameMode('select')}
             />
           )}
+            </div>
+
+            {/* Sen - En Sağ */}
+            <div className="lg:col-span-1 order-3 lg:order-3">
+              <div className="sticky top-4">
+                {multiplayerState.players
+                  .filter(player => player.name !== 'Ali Cabbar')
+                  .map((player, index) => (
+                    <div key={player.id} className="bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20 rounded-xl p-6 border transition-all duration-300">
+                      <div className="text-center mb-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold bg-blue-500 text-white mx-auto mb-3">
+                          1
+                        </div>
+                        <span className="font-medium text-white text-lg">{player.name}</span>
+                      </div>
+                      
+                      <div className="text-center mb-4">
+                        <span className="text-3xl font-bold text-purple-400">{player.score}</span>
+                        {player.hasAnswered && (
+                          <div className="text-sm text-green-400 mt-2">✓</div>
+                        )}
+                      </div>
+                      
+                      {/* Player rope position indicator */}
+                      <div className="w-full bg-gray-700 rounded-full h-3">
+                        <div 
+                          className="h-3 rounded-full transition-all duration-300 bg-blue-500"
+                          style={{ width: `${player.ropePosition}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Game in progress
+  // Game in progress (single player)
   const currentQ = game?.questions[gameState.currentQuestion];
   const progress = game ? ((gameState.currentQuestion + 1) / game.questions.length) * 100 : 0;
 
@@ -1203,37 +1524,7 @@ export default function NewsTriviaPage(): JSX.Element {
             {currentQ.question}
           </h2>
 
-          {/* Hint Section */}
-          {currentQ.hint && (
-            <div className="mb-6">
-              {!gameState.showHint ? (
-                <button
-                  onClick={handleUseHint}
-                  disabled={gameState.hintUsed || !userProfile || userProfile.xp < 5}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg text-yellow-300 hover:from-yellow-500/30 hover:to-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-sm font-medium">
-                    {gameState.hintUsed ? t('hint.used') : t('hint.button')}
-                  </span>
-                </button>
-              ) : (
-                <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-blue-300 text-sm font-medium mb-1">{t('hint.label')}</p>
-                      <p className="text-blue-200 text-sm">{currentQ.hint}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Hint Section - temporarily disabled */}
 
           <div className="space-y-3">
             {currentQ.options?.map((option, index) => {

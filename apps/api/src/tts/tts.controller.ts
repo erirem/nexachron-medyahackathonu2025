@@ -6,14 +6,12 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
   Request,
   HttpException,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { TTSService } from './tts.service';
-import { SupabaseAuthGuard, type AuthenticatedRequest } from '../auth/supabase-auth.guard';
 import type {
   GenerateTTSRequest,
   TTSAudioResponse,
@@ -91,10 +89,8 @@ export class TTSController {
    * DELETE /api/tts/:id
    */
   @Delete(':id')
-  @UseGuards(SupabaseAuthGuard)
   async deleteTTSAudio(
     @Param('id') id: string,
-    @Request() req: AuthenticatedRequest,
   ): Promise<{ message: string }> {
     try {
       await this.ttsService.deleteTTSAudio(id);

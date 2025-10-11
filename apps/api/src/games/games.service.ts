@@ -172,14 +172,31 @@ export class GamesService {
   }
 
   /**
+   * Get a system user ID for anonymous games
+   */
+  private async getSystemUserId(): Promise<string> {
+    // Get the first user from the database to use as system user
+    const { data, error } = await this.supabaseService.supabase
+      .from('users')
+      .select('id')
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      // Fallback to a hardcoded UUID if no users exist
+      return '00000000-0000-0000-0000-000000000001';
+    }
+
+    return data.id;
+  }
+
+  /**
    * Yeni oyun başlat
    */
-  async startGame(startRequest: StartGameRequest, userId: string): Promise<Game> {
-    this.logger.log(`Starting ${startRequest.gameType} game for user ${userId}`);
+  async startGame(startRequest: StartGameRequest): Promise<Game> {
+    this.logger.log(`Starting ${startRequest.gameType} game`);
 
     try {
-      // Kullanıcının var olup olmadığını kontrol et, yoksa oluştur
-      await this.ensureUserExists(userId);
       // Soru havuzundan soruları çek
       const questions = await this.questionGenerationService.getQuestions(
         startRequest.filter || { 
@@ -192,6 +209,9 @@ export class GamesService {
         throw new Error('No questions available for the selected criteria');
       }
 
+      // Get system user ID for anonymous games
+      const systemUserId = await this.getSystemUserId();
+
       // Oyun oluştur
       const game: Game = {
         id: crypto.randomUUID(),
@@ -202,14 +222,14 @@ export class GamesService {
         currentQuestionIndex: 0,
         timeLimit: startRequest.timeLimit,
         createdAt: new Date(),
-        createdBy: userId,
+        createdBy: systemUserId,
       };
 
       // Veritabanına kaydet
       await this.saveGame(game);
 
       // Kullanıcıyı oyuna kat
-      await this.addParticipant(game.id, userId);
+      await this.addParticipant(game.id, game.createdBy);
 
       // Multiplayer ise oda oluştur
       if (startRequest.mode === GameMode.MULTIPLAYER) {
@@ -220,7 +240,7 @@ export class GamesService {
           isPrivate: startRequest.isPrivate || false,
           password: startRequest.password,
           filter: startRequest.filter,
-          createdBy: userId,
+          createdBy: game.createdBy,
         });
       }
 
@@ -236,10 +256,9 @@ export class GamesService {
    */
   async answerQuestion(
     gameId: string,
-    userId: string,
     answerRequest: AnswerQuestionRequest,
   ) {
-    this.logger.log(`User ${userId} answering question in game ${gameId}`);
+    this.logger.log(`Answering question in game ${gameId}`);
 
     try {
       // Oyunu getir
@@ -248,21 +267,15 @@ export class GamesService {
         throw new Error('Game not found');
       }
 
-      // Kullanıcının oyuna katılıp katılmadığını kontrol et
-      const isParticipant = await this.isUserParticipant(gameId, userId);
-      if (!isParticipant) {
-        throw new Error('User is not a participant in this game');
-      }
-
       // Soruyu cevapla
       const result = await this.quizGameService.answerQuestion(
         game,
         answerRequest,
-        userId,
+        game.createdBy,
       );
 
       // Cevabı kaydet
-      await this.saveAnswer(gameId, userId, answerRequest, result);
+      await this.saveAnswer(gameId, game.createdBy, answerRequest, result);
 
       return result;
     } catch (error) {
@@ -274,15 +287,21 @@ export class GamesService {
   /**
    * Oyunu tamamla
    */
-  async completeGame(gameId: string, userId: string): Promise<GameResult> {
-    this.logger.log(`Completing game ${gameId} for user ${userId}`);
+  async completeGame(gameId: string): Promise<GameResult> {
+    this.logger.log(`Completing game ${gameId}`);
 
     try {
+      // Oyunu getir
+      const game = await this.getGame(gameId);
+      if (!game) {
+        throw new Error('Game not found');
+      }
+
       // Oyun sonuçlarını hesapla
-      const result = await this.quizGameService.calculateGameResult(gameId, userId);
+      const result = await this.quizGameService.calculateGameResult(gameId, game.createdBy);
 
       // XP ve gamification güncellemeleri
-      await this.gamificationService.updateUserProgress(userId, result);
+      await this.gamificationService.updateUserProgress(game.createdBy, result);
 
       // Oyunu tamamlandı olarak işaretle
       await this.updateGameStatus(gameId, GameStatus.COMPLETED);
@@ -297,16 +316,13 @@ export class GamesService {
   /**
    * Oyun durumunu getir
    */
-  async getGameStatus(gameId: string, userId: string) {
+  async getGameStatus(gameId: string) {
     const game = await this.getGame(gameId);
     if (!game) {
       throw new Error('Game not found');
     }
 
-    const isParticipant = await this.isUserParticipant(gameId, userId);
-    if (!isParticipant) {
-      throw new Error('User is not a participant in this game');
-    }
+    // Remove participant check since we're using anonymous users
 
     return {
       game,
@@ -324,7 +340,6 @@ export class GamesService {
    * Oyun geçmişini getir
    */
   async getGameHistory(
-    userId: string,
     filters: { page: number; limit: number; gameType?: GameType },
   ) {
       const { data, error } = await this.supabaseService.supabase
@@ -333,7 +348,7 @@ export class GamesService {
           *,
           games!inner(*)
         `)
-        .eq('player_id', userId)
+        // Remove player filter since we don't have authenticated users
         .eq(filters.gameType ? 'games.type' : 'games.type', filters.gameType || '')
         .order('completed_at', { ascending: false })
         .range(

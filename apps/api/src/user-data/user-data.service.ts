@@ -62,19 +62,13 @@ export class UserDataService {
     return { ok: true, count: rows.length };
   }
 
-  async getPreferences(userId: string | undefined, accessToken?: string) {
-    if (!userId) {
-      return { ok: false, error: 'Missing user identifier' };
-    }
-
-    const client = accessToken
-      ? this.supabaseService.getUserClient(accessToken)
-      : this.supabaseService.supabase;
+  async getPreferences() {
+    const client = this.supabaseService.supabase;
 
     const { data, error } = await client
       .from('user_profile_preferences')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', 'anonymous')
       .maybeSingle();
     if (error) return { ok: false, error: error.message };
 
@@ -93,15 +87,12 @@ export class UserDataService {
     };
   }
 
-  async upsertPreferences(userId: string | undefined, body: any, accessToken?: string) {
-    if (!userId) {
-      return { ok: false, error: 'Missing user identifier' };
-    }
+  async upsertPreferences(body: any) {
 
     // Align with migration schema: categories (jsonb), target_moods (jsonb), language (text)
     const { categories, targetMoods, language, personalizationOptIn } = body ?? {};
     const payload: any = {
-      user_id: userId,
+      user_id: 'anonymous',
       updated_at: new Date().toISOString(),
     };
     if (typeof personalizationOptIn === 'boolean') payload.personalization_opt_in = personalizationOptIn;
@@ -109,9 +100,7 @@ export class UserDataService {
     if (targetMoods !== undefined) payload.target_moods = targetMoods;
     if (language !== undefined) payload.language = language;
 
-    const client = accessToken
-      ? this.supabaseService.getUserClient(accessToken)
-      : this.supabaseService.supabase;
+    const client = this.supabaseService.supabase;
 
     const { data, error } = await client
       .from('user_profile_preferences')

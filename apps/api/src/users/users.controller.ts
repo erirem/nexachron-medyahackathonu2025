@@ -3,13 +3,8 @@ import {
   Get,
   Req,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 
-import {
-  SupabaseAuthGuard,
-  type AuthenticatedRequest,
-} from '../auth/supabase-auth.guard';
 import { resolveLocale, translate } from '../i18n/i18n';
 import { UsersService, type ProfileWithStats } from './users.service';
 
@@ -17,10 +12,8 @@ import { UsersService, type ProfileWithStats } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(SupabaseAuthGuard)
   @Get('me')
-  async getMe(@Req() request: AuthenticatedRequest): Promise<ProfileWithStats> {
-    const user = request.user;
+  async getMe(@Req() request: any): Promise<ProfileWithStats> {
     const acceptLanguage = request.headers['accept-language'];
     let localeParam: string | undefined;
 
@@ -38,10 +31,6 @@ export class UsersController {
 
     const locale = resolveLocale(localeParam);
 
-    if (!user) {
-      throw new UnauthorizedException(translate(locale, 'errors.unauthorized'));
-    }
-
-    return this.usersService.getProfileWithStats(user);
+    return this.usersService.getProfileWithStats();
   }
 }

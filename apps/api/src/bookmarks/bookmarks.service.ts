@@ -44,10 +44,8 @@ export class BookmarksService {
     }
   }
 
-  async list(userId: string, accessToken?: string) {
-    const supabase = accessToken
-      ? this.supabaseService.getUserClient(accessToken)
-      : this.supabaseService.supabase;
+  async list() {
+    const supabase = this.supabaseService.supabase;
     // Haber detaylarını birlikte döndür (FK: news_id -> news.id)
     const { data, error } = await supabase
       .from('bookmarks')
@@ -65,7 +63,7 @@ export class BookmarksService {
           media_summary
         )`,
       )
-      .eq('user_id', userId)
+      .eq('user_id', 'anonymous')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -74,14 +72,11 @@ export class BookmarksService {
     return data ?? [];
   }
 
-  async add(userId: string, newsId: string, accessToken: string, user?: User) {
-    const supabase = this.supabaseService.getUserClient(accessToken);
-    if (user) {
-      await this.ensureUserRow(user, accessToken);
-    }
+  async add(newsId: string) {
+    const supabase = this.supabaseService.supabase;
     const { error } = await supabase
       .from('bookmarks')
-      .upsert({ user_id: userId, news_id: newsId }, {
+      .upsert({ user_id: 'anonymous', news_id: newsId }, {
         onConflict: 'user_id,news_id',
         ignoreDuplicates: true,
       });
@@ -92,12 +87,12 @@ export class BookmarksService {
     return { success: true } as const;
   }
 
-  async remove(userId: string, newsId: string, accessToken: string) {
-    const supabase = this.supabaseService.getUserClient(accessToken);
+  async remove(newsId: string) {
+    const supabase = this.supabaseService.supabase;
     const { error } = await supabase
       .from('bookmarks')
       .delete()
-      .eq('user_id', userId)
+      .eq('user_id', 'anonymous')
       .eq('news_id', newsId);
 
     if (error) {

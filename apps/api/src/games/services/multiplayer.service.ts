@@ -29,15 +29,37 @@ export class MultiplayerService {
   ) {}
 
   /**
+   * Get a system user ID for anonymous games
+   */
+  private async getSystemUserId(): Promise<string> {
+    // Get the first user from the database to use as system user
+    const { data, error } = await this.supabaseService.supabase
+      .from('users')
+      .select('id')
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      // Fallback to a hardcoded UUID if no users exist
+      return '00000000-0000-0000-0000-000000000001';
+    }
+
+    return data.id;
+  }
+
+  /**
    * Yeni oyun odası oluştur
    */
   async createGameRoom(request: CreateGameRoomRequest): Promise<GameRoom> {
     this.logger.log(`Creating game room: ${request.roomName}`);
 
     try {
+      // Get system user ID for anonymous games
+      const systemUserId = await this.getSystemUserId();
+      
       // Önce oyunu oluştur (sorular dahil)
       const gameId = crypto.randomUUID();
-      await this.createGameWithQuestions(gameId, request.gameType, request.createdBy, request.filter);
+      await this.createGameWithQuestions(gameId, request.gameType, systemUserId, request.filter);
 
       const room: GameRoom = {
         id: crypto.randomUUID(),
@@ -49,7 +71,7 @@ export class MultiplayerService {
         password: request.password,
         status: GameStatus.WAITING,
         createdAt: new Date(),
-        createdBy: request.createdBy,
+        createdBy: systemUserId,
       };
 
       // Veritabanına kaydet
@@ -67,11 +89,10 @@ export class MultiplayerService {
    */
   async joinGame(
     roomId: string,
-    userId: string,
     playerName: string,
     password?: string,
   ): Promise<GameParticipant> {
-    this.logger.log(`User ${userId} joining game ${roomId}`);
+    this.logger.log(`Joining game ${roomId}`);
 
     try {
       // Oyun odasını getir
@@ -98,8 +119,11 @@ export class MultiplayerService {
         throw new Error('Game has already started');
       }
 
+      // Get system user ID for anonymous games
+      const systemUserId = await this.getSystemUserId();
+      
       // Kullanıcı zaten katılmış mı kontrol et
-      const existingParticipant = await this.getParticipant(gameId, userId);
+      const existingParticipant = await this.getParticipant(gameId, systemUserId);
       if (existingParticipant) {
         // Kullanıcı zaten odada, eğer playerName farklıysa güncelle
         if (existingParticipant.playerName !== playerName) {
@@ -110,7 +134,7 @@ export class MultiplayerService {
               player_name: playerName
             })
             .eq('game_id', gameId)
-            .eq('player_id', userId);
+            .eq('player_id', systemUserId);
 
           if (updateError) {
             this.logger.error(`Failed to update participant name: ${updateError.message}`);
@@ -118,7 +142,7 @@ export class MultiplayerService {
           }
           
           // Güncellenmiş katılımcıyı tekrar çek
-          const updatedParticipant = await this.getParticipant(gameId, userId);
+          const updatedParticipant = await this.getParticipant(gameId, systemUserId);
           if (!updatedParticipant) {
             throw new Error('Failed to retrieve updated participant');
           }
@@ -128,10 +152,10 @@ export class MultiplayerService {
       }
 
       // Katılımcı ekle
-      const participant = await this.addParticipant(gameId, userId, playerName);
+      const participant = await this.addParticipant(gameId, systemUserId, playerName);
 
       // Oda listesini güncelle
-      await this.updateRoomPlayers(roomId, [...room.currentPlayers, userId]);
+      await this.updateRoomPlayers(roomId, [...room.currentPlayers, systemUserId]);
 
       return participant;
     } catch (error) {
@@ -143,8 +167,8 @@ export class MultiplayerService {
   /**
    * Oyundan ayrıl
    */
-  async leaveGame(roomId: string, userId: string): Promise<void> {
-    this.logger.log(`User ${userId} leaving game ${roomId}`);
+  async leaveGame(roomId: string): Promise<void> {
+    this.logger.log(`Leaving game ${roomId}`);
 
     try {
       // Oyun odasını getir
@@ -153,18 +177,21 @@ export class MultiplayerService {
         throw new Error('Game room not found');
       }
 
+      // Get system user ID for anonymous games
+      const systemUserId = await this.getSystemUserId();
+      
       // Room'dan gameId'yi al
       const gameId = room.gameId;
 
       // Katılımcıyı kaldır
-      await this.removeParticipant(gameId, userId);
+      await this.removeParticipant(gameId, systemUserId);
 
       // Oda sahibi ayrılıyorsa odayı kapat
-      if (room.createdBy === userId) {
+      if (room.createdBy === systemUserId) {
         await this.closeGameRoom(roomId);
       } else {
         // Oda listesini güncelle
-        const updatedPlayers = room.currentPlayers.filter(id => id !== userId);
+        const updatedPlayers = room.currentPlayers.filter(id => id !== systemUserId);
         await this.updateRoomPlayers(roomId, updatedPlayers);
       }
     } catch (error) {
@@ -432,8 +459,8 @@ export class MultiplayerService {
   /**
    * Oyunu başlat
    */
-  async startGame(roomId: string, userId: string) {
-    this.logger.log(`Starting game in room ${roomId} by user ${userId}`);
+  async startGame(roomId: string) {
+    this.logger.log(`Starting game in room ${roomId}`);
 
     try {
       // Oda detaylarını getir
@@ -442,8 +469,11 @@ export class MultiplayerService {
         throw new Error('Game room not found');
       }
 
+      // Get system user ID for anonymous games
+      const systemUserId = await this.getSystemUserId();
+      
       // Sadece oda sahibi oyunu başlatabilir
-      if (room.createdBy !== userId) {
+      if (room.createdBy !== systemUserId) {
         throw new Error('Only room owner can start the game');
       }
 

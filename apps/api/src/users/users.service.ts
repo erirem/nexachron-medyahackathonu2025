@@ -36,9 +36,9 @@ export class UsersService {
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async getProfileWithStats(user: User): Promise<ProfileWithStats> {
-    const profile = await this.ensureProfileRow(user);
-    const stats = await this.ensureStatsRow(user.id);
+  async getProfileWithStats(): Promise<ProfileWithStats> {
+    const profile = await this.ensureProfileRow();
+    const stats = await this.ensureStatsRow('anonymous');
 
     return {
       user: {
@@ -60,13 +60,13 @@ export class UsersService {
     };
   }
 
-  private async ensureProfileRow(user: User): Promise<UserRow> {
+  private async ensureProfileRow(): Promise<UserRow> {
     const supabase = this.supabaseService.supabase;
 
     const profileResponse = await supabase
       .from('users')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', 'anonymous')
       .maybeSingle();
 
     if (profileResponse.error) {
@@ -77,12 +77,12 @@ export class UsersService {
       return profileResponse.data as UserRow;
     }
 
-    const fallbackUsername = this.deriveUsername(user);
-    const city = this.extractMetadataString(user, 'city');
+    const fallbackUsername = 'anonymous_user';
+    const city = null;
 
     const insertPayload: Database['public']['Tables']['users']['Insert'] = {
-      id: user.id,
-      email: user.email,
+      id: 'anonymous',
+      email: 'anonymous@example.com',
       username: fallbackUsername,
       city,
     };
@@ -99,7 +99,7 @@ export class UsersService {
         const retryResponse = await supabase
           .from('users')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', 'anonymous')
           .single();
 
         if (retryResponse.error) {
