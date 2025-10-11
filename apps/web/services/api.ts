@@ -871,3 +871,58 @@ export async function postRecommendations(limit = 20, config: RequestConfig = {}
   const data = await response.json();
   return data as { ok: boolean; items: any[] };
 }
+
+// TTS API types
+interface TTSGenerateRequest {
+  newsId: string;
+  contentType: 'summary' | 'full';
+  voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  speed: number;
+}
+
+interface TTSAudioResponse {
+  id: string;
+  newsId: string;
+  contentType: string;
+  voice: string;
+  speed: number;
+  audioUrl: string;
+  fileSizeBytes: number;
+  durationSeconds: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// TTS API functions
+export async function generateTTS(
+  request: TTSGenerateRequest,
+  config: RequestConfig = {},
+): Promise<TTSAudioResponse> {
+  const envelope = await apiFetch<TTSAudioResponse>(
+    '/api/tts/generate',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return envelope;
+}
+
+export async function getTTSAudio(
+  id: string,
+  config: RequestConfig = {},
+): Promise<TTSAudioResponse> {
+  const envelope = await apiFetch<TTSAudioResponse>(
+    `/api/tts/${id}`,
+    { signal: config.signal },
+  );
+
+  return envelope;
+}

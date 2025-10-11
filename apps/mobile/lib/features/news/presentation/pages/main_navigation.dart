@@ -4,6 +4,7 @@ import 'dashboard_page.dart';
 import 'bookmarks_page.dart';
 import '../../../auth/presentation/pages/profile_screen.dart';
 import '../../../games/presentation/pages/games_page.dart';
+import '../../../podcast/presentation/pages/podcast_page.dart';
 
 class CurrentIndexNotifier extends Notifier<int> {
   @override
@@ -27,6 +28,7 @@ class MainNavigation extends ConsumerWidget {
 
     final pages = [
       const DashboardPage(),
+      const PodcastPage(),
       const GamesPage(),
       const BookmarksPage(),
       const ProfileScreen(),
@@ -56,28 +58,36 @@ class MainNavigation extends ConsumerWidget {
                       ref.read(currentIndexProvider.notifier).setIndex(0),
                 ),
                 _NavBarItem(
-                  icon: Icons.games_outlined,
-                  activeIcon: Icons.games,
-                  label: 'Oyunlar',
+                  icon: Icons.podcasts_outlined,
+                  activeIcon: Icons.podcasts,
+                  label: 'Podcast',
                   isActive: currentIndex == 1,
                   onTap: () =>
                       ref.read(currentIndexProvider.notifier).setIndex(1),
                 ),
                 _NavBarItem(
-                  icon: Icons.bookmark_outline,
-                  activeIcon: Icons.bookmark,
-                  label: 'Kayıtlar',
+                  icon: Icons.games_outlined,
+                  activeIcon: Icons.games,
+                  label: 'Oyunlar',
                   isActive: currentIndex == 2,
                   onTap: () =>
                       ref.read(currentIndexProvider.notifier).setIndex(2),
                 ),
                 _NavBarItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: 'Profil',
+                  icon: Icons.bookmark_outline,
+                  activeIcon: Icons.bookmark,
+                  label: 'Kayıtlar',
                   isActive: currentIndex == 3,
                   onTap: () =>
                       ref.read(currentIndexProvider.notifier).setIndex(3),
+                ),
+                _NavBarItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Profil',
+                  isActive: currentIndex == 4,
+                  onTap: () =>
+                      ref.read(currentIndexProvider.notifier).setIndex(4),
                 ),
               ],
             ),

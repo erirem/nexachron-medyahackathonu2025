@@ -13,6 +13,7 @@ import { TTSModule } from './tts/tts.module';
 import { ReelsModule } from './reels/reels.module';
 import { UserDataModule } from './user-data/user-data.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
+import { PodcastModule } from './podcast/podcast.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
     ReelsModule,
     UserDataModule,
     RecommendationsModule,
+    PodcastModule,
   ],
   controllers: [AppController],
   providers: [AppService],
