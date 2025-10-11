@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { useGamification } from '@/contexts/gamification-context';
+import { RANK_THRESHOLDS, UserRank } from '@/lib/types/gamification';
 
 import { GameCard } from './_components/game-card';
 import type { Game } from './_types/game-types';
@@ -81,6 +82,116 @@ const BirdIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
     <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 5.5V7.5L21 9ZM3 9L9 7.5V5.5L3 7V9ZM12 8C9.8 8 8 9.8 8 12S9.8 16 12 16 16 14.2 16 12 14.2 8 12 8ZM12 14C10.9 14 10 13.1 10 12S10.9 10 12 10 14 10.9 14 12 13.1 14 12 14Z"/>
   </svg>
 );
+
+// XP Progress Bar Component
+const XPProgressBar = ({ currentXP, currentRank }: { currentXP: number; currentRank: UserRank }) => {
+  const getCurrentLevelInfo = () => {
+    const ranks = Object.values(UserRank);
+    const currentIndex = ranks.indexOf(currentRank);
+    const currentThreshold = RANK_THRESHOLDS[currentRank];
+    const nextRank = ranks[currentIndex + 1];
+    const nextThreshold = nextRank ? RANK_THRESHOLDS[nextRank] : currentThreshold;
+    
+    const progress = nextRank 
+      ? ((currentXP - currentThreshold) / (nextThreshold - currentThreshold)) * 100
+      : 100;
+    
+    const xpToNext = nextRank ? nextThreshold - currentXP : 0;
+    
+    return {
+      currentRank,
+      nextRank,
+      currentThreshold,
+      nextThreshold,
+      progress: Math.min(Math.max(progress, 0), 100),
+      xpToNext,
+      isMaxLevel: !nextRank
+    };
+  };
+
+  const levelInfo = getCurrentLevelInfo();
+  
+  const getRankDisplayName = (rank: UserRank) => {
+    const rankNames = {
+      [UserRank.NEW_MEMBER]: 'Yeni Üye',
+      [UserRank.ACTIVE_READER]: 'Aktif Okuyucu',
+      [UserRank.KNOWLEDGE_SHARER]: 'Bilgi Paylaşımcısı',
+      [UserRank.EXPERT_COMMENTER]: 'Uzman Yorumcu',
+      [UserRank.COMMUNITY_LEADER]: 'Topluluk Lideri'
+    };
+    return rankNames[rank];
+  };
+
+  return (
+    <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-white font-semibold text-sm">
+              {getRankDisplayName(levelInfo.currentRank)}
+            </h3>
+            <p className="text-white/60 text-xs">
+              {currentXP.toLocaleString()} XP
+            </p>
+          </div>
+        </div>
+        
+        {!levelInfo.isMaxLevel && (
+          <div className="text-right">
+            <p className="text-white/60 text-xs">
+              Sonraki seviye
+            </p>
+            <p className="text-white font-semibold text-sm">
+              {getRankDisplayName(levelInfo.nextRank!)}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {!levelInfo.isMaxLevel ? (
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-white/60">
+              {levelInfo.currentThreshold.toLocaleString()} XP
+            </span>
+            <span className="text-white/60">
+              {levelInfo.nextThreshold!.toLocaleString()} XP
+            </span>
+          </div>
+          
+          <div className="relative">
+            <div className="w-full bg-white/10 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${levelInfo.progress}%` }}
+              />
+            </div>
+            
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-white/60 text-xs">
+                %{Math.round(levelInfo.progress)} tamamlandı
+              </span>
+              <span className="text-yellow-400 text-xs font-medium">
+                {levelInfo.xpToNext.toLocaleString()} XP kaldı
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-2">
+          <p className="text-yellow-400 font-semibold text-sm">
+            🎉 Maksimum seviyeye ulaştınız!
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 type BaseGame = Omit<Game, 'title' | 'description' | 'estimatedTime'> & {
   readonly translationKey: string;
@@ -455,10 +566,16 @@ export default function GamesPage(): JSX.Element {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">{t('page.title')}</h1>
-          <p className="text-[#8fb8ff] text-lg">
-            {t('page.description', { xp: (userProfile?.xp ?? 0).toLocaleString(locale) })}
+          <h1 className="text-4xl font-bold mb-4">{t('page.title')}</h1>
+          <p className="text-[#8fb8ff] text-lg mb-4">
+            Eğlenceli oyunlarla bilginizi test edin ve XP kazanın!
           </p>
+          {userProfile && (
+            <XPProgressBar 
+              currentXP={userProfile.xp} 
+              currentRank={userProfile.currentRank} 
+            />
+          )}
         </div>
 
         <div className="mb-8">
