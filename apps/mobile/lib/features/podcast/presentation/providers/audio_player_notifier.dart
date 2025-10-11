@@ -249,21 +249,21 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   void dispose() {
     try {
       print('🔄 Disposing audio player...');
-      
+
       // Önce sesi durdur
       _audioPlayer?.stop();
-      
+
       // Subscription'ları iptal et
       _positionSubscription?.cancel();
       _playerStateSubscription?.cancel();
-      
+
       // Audio player'ı dispose et
       _audioPlayer?.dispose();
       _audioPlayer = null;
-      
+
       // State'i sıfırla
       state = const AudioPlayerState();
-      
+
       print('✅ Audio player disposed successfully');
     } catch (e) {
       print('❌ Error disposing audio player: $e');
