@@ -145,6 +145,7 @@ type GetNewsListParams = {
   readonly pageSize?: number;
   readonly limit?: number;
   readonly categoryId?: string;
+  readonly categoryIds?: string[]; // Çoklu kategori desteği
   readonly city?: string;
   readonly isPopular?: boolean;
 };
@@ -173,6 +174,7 @@ export async function fetchNewsList(
     pageSize: params.pageSize,
     limit: params.limit,
     categoryId: params.categoryId,
+    categoryIds: params.categoryIds?.join(','), // Çoklu kategoriyi virgülle ayırarak gönder
     city: params.city,
     isPopular:
       typeof params.isPopular === 'boolean' ? String(params.isPopular) : undefined,
@@ -679,6 +681,167 @@ export async function triggerCategoryNewsIngest(
   return ensureSuccess(envelope);
 }
 
+// Reels/Explore API functions
+export interface ExploreItem {
+  kind: 'reel';
+  id: string;
+  title: string;
+  summary: string;
+  category: string;
+  videoUrl: string;
+  thumbUrl: string;
+  durationSec: number;
+  hrefId: string;
+}
+
+export interface ExploreFeedResponse {
+  items: ExploreItem[];
+  nextCursor?: string;
+  hasMore: boolean;
+}
+
+export async function fetchExploreFeed(
+  params: {
+    limit?: number;
+    cursor?: string;
+    category?: string;
+    userId?: string;
+  } = {},
+  config: RequestConfig = {},
+): Promise<ExploreFeedResponse> {
+  const response = await apiFetch<ExploreFeedResponse>(
+    '/api/reels/explore',
+    {
+      query: {
+        limit: params.limit || 24,
+        cursor: params.cursor,
+        category: params.category,
+        userId: params.userId,
+      },
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
+
+export interface ReelListItem {
+  id: string;
+  title: string;
+  description: string;
+  video_url?: string;
+  thumbnail_url?: string;
+  duration_seconds: number;
+  category: string;
+  created_at: string;
+  status: string;
+}
+
+export interface ReelListResponse {
+  reels: ReelListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+export async function fetchReelsList(
+  params: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    category?: string;
+  } = {},
+  config: RequestConfig = {},
+): Promise<ReelListResponse> {
+  const response = await apiFetch<ReelListResponse>(
+    '/api/reels/list',
+    {
+      query: {
+        limit: params.limit || 20,
+        offset: params.offset || 0,
+        status: params.status,
+        category: params.category,
+      },
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
+
+export interface ReelDetail {
+  id: string;
+  content: {
+    headline: string;
+    summary_sentences?: string[];
+    captions?: string;
+    hashtags?: string[];
+  };
+  assets: {
+    video_url?: string;
+    thumbnail_url?: string;
+    background_image?: string;
+  };
+  duration_seconds: number;
+  category: string;
+  engagement_score: number;
+  published_at: string;
+  created_at: string;
+  news_id: string;
+  status: string;
+}
+
+export async function fetchReelById(
+  id: string,
+  config: RequestConfig = {},
+): Promise<ReelDetail> {
+  const response = await apiFetch<ReelDetail>(
+    `/api/reels/${id}`,
+    {
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
+
+export interface NextReelResponse {
+  item: {
+    id: string;
+    title: string;
+    summary: string;
+    category: string;
+    videoUrl: string;
+    thumbUrl: string;
+    durationSec: number;
+    hrefId: string;
+  };
+}
+
+export async function fetchNextReel(
+  currentId: string,
+  params: {
+    dir?: 'up' | 'down';
+    category?: string;
+    userId?: string;
+  } = {},
+  config: RequestConfig = {},
+): Promise<NextReelResponse> {
+  const response = await apiFetch<NextReelResponse>(
+    `/api/reels/${currentId}/next`,
+    {
+      query: {
+        dir: params.dir || 'up',
+        category: params.category,
+        userId: params.userId,
+      },
+      signal: config.signal,
+    },
+  );
+
+  return response;
+}
 // Recommendations API
 export async function postRecommendations(limit = 20, config: RequestConfig = {}) {
   const url = buildUrl('/api/v1/recommendations');

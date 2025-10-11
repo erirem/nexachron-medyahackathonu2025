@@ -7,6 +7,7 @@ import { fetchNewsList } from '@/services/api';
 
 type UseInfiniteNewsOptions = {
   readonly categoryId?: string;
+  readonly categoryIds?: string[]; // Çoklu kategori desteği
   readonly city?: string;
   readonly isPopular?: boolean;
   readonly initialData?: NewsListDataPayload;
@@ -15,7 +16,7 @@ type UseInfiniteNewsOptions = {
 };
 
 export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
-  const { categoryId, city, isPopular, initialData, filterCategory } = options;
+  const { categoryId, categoryIds, city, isPopular, initialData, filterCategory } = options;
 
   // Map UI filter to backend parameters
   const resolveParams = useCallback(() => {
@@ -23,13 +24,19 @@ export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
       page: 1 as number, 
       pageSize: 10, 
       categoryId: undefined as string | undefined, 
+      categoryIds: undefined as string[] | undefined, // Çoklu kategori desteği
       city: undefined as string | undefined, 
       isPopular: undefined as boolean | undefined,
       limit: 10 as number,
     };
 
+    // If multiple category IDs are provided, use them
+    if (categoryIds && categoryIds.length > 0) {
+      params.categoryIds = categoryIds;
+      params.limit = undefined; // Use pagination when filtering by categories
+    }
     // If a specific category ID is provided, use it directly
-    if (categoryId) {
+    else if (categoryId) {
       params.categoryId = categoryId;
       params.limit = undefined; // Use pagination when filtering by category
     } 
@@ -116,7 +123,7 @@ export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
     }
 
     return params;
-  }, [categoryId, city, isPopular, filterCategory]);
+  }, [categoryId, categoryIds, city, isPopular, filterCategory]);
 
   const {
     data,
@@ -128,7 +135,7 @@ export function useInfiniteNews(options: UseInfiniteNewsOptions = {}) {
     isError,
     error,
   } = useInfiniteQuery({
-    queryKey: ['infinite-news', { categoryId, city, isPopular, filterCategory }],
+    queryKey: ['infinite-news', { categoryId, categoryIds, city, isPopular, filterCategory }],
     queryFn: ({ pageParam = 1 }) => {
       const params = resolveParams();
       return fetchNewsList({ 

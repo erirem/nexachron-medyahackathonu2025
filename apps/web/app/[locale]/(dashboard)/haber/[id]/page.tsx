@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { type JSX } from 'react';
 import { NewsArticle } from './_components/news-article';
 import { NewsSidebar } from './_components/news-sidebar';
+import { ReaderEngagement } from './_components/reader-engagement';
 import { TimeLimitedWrapper } from './_components/time-limited-wrapper';
 import { SmoothScrollWrapper } from './_components/smooth-scroll-wrapper';
 import { DynamicScrollbarWrapper } from './_components/dynamic-scrollbar-wrapper';
@@ -35,10 +36,22 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
       .slice(0, 4);
 
     // Fetch popular news for sidebar
-    const popularNewsData = await fetchNewsList({ 
+    let popularNewsData = await fetchNewsList({ 
       isPopular: true, 
       limit: 6 
     });
+    
+    // Ensure items array exists
+    if (!popularNewsData.items) {
+      popularNewsData.items = [];
+    }
+    
+    // If no popular news found, fallback to regular news
+    if (popularNewsData.items.length === 0) {
+      popularNewsData = await fetchNewsList({ 
+        limit: 6 
+      });
+    }
     
     // Transform popular news data
     const popularNews = popularNewsData.items
@@ -79,6 +92,11 @@ export default async function NewsPage({ params }: { params: Promise<{ id: strin
                       relatedNews={relatedNews}
                       allNews={recentNewsData.items.map(transformNewsDataToDashboardItem)}
                     />
+                    
+                    {/* Comments and Engagement Section */}
+                    <div className="mt-16">
+                      <ReaderEngagement articleId={article.id} />
+                    </div>
                   </div>
                 </main>
                 

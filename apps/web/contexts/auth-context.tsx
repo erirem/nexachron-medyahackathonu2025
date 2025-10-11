@@ -50,7 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setOnboardingStatusLoading(true);
       const supabase = getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session?.access_token) {
         // No session, so we can't check - user is not logged in
         console.log('AuthContext: No session found, setting states to null');
@@ -59,13 +59,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setOnboardingStatusLoading(false);
         return false;
       }
-      
+
       console.log('AuthContext: Checking onboarding status for user:', session.user?.id);
 
       // Add timeout to prevent hanging
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
       try {
         const response = await fetch(`${API_URL}/api/v1/user-data/preferences`, {
           headers: {
@@ -74,9 +74,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           },
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (response.ok) {
           const data = await response.json();
           const completedFromMeta = data?.meta?.hasCompletedOnboarding;
@@ -94,9 +94,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setOnboardingStatusLoading(false);
           return completed;
         }
-        
+
         // API call failed or returned error - treat as unknown so UI can retry gracefully
         console.log('AuthContext: API call failed, status:', response.status, 'returning unknown onboarding state');
+
+        // If user exists, assume they've completed onboarding (conservative approach)
+        if (session?.user) {
+          console.log('AuthContext: API failed but user exists, defaulting to completed');
+          setHasCompletedOnboarding(true);
+          setIsFirstTimeUser(false);
+          setOnboardingStatusLoading(false);
+          return true;
+        }
+
         setHasCompletedOnboarding(null);
         setIsFirstTimeUser(null);
         setOnboardingStatusLoading(false);
@@ -109,7 +119,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } else {
           console.log('AuthContext: API call failed with error:', fetchError);
         }
-        
+
+        // If user exists, assume they've completed onboarding (conservative approach)
+        if (session?.user) {
+          console.log('AuthContext: API failed but user exists, defaulting to completed');
+          setHasCompletedOnboarding(true);
+          setIsFirstTimeUser(false);
+          setOnboardingStatusLoading(false);
+          return true;
+        }
+
         // If API is not available, keep state unknown so guard can fallback gracefully
         setHasCompletedOnboarding(null);
         setIsFirstTimeUser(null);
@@ -136,7 +155,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('AuthContext: Loading profile for user:', userId);
       const supabase = getSupabaseClient();
-      
+
       // Fetch both auth user and session token
       const [authResult, sessionResult] = await Promise.all([
         supabase.auth.getUser(),
@@ -240,6 +259,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (onboardingStatusLoading) {
         setOnboardingStatusLoading(false);
       }
+      // Eğer kullanıcı giriş yapmışsa ve onboarding durumu belirsizse,
+      // muhtemelen onboarding tamamlanmıştır (user zaten sistemde)
+      if (hasCompletedOnboarding === null && user) {
+        console.warn('AuthContext: hasCompletedOnboarding still null for logged-in user, setting to true as fallback');
+        setHasCompletedOnboarding(true);
+        setIsFirstTimeUser(false);
+      }
     }, 4000);
 
     // Get initial session
@@ -247,11 +273,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         console.log('AuthContext: Getting initial session...');
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (!isMounted) return;
-        
+
         setUser(session?.user ?? null);
-        
+
         // Load profile if user exists
         if (session?.user?.id) {
           console.log('AuthContext: User found, loading profile and checking onboarding');
@@ -290,11 +316,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       async (event, session) => {
         try {
           console.log('AuthContext: Auth state changed, event:', event);
-          
+
           if (!isMounted) return;
-          
+
           setUser(session?.user ?? null);
-          
+
           // Load profile if user exists
           if (session?.user?.id) {
             console.log('AuthContext: Loading profile after auth change');
@@ -331,6 +357,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
+      console.log('AuthContext: signOut başlatılıyor...');
+      
+      // Önce state'i temizle ki UI hemen güncellensin
+      setUser(null);
+      setProfile(null);
+      setHasCompletedOnboarding(null);
+      setIsFirstTimeUser(null);
+      setOnboardingStatusLoading(false);
+      
       const persistent = getSupabaseClient(true);
       const sessionClient = getSupabaseClient(false);
 
@@ -339,24 +374,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           // @ts-ignore - bazı tip sürümlerinde scope eksik olabilir
           await client.auth.signOut({ scope: 'global' });
-        } catch {
+          console.log('AuthContext: Global signOut başarılı');
+        } catch (error) {
+          console.log('AuthContext: Global signOut başarısız, normal signOut deneniyor:', error);
           await client.auth.signOut();
+          console.log('AuthContext: Normal signOut başarılı');
         }
       };
 
-      await Promise.allSettled([
+      const results = await Promise.allSettled([
         signOutWithScope(persistent),
         signOutWithScope(sessionClient),
       ]);
+
+      // Sonuçları kontrol et
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.warn(`AuthContext: Client ${index} signOut hatası:`, result.reason);
+        }
+      });
+
+      console.log('AuthContext: Tüm signOut işlemleri tamamlandı');
     } catch (e) {
-      console.warn('AuthContext: signOut sırasında uyarı:', e);
-    } finally {
-      // Context state'lerini temizle
+      console.error('AuthContext: signOut sırasında kritik hata:', e);
+      // Hata olsa bile state'i temizle
       setUser(null);
       setProfile(null);
       setHasCompletedOnboarding(null);
       setIsFirstTimeUser(null);
       setOnboardingStatusLoading(false);
+    } finally {
+      // LocalStorage'ı da temizle
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('supabase.auth.token');
+          // Supabase auth token'larını temizle
+          Object.keys(localStorage).forEach(key => {
+            if (key.includes('supabase') || key.includes('sb-')) {
+              localStorage.removeItem(key);
+            }
+          });
+          console.log('AuthContext: LocalStorage temizlendi');
+        }
+      } catch (storageError) {
+        console.warn('AuthContext: LocalStorage temizleme hatası:', storageError);
+      }
+      
+      console.log('AuthContext: SignOut tamamlandı');
     }
   };
 

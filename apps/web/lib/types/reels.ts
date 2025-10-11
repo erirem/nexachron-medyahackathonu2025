@@ -1,14 +1,20 @@
-export type ReelCategory = 'economy' | 'sports' | 'world' | 'culture' | 'tech';
+// Re-export from API service for backward compatibility
+export type { ExploreItem, ExploreFeedResponse } from '../../services/api';
+
+// Legacy types - kept for reference
+export type ReelCategory = 'economy' | 'sports' | 'world' | 'culture' | 'tech' |
+    'gundem' | 'ekonomi' | 'spor' | 'teknoloji' | 'savunma' | 'enerji' | 'kultur' | 'general';
 
 export type Reel = {
     id: string;
     title: string;
     summary: string;
-    category: ReelCategory;
+    category: string;
     videoUrl: string;
     thumbUrl: string;
     durationSec: number;
     city?: string;
+    hrefId?: string;
 };
 
 export type ProfileVector = Partial<Record<ReelCategory, number>>;
@@ -18,21 +24,9 @@ export type ReelsPage = {
     nextCursor?: string;
 };
 
-export type ExploreItem =
-    | ({ kind: 'reel' } & Reel)
-    | {
-        kind: 'photo';
-        id: string;
-        title: string;
-        summary: string;
-        category: ReelCategory;
-        imageUrl: string;
-        thumbUrl: string;
-        hrefId: string; // future article id
-    };
-
+// Deprecated: Use ExploreFeedResponse from services/api instead
 export type ExplorePage = {
-    items: ExploreItem[];
+    items: Array<{ kind: 'reel' } & Reel>;
     nextCursor?: string;
 };
 

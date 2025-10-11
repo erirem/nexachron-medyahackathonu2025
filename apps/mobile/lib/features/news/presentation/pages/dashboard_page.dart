@@ -456,10 +456,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           );
                           return recommendations.when(
                             data: (items) {
-                              if (items.isEmpty)
+                              if (items.isEmpty) {
                                 return const SliverToBoxAdapter(
                                   child: SizedBox.shrink(),
                                 );
+                              }
 
                               return SliverToBoxAdapter(
                                 child: Padding(
@@ -534,10 +535,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           );
                           return recommendations.when(
                             data: (items) {
-                              if (items.isEmpty)
+                              if (items.isEmpty) {
                                 return const SliverToBoxAdapter(
                                   child: SizedBox.shrink(),
                                 );
+                              }
 
                               return SliverPadding(
                                 padding: const EdgeInsets.symmetric(
@@ -592,10 +594,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           );
                           return recommendations.when(
                             data: (items) {
-                              if (items.isEmpty)
+                              if (items.isEmpty) {
                                 return const SliverToBoxAdapter(
                                   child: SizedBox.shrink(),
                                 );
+                              }
                               return const SliverToBoxAdapter(
                                 child: SizedBox(height: 24),
                               );

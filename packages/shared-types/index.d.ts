@@ -275,6 +275,7 @@ export interface FindNewsOptions {
   page?: number;
   pageSize?: number;
   categoryId?: string;
+  categoryIds?: string[]; // Çoklu kategori desteği
   city?: string;
   isPopular?: boolean;
   search?: string;
