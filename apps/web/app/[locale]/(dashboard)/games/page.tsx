@@ -259,30 +259,6 @@ const baseGames: readonly BaseGame[] = [
     completionRate: 0,
   },
   {
-    id: 'timeline-game',
-    translationKey: 'timelineGame',
-    icon: <CalendarIcon className="w-6 h-6" />,
-    color: 'cyan',
-    category: 'timeline',
-    difficulty: 'hard',
-    xpReward: 40,
-    isAvailable: false,
-    isCompleted: false,
-    completionRate: 0,
-  },
-  {
-    id: 'spot-the-difference',
-    translationKey: 'spotTheDifference',
-    icon: <SearchIcon className="w-6 h-6" />,
-    color: 'red',
-    category: 'visual',
-    difficulty: 'medium',
-    xpReward: 30,
-    isAvailable: false,
-    isCompleted: false,
-    completionRate: 0,
-  },
-  {
     id: 'wordle',
     translationKey: 'wordle',
     icon: <DocumentIcon className="w-6 h-6" />,
@@ -303,6 +279,34 @@ const baseGames: readonly BaseGame[] = [
     difficulty: 'medium',
     xpReward: 20,
     isAvailable: true,
+    isCompleted: false,
+    completionRate: 0,
+  },
+];
+
+// Coming Soon Games - These will only appear in the Coming Soon section
+const comingSoonGamesData: readonly BaseGame[] = [
+  {
+    id: 'timeline-game',
+    translationKey: 'timelineGame',
+    icon: <CalendarIcon className="w-6 h-6" />,
+    color: 'cyan',
+    category: 'timeline',
+    difficulty: 'hard',
+    xpReward: 40,
+    isAvailable: false,
+    isCompleted: false,
+    completionRate: 0,
+  },
+  {
+    id: 'spot-the-difference',
+    translationKey: 'spotTheDifference',
+    icon: <SearchIcon className="w-6 h-6" />,
+    color: 'red',
+    category: 'visual',
+    difficulty: 'medium',
+    xpReward: 30,
+    isAvailable: false,
     isCompleted: false,
     completionRate: 0,
   },
@@ -351,8 +355,13 @@ export default function GamesPage(): JSX.Element {
     : games.filter((game) => game.category === selectedCategory);
 
   const comingSoonGames = useMemo(
-    () => games.filter((game) => !game.isAvailable),
-    [games],
+    () => comingSoonGamesData.map((game) => ({
+      ...game,
+      title: t(`gamesList.${game.translationKey}.title`),
+      description: t(`gamesList.${game.translationKey}.description`),
+      estimatedTime: t(`gamesList.${game.translationKey}.estimatedTime`),
+    })),
+    [t],
   );
 
   const handleGameSelect = (game: Game) => {
