@@ -9,8 +9,19 @@ import type {
   NewsWithMediaDto,
 } from '@nexachron/shared-types';
 
+/**
+ * Unified API client
+ * - Combines News, Bookmarks, Ingest, Games (single & multiplayer), Reels/Explore, Recommendations, and TTS endpoints
+ * - Deduplicates helpers and types
+ * - Provides resilient `apiFetch` that tolerates empty responses and non-JSON error bodies
+ */
+
+// =========================
+// Shared types & utilities
+// =========================
+
 // Games API types
-interface GameQuestion {
+export interface GameQuestion {
   id: string;
   question: string;
   type: 'multiple_choice' | 'true_false';
@@ -25,7 +36,7 @@ interface GameQuestion {
   createdAt: string;
 }
 
-interface Game {
+export interface Game {
   id: string;
   gameType: string;
   mode: 'single' | 'multiplayer';
@@ -39,7 +50,7 @@ interface Game {
   totalQuestions: number;
 }
 
-interface StartGameRequest {
+export interface StartGameRequest {
   gameType: string;
   mode: 'single' | 'multiplayer';
   filter?: {
@@ -51,17 +62,16 @@ interface StartGameRequest {
   };
 }
 
-interface AnswerQuestionRequest {
+export interface AnswerQuestionRequest {
   questionId: string;
   answer: string;
   timeSpent: number;
 }
 
-type QueryValue = string | number | boolean | undefined | null;
+export type QueryValue = string | number | boolean | undefined | null;
+export type QueryRecord = Record<string, QueryValue>;
 
-type QueryRecord = Record<string, QueryValue>;
-
-type ApiFetchOptions = RequestInit & {
+export type ApiFetchOptions = RequestInit & {
   readonly query?: QueryRecord;
   readonly signal?: AbortSignal;
 };
@@ -116,7 +126,7 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
         try {
           const json = JSON.parse(text);
           // Try common error shapes
-          details = json?.error ?? json?.message ?? text;
+          details = (json as any)?.error ?? (json as any)?.message ?? text;
         } catch {
           details = text;
         }
@@ -129,7 +139,20 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
     throw new Error(message);
   }
 
-  return (await response.json()) as T;
+  // Boş response'ları handle et
+  const text = await response.text();
+  if (!text) {
+    // Empty success response
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (error: any) {
+    // Useful for debugging unexpected HTML/text bodies
+    console.error('Failed to parse JSON response:', text);
+    throw new Error(`Invalid JSON response: ${error.message}`);
+  }
 }
 
 function ensureSuccess<T>(envelope: ApiResponseEnvelope<T>): T {
@@ -140,7 +163,15 @@ function ensureSuccess<T>(envelope: ApiResponseEnvelope<T>): T {
   return envelope.data;
 }
 
-type GetNewsListParams = {
+export type RequestConfig = {
+  readonly signal?: AbortSignal;
+};
+
+// =========================
+// News API
+// =========================
+
+export type GetNewsListParams = {
   readonly page?: number;
   readonly pageSize?: number;
   readonly limit?: number;
@@ -150,19 +181,15 @@ type GetNewsListParams = {
   readonly isPopular?: boolean;
 };
 
-type GetCategoryNewsParams = {
+export type GetCategoryNewsParams = {
   readonly categoryId?: string;
   readonly page?: number;
   readonly pageSize?: number;
 };
 
-type SearchNewsParams = {
+export type SearchNewsParams = {
   readonly query: string;
   readonly limit?: number;
-};
-
-type RequestConfig = {
-  readonly signal?: AbortSignal;
 };
 
 export async function fetchNewsList(
@@ -296,7 +323,10 @@ export async function fetchNewsById(
   return ensureSuccess(envelope);
 }
 
+// =========================
 // Bookmarks API
+// =========================
+
 export async function fetchBookmarks(config: RequestConfig = {}) {
   const envelope = await apiFetch<
     ApiResponseEnvelope<
@@ -358,6 +388,10 @@ async function buildAuthHeader(): Promise<Record<string, string>> {
   }
 }
 
+// =========================
+// News interactions
+// =========================
+
 export async function addCommentToNews(
   id: string,
   userId: string,
@@ -399,6 +433,10 @@ export async function addReactionToNews(
 
   return ensureSuccess(envelope);
 }
+
+// =========================
+// Ingest & Admin stats
+// =========================
 
 export async function fetchNewsIngestStats(
   config: RequestConfig = {},
@@ -552,9 +590,33 @@ export async function triggerManualNewsIngest(
   return ensureSuccess(envelope);
 }
 
-// Games API functions
+export async function triggerCategoryNewsIngest(
+  category: string,
+  config: RequestConfig = {},
+) {
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    message: string;
+    category: string;
+    processed: number;
+    items: unknown[];
+  }>>(
+    `/api/news-ingest/category/${category}`,
+    {
+      method: 'POST',
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+// =========================
+// Games API (single-player)
+// =========================
+
 export async function getAvailableGames(config: RequestConfig = {}) {
-  const envelope = await apiFetch<{
+  // This endpoint returns a plain object, not ApiResponseEnvelope
+  const res = await apiFetch<{
     games: Array<{
       id: string;
       name: string;
@@ -568,7 +630,7 @@ export async function getAvailableGames(config: RequestConfig = {}) {
     }>;
   }>('/api/games', { signal: config.signal });
 
-  return envelope;
+  return res;
 }
 
 export async function startGame(
@@ -661,19 +723,34 @@ export async function generateNewsTriviaQuestions(config: RequestConfig = {}) {
   return ensureSuccess(envelope);
 }
 
-export async function triggerCategoryNewsIngest(
-  category: string,
+// =========================
+// Multiplayer API
+// =========================
+
+export async function getGameRooms(
+  gameType?: string,
+  status?: string,
+  limit = 20,
   config: RequestConfig = {},
 ) {
+  const authHeaders = await buildAuthHeader();
   const envelope = await apiFetch<ApiResponseEnvelope<{
-    message: string;
-    category: string;
-    processed: number;
-    items: unknown[];
+    rooms: Array<{
+      id: string;
+      name: string;
+      gameType: string;
+      maxPlayers: number;
+      currentPlayers: string[];
+      isPrivate: boolean;
+      status: string;
+      createdAt: string;
+      createdBy: string;
+    }>;
   }>>(
-    `/api/news-ingest/category/${category}`,
+    '/api/games/rooms',
     {
-      method: 'POST',
+      query: { gameType, status, limit },
+      headers: authHeaders,
       signal: config.signal,
     },
   );
@@ -681,7 +758,140 @@ export async function triggerCategoryNewsIngest(
   return ensureSuccess(envelope);
 }
 
-// Reels/Explore API functions
+export async function createGameRoom(
+  request: {
+    gameType: string;
+    roomName: string;
+    maxPlayers?: number;
+    isPrivate?: boolean;
+    password?: string;
+  },
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    room: {
+      id: string;
+      name: string;
+      gameType: string;
+      maxPlayers: number;
+      currentPlayers: string[];
+      isPrivate: boolean;
+      status: string;
+      createdAt: string;
+      createdBy: string;
+    };
+  }>>(
+    '/api/games/rooms',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function joinGameRoom(
+  roomId: string,
+  request: {
+    playerName: string;
+    password?: string;
+  },
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    participant: {
+      id: string;
+      gameId: string;
+      playerId: string;
+      playerName: string;
+      joinedAt: string;
+      isReady: boolean;
+      currentScore: number;
+    };
+  }>>(
+    `/api/games/rooms/${roomId}/join`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify(request),
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function leaveGameRoom(
+  roomId: string,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    message: string;
+  }>>(
+    `/api/games/rooms/${roomId}/leave`,
+    {
+      method: 'POST',
+      headers: authHeaders,
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+export async function getGameRoomDetails(
+  roomId: string,
+  config: RequestConfig = {},
+) {
+  const authHeaders = await buildAuthHeader();
+  const envelope = await apiFetch<ApiResponseEnvelope<{
+    room: {
+      id: string;
+      gameId: string;
+      name: string;
+      gameType: string;
+      maxPlayers: number;
+      currentPlayers: string[];
+      isPrivate: boolean;
+      status: string;
+      createdAt: string;
+      createdBy: string;
+    };
+    participants: Array<{
+      id: string;
+      playerId: string;
+      playerName: string;
+      joinedAt: string;
+      isReady: boolean;
+      currentScore: number;
+    }>;
+  }>>(
+    `/api/games/rooms/${roomId}`,
+    {
+      headers: authHeaders,
+      signal: config.signal,
+    },
+  );
+
+  return ensureSuccess(envelope);
+}
+
+// =========================
+// Reels / Explore API
+// =========================
+
 export interface ExploreItem {
   kind: 'reel';
   id: string;
@@ -842,45 +1052,38 @@ export async function fetchNextReel(
 
   return response;
 }
+
+// =========================
 // Recommendations API
+// =========================
+
 export async function postRecommendations(limit = 20, config: RequestConfig = {}) {
-  const url = buildUrl('/api/v1/recommendations');
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+  const data = await apiFetch<{ ok: boolean; items: any[] }>(
+    '/api/v1/recommendations',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type: 'news', limit }),
+      signal: config.signal,
     },
-    // inline body because ApiFetchOptions in this file omits 'body'
-    // and we are using native fetch directly here
-    body: JSON.stringify({ type: 'news', limit }) as any,
-    signal: config.signal,
-    cache: 'no-store',
-  } as RequestInit);
-
-  if (!response.ok) {
-    let details = '';
-    try {
-      const text = await response.text();
-      if (text) {
-        try { details = (JSON.parse(text)?.error) ?? text; } catch { details = text; }
-      }
-    } catch {}
-    throw new Error(`Recommendations failed: ${response.status} ${response.statusText}${details ? `: ${details}` : ''}`);
-  }
-
-  const data = await response.json();
-  return data as { ok: boolean; items: any[] };
+  );
+  return data;
 }
 
-// TTS API types
-interface TTSGenerateRequest {
+// =========================
+// TTS API
+// =========================
+
+export interface TTSGenerateRequest {
   newsId: string;
   contentType: 'summary' | 'full';
   voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
   speed: number;
 }
 
-interface TTSAudioResponse {
+export interface TTSAudioResponse {
   id: string;
   newsId: string;
   contentType: string;
@@ -895,7 +1098,6 @@ interface TTSAudioResponse {
   updatedAt: string;
 }
 
-// TTS API functions
 export async function generateTTS(
   request: TTSGenerateRequest,
   config: RequestConfig = {},

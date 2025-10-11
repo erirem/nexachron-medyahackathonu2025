@@ -185,7 +185,7 @@ export class AiSummaryService {
 
 İçerik: ${truncatedContent}
 
-Bu haberi net ve anlaşılır şekilde özetle. 3-4 cümle kullan. Her cümle maksimum 15-20 kelime olsun. Önemli detayları kaçırma. 
+Sen alanında uzman bir spikeri için haber özetleyicisisin bağlama göre verilen haberin anlam bütünlüğünü bozmadan özetle. 3-4 cümle kullan. Her cümle maksimum 15-20 kelime olsun. Önemli detayları kaçırma. 30 saniyeden daha kısa sürede okunabilir bir özet yap.
 ÖNEMLİ: Başlığı tekrar etme, sadece içeriği özetle. Başlık zaten verildi, özetin başında tekrar yazma.
 Sadece özet yaz, başka açıklama ekleme.`;
   }

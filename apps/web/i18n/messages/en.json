@@ -485,6 +485,23 @@
         "accuracy": "Accuracy:",
         "earnedXp": "Earned XP:",
         "playAgain": "Play Again",
+        "multiplayer": {
+          "title": "Multiplayer Trivia",
+          "createRoom": "Create Room",
+          "joinRoom": "Join Room",
+          "roomName": "Room Name",
+          "roomId": "Room ID",
+          "password": "Password",
+          "privateRoom": "Private Room",
+          "players": "Players",
+          "ready": "Ready",
+          "notReady": "Not Ready",
+          "startGame": "Start Game",
+          "waitingForPlayers": "Waiting for players...",
+          "gameStarted": "Game Started!",
+          "finalScores": "Final Scores",
+          "backToGames": "Back to Games"
+        },
         "backToGames": "Back to Games",
         "explanation": "Explanation:",
         "messages": {

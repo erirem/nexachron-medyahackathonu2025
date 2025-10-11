@@ -7,6 +7,7 @@ import { QuizGameService } from './services/quiz-game.service';
 import { QuestionGenerationService } from './services/question-generation.service';
 import { MultiplayerService } from './services/multiplayer.service';
 import { GamificationService } from './services/gamification.service';
+import { MultiplayerGateway } from './gateways/multiplayer.gateway';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UsersModule } from '../users/users.module';
 import { NewsIngestModule } from '../news-ingest/news-ingest.module';
@@ -28,6 +29,7 @@ import { NewsModule } from '../news/news.module';
     QuestionGenerationService,
     MultiplayerService,
     GamificationService,
+    MultiplayerGateway,
   ],
   exports: [
     GamesService,
@@ -35,6 +37,7 @@ import { NewsModule } from '../news/news.module';
     QuestionGenerationService,
     MultiplayerService,
     GamificationService,
+    MultiplayerGateway,
   ],
 })
 export class GamesModule {}
