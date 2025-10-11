@@ -682,7 +682,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       trackActivity,
       getDailyActivity,
       getWeeklyActivity,
-      getMonthlyActivity
+      getMonthlyActivity,
       completeNews,
       completeSpeedRead
     }}>

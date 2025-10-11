@@ -3,10 +3,13 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SupabaseModule } from './supabase/supabase.module';
-import { NewsModule } from './news/news.module';
-import { UsersModule } from './users/users.module';
+import { NewsModule } from './modules/news/news.module';
+import { UsersModule } from './modules/users/users.module';
+import { GamesModule } from './modules/games/games.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { NewsIngestModule } from './news-ingest/news-ingest.module';
-import { BookmarksModule } from './bookmarks/bookmarks.module';
+import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
+import { ReelsModule } from './modules/reels/reels.module';
 import { UserDataModule } from './user-data/user-data.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 
@@ -18,8 +21,11 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
     SupabaseModule,
     NewsModule,
     UsersModule,
+    GamesModule,
+    AnalyticsModule,
     NewsIngestModule,
     BookmarksModule,
+    ReelsModule,
     UserDataModule,
     RecommendationsModule,
   ],
