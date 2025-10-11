@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AiCategoryClassificationService } from './services/ai-category-classification.service';
-import { AACategory } from '../news-ingest/dto/news-item.dto';
+import { AACategory } from '../shared/enums/news-category.enum';
 
 @Injectable()
 export class NewsCategoryService {

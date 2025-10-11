@@ -40,6 +40,7 @@ export class ErrorResponseDto {
 export class SuccessResponseDto<T = any> {
   success: true;
   data: T;
+  message: string;
   pagination?: PaginationDto;
 }
 
@@ -50,6 +51,7 @@ export function createSuccessResponse<T>(data: T, message?: string, pagination?:
   return {
     success: true,
     data,
+    message: message || '',
     ...(pagination && { pagination }),
   };
 }

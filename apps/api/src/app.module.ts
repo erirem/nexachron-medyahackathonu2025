@@ -7,7 +7,7 @@ import { NewsModule } from './modules/news/news.module';
 import { UsersModule } from './modules/users/users.module';
 import { GamesModule } from './modules/games/games.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { NewsIngestModule } from './news-ingest/news-ingest.module';
+import { NewsIngestModule } from './modules/news-ingest/news-ingest.module';
 import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { ReelsModule } from './modules/reels/reels.module';
 import { AuthModule } from './modules/auth/auth.module';

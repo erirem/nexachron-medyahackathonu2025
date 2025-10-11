@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
-import { AACategory } from '../../news-ingest/dto/news-item.dto';
+import { AACategory } from '../../shared/enums/news-category.enum';
 
 export interface CategoryClassificationRequest {
   title: string;
