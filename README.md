@@ -1,146 +1,136 @@
-# Nexachron 🚀
+<div align="center" style="display: flex; align-items: center; justify-content: center; gap: 15px;">
 
-**Gamified News Platform** with AI-powered content curation, quiz systems, and social features.
+<img src="https://github.com/user-attachments/assets/0d96e214-b433-431a-89ca-8590a514926f" alt="Nexachron Logo" width="100" height="100" />
 
-## ✨ Features
+# Nexachron
 
-- 🎮 **Gamification**: XP system, cards, leaderboards, streaks
-- 📰 **Smart News Feed**: Mood-based content (Happy, Top, World, Surprise)
-- 🧠 **Interactive Quizzes**: Earn XP by answering questions (NewsGuessr, Trivia)
-- 🎴 **Card Collection**: Rare collectibles with different rarities
-- 📍 **Location-Based**: City-specific content filtering
-- 💬 **Social Features**: Comments, emoji reactions, topics
-- 🔮 **Predictions**: Bet on future events
-- 🎧 **Audio Features**: Text-to-speech, podcast integration
-- 📊 **Personal Analyst**: AI-powered reading insights and recommendations
-- 🎬 **Reels**: Short-form video content with engagement tracking
-- 📱 **Cross-Platform**: Web, Mobile (Flutter), and API
+**AI Destekli Oyunlaştırılmış Haber Platformu**
 
-## 🏗️ System Architecture
+[![Next.js](https://img.shields.io/badge/Next.js-15.0%2B-black.svg)](https://nextjs.org)
+[![Flutter](https://img.shields.io/badge/Flutter-3.9%2B-blue.svg)](https://flutter.dev)
+[![NestJS](https://img.shields.io/badge/NestJS-11.0%2B-red.svg)](https://nestjs.com)
+[![Supabase](https://img.shields.io/badge/Supabase-Edge%20Functions-green.svg)](https://supabase.com)
+[![OpenAI](https://img.shields.io/badge/OpenAI-API%20Integration-purple.svg)](https://openai.com)
+
+*AI destekli son dakika haberleri, quiz sistemi ve sosyal etkileşimlerle güçlendirilmiş haber deneyimi*
+
+</div>
+
+---
+
+
+
+##  System Architecture
 
 ### High-Level Architecture
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        NEXACHRON PLATFORM                      │
-├─────────────────────────────────────────────────────────────────┤
-│  🌐 WEB (Next.js 15)    │  📱 MOBILE (Flutter)  │  🔧 API (NestJS) │
-│  - React App Router     │  - Cross-platform     │  - RESTful APIs   │
-│  - Tailwind CSS 4       │  - Riverpod State      │  - Real-time      │
-│  - TypeScript          │  - Go Router          │  - Authentication │
-│  - Supabase Client     │  - Supabase Flutter   │  - AI Integration │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    BACKEND SERVICES                            │
-├─────────────────────────────────────────────────────────────────┤
-│  🗄️ SUPABASE (PostgreSQL)  │  🤖 OPENAI API        │  📰 NEWS SOURCES │
-│  - Database + Auth         │  - TTS Generation     │  - RSS Feeds      │
-│  - Real-time Subscriptions │  - Content Analysis   │  - Web Scraping   │
-│  - Row Level Security      │  - Recommendations    │  - API Integration│
-│  - File Storage           │  - AI Chat            │  - Content Curation│
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    EXTERNAL INTEGRATIONS                        │
-├─────────────────────────────────────────────────────────────────┤
-│  🎮 GAMIFICATION    │  📊 ANALYTICS      │  🔔 NOTIFICATIONS    │
-│  - XP System        │  - User Behavior    │  - Push Notifications│
-│  - Card Collection  │  - Reading Patterns │  - Real-time Updates │
-│  - Leaderboards     │  - Performance      │  - Email Alerts     │
-│  - Quizzes & Games  │  - Recommendations  │  - Social Updates   │
-└─────────────────────────────────────────────────────────────────┘
-```
+<img width="512" height="718" alt="image" src="https://github.com/user-attachments/assets/97dba63b-0114-45e1-aadc-3bff93ffb78b" />
 
 ### Project Structure
-```
-nexachron/
-├── apps/
-│   ├── web/              # Next.js 15 frontend with App Router
-│   │   ├── app/           # App Router pages and layouts
-│   │   ├── components/    # Reusable UI components
-│   │   ├── contexts/      # React contexts (auth, tracking)
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── services/      # API service layer
-│   │   └── styles/        # Tailwind CSS styles
-│   ├── api/               # NestJS 11 backend API
-│   │   ├── src/
-│   │   │   ├── auth/      # Authentication & guards
-│   │   │   ├── news/      # News management
-│   │   │   ├── games/     # Gamification features
-│   │   │   ├── users/     # User management
-│   │   │   ├── tts/        # Text-to-speech
-│   │   │   ├── reels/     # Short-form content
-│   │   │   └── supabase/  # Database integration
-│   │   └── test/          # API tests
-│   └── mobile/            # Flutter mobile app
-│       ├── lib/
-│       │   ├── features/  # Feature-based architecture
-│       │   ├── shared/    # Shared utilities
-│       │   └── main.dart  # App entry point
-│       └── test/          # Mobile tests
-├── packages/
-│   └── shared-types/      # TypeScript types shared across apps
-├── docs/
-│   ├── database/          # SQL schemas & migrations
-│   ├── DEPLOYMENT.md      # Production deployment guide
-│   ├── TEAM_GUIDE.md      # Team workflow
-│   └── LOCAL_DEVELOPMENT.md
-├── scripts/               # Automation scripts
-└── .github/workflows/     # CI/CD pipelines
-```
+<img width="512" height="718" alt="image" src="https://github.com/user-attachments/assets/32a6a719-d77c-4aea-bf4b-bd8c21d328ff" />
+
 
 ### Data Flow Architecture
-```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   MOBILE    │    │     WEB     │    │   EXTERNAL  │
-│  (Flutter)  │    │  (Next.js)  │    │   CLIENTS   │
-└──────┬──────┘    └──────┬──────┘    └──────┬──────┘
-       │                  │                   │
-       │ HTTP/HTTPS       │ HTTP/HTTPS        │ HTTP/HTTPS
-       │ RESTful APIs     │ RESTful APIs      │ RESTful APIs
-       │                  │                   │
-       ▼                  ▼                   ▼
-┌─────────────────────────────────────────────────────────┐
-│                NESTJS API SERVER                       │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐      │
-│  │   AUTH      │ │    NEWS     │ │  GAMIFICATION│     │
-│  │  MODULE     │ │   MODULE    │ │   MODULE    │      │
-│  └─────────────┘ └─────────────┘ └─────────────┘      │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐      │
-│  │     TTS     │ │   REELS     │ │   ANALYTICS │      │
-│  │   MODULE    │ │   MODULE    │ │   MODULE    │      │
-│  └─────────────┘ └─────────────┘ └─────────────┘      │
-└─────────────────────────────────────────────────────────┘
-       │                  │                   │
-       │ Supabase Client  │ Supabase Client   │ External APIs
-       │                  │                   │
-       ▼                  ▼                   ▼
-┌─────────────────────────────────────────────────────────┐
-│                    SUPABASE CLOUD                       │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐      │
-│  │ POSTGRESQL  │ │   AUTH      │ │   STORAGE   │      │
-│  │  DATABASE   │ │  SERVICE    │ │   SERVICE   │      │
-│  └─────────────┘ └─────────────┘ └─────────────┘      │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐      │
-│  │  REALTIME   │ │   RLS       │ │   EDGE      │      │
-│  │  SERVICE    │ │  SECURITY   │ │  FUNCTIONS  │      │
-│  └─────────────┘ └─────────────┘ └─────────────┘      │
-└─────────────────────────────────────────────────────────┘
-       │                  │                   │
-       │ OpenAI API        │ RSS Feeds         │ External Services
-       │                  │                   │
-       ▼                  ▼                   ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   OPENAI    │    │ NEWS SOURCES │    │   RENDER    │
-│   SERVICE   │    │ (RSS/APIs)   │    │  HOSTING    │
-└─────────────┘    └─────────────┘    └─────────────┘
+```mermaid
+sequenceDiagram
+    participant U as Kullanıcı
+    participant W as Web (Next.js 15)
+    participant M as Mobile (Flutter)
+    participant API as Backend API (NestJS 11)
+    participant GE as Gamification Engine<br/>(XP hesaplama, streak güncelleme, kart kontrolü)
+    participant SB as Supabase (Postgres/Auth)
+    participant CDN as Storage/CDN
+    participant AI as OpenAI API
+    participant NEWS as News Sources
+
+    Note over U,NEWS: Kimlik Doğrulama Akışı
+    U->>W: Giriş / Kayıt
+    W->>SB: Supabase Auth Request
+    SB-->>W: JWT Token Response
+    W->>API: Auth Token ile API istekleri
+
+    Note over U,NEWS: Mobil Kimlik Doğrulama
+    U->>M: Giriş / Kayıt
+    M->>SB: Supabase Flutter Auth
+    SB-->>M: JWT Token Response
+    M->>API: Auth Token ile API istekleri
+
+    Note over U,NEWS: Dashboard Yükleme
+    U->>W: Dashboard açma
+    W->>API: GET /api/news?feed=personalized
+    API->>SB: Query news from DB
+    SB-->>API: News Data Returned
+    API->>AI: AI Content Analysis
+    AI-->>API: Content Analysis Results
+    API-->>W: Formatted Response
+    W->>CDN: Load images / videos
+    CDN-->>W: Media Content
+
+    Note over U,NEWS: Haber İçerik Yönetimi
+    U->>W: Haber okuma / etkileşim
+    W->>API: POST /api/news/:id/comment
+    API->>SB: Update comments table
+    SB-->>API: Success Response
+    API-->>W: Comment Added
+
+    Note over U,NEWS: Gamification Sistemi<br/>(XP hesaplama, streak güncelleme, kart kontrolü, sıralama)
+    U->>W: Quiz oynama / Haber okuma
+    W->>API: POST /api/games/quiz/submit
+    API->>GE: Send to Gamification Engine<br/>(XP hesaplama, streak güncelleme, kart kontrolü)
+    GE->>SB: Update XP, streak, badges, cards
+    SB-->>GE: Success (rows updated)
+    GE-->>API: Gamification Results<br/>(Yeni XP miktarı, streak durumu, kart kazanımı, sıralama)
+    API-->>W: XP & Badge Updates
+    W->>U: "Tebrikler! +50 XP kazandınız!<br/>7 günlük streak!<br/>Yeni nadir kart kazandınız!<br/>Liderlik tablosunda 5. sıradasınız!"
+
+    Note over U,NEWS: Reels & Video İçerik
+    U->>W: Reels izleme
+    W->>API: GET /api/reels
+    API->>SB: Query reels from DB
+    SB-->>API: Reels Data
+    API->>AI: Generate TTS Audio
+    AI-->>API: Audio Content
+    API-->>W: Reels with Audio
+    W->>CDN: Load video content
+    CDN-->>W: Video Stream
+
+    Note over U,NEWS: TTS & Podcast
+    U->>W: TTS oynatma
+    W->>API: POST /api/tts/generate
+    API->>AI: OpenAI TTS Request
+    AI-->>API: Audio File
+    API->>CDN: Store Audio
+    CDN-->>API: Audio URL
+    API-->>W: Audio Content
+
+    Note over U,NEWS: Kişisel Analist
+    U->>W: Analiz görüntüleme
+    W->>API: GET /api/v1/recommendations
+    API->>SB: Query user behavior data
+    SB-->>API: User Analytics
+    API->>AI: AI Analysis Request
+    AI-->>API: Personalized Insights
+    API-->>W: Personal Analytics
+
+    Note over U,NEWS: Haber İçerik Yönetimi (Otomatik)
+    API->>NEWS: RSS Feed Polling
+    NEWS-->>API: News Content
+    API->>AI: Content Processing & Analysis
+    AI-->>API: Processed Content
+    API->>SB: Store processed news
+    SB-->>API: Storage Confirmation
+
+    Note over U,NEWS: Real-time Güncellemeler
+    SB->>W: Real-time subscription updates
+    SB->>M: Real-time subscription updates
+    W->>U: Live notifications
+    M->>U: Push notifications
 ```
 
-## 🛠️ Teknoloji Stack'i
 
-### 🔧 Backend Teknolojileri
+
+##  Teknoloji Stack'i
+
+###  Backend Teknolojileri
 
 #### Core Framework
 - **NestJS 11** - Enterprise-grade Node.js framework
@@ -234,7 +224,7 @@ nexachron/
 - **Flutter Test** - Testing framework
 - **Flutter Doctor** - Environment check
 
-### 🏗️ Infrastructure & DevOps
+###  Infrastructure & DevOps
 
 #### Hosting & Deployment
 - **Render.com** - Cloud hosting
@@ -273,12 +263,7 @@ nexachron/
 - **TTS Services** - Audio generation
 - **Content Curation** - AI-powered recommendations
 
-#### Social Features
-- **Real-time Chat** - Live comments
-- **Push Notifications** - User engagement
-- **Social Sharing** - Content distribution
-
-### 📊 Performance & Optimization
+###  Performance & Optimization
 
 #### Frontend Optimization
 - **Turbopack** - Fast bundling
@@ -298,7 +283,7 @@ nexachron/
 - **Lazy Loading** - On-demand content
 - **Offline Support** - Cached content
 
-### 🔒 Security & Authentication
+###  Security & Authentication
 
 #### Authentication
 - **Supabase Auth** - User management
@@ -313,9 +298,9 @@ nexachron/
 - **Rate Limiting** - API protection
 - **Environment Variables** - Secret management
 
-## 🚀 Kurulum ve Çalıştırma Rehberi
+##  Kurulum ve Çalıştırma Rehberi
 
-### 📋 Gereksinimler
+### Gereksinimler
 
 #### Sistem Gereksinimleri
 - **Node.js**: 20.0.0 veya üzeri
