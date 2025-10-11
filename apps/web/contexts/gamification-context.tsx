@@ -709,6 +709,27 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     return streakDays * 20;
   }, []);
 
+  // Hint kullanma - 5 XP harcar
+  const useHint = useCallback((): boolean => {
+    if (!userProfile || userProfile.xp < 5) {
+      return false; // Yeterli XP yok
+    }
+
+    setUserProfile(prev => {
+      if (!prev) return prev;
+      
+      return {
+        ...prev,
+        xp: prev.xp - 5,
+        weeklyXp: prev.weeklyXp - 5,
+        monthlyXp: prev.monthlyXp - 5,
+        seasonXp: prev.seasonXp - 5
+      };
+    });
+
+    return true; // Hint başarıyla kullanıldı
+  }, [userProfile]);
+
   return (
     <GamificationContext.Provider value={{
       userProfile,

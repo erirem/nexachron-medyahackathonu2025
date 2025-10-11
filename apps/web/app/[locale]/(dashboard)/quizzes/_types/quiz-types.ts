@@ -4,6 +4,7 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number; // 0-based index
   explanation: string;
+  hint?: string; // Optional hint for the question
 }
 
 export interface Quiz {

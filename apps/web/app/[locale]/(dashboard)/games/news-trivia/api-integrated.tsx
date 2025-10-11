@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, type JSX } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useGamification } from '@/contexts/gamification-context';
+import { SocialShareModal } from '@/components/social-share-modal';
 import { startGame, answerQuestion, generateNewsTriviaQuestions } from '@/services/api';
 
 interface GameQuestion {
@@ -66,6 +67,7 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [shouldStartTimer, setShouldStartTimer] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { completeQuiz } = useGamification();
   const router = useRouter();
@@ -244,6 +246,10 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
     return t('messages.needsWork');
   };
 
+  const isPerfectScore = (): boolean => {
+    return game ? gameState.score === game.questions.length : false;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] flex items-center justify-center p-4">
@@ -401,6 +407,17 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
               >
                 {t('playAgain')}
               </button>
+              
+              {/* Share Button - only show for perfect scores */}
+              {isPerfectScore() && (
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                >
+                  🎉 Başarımı Paylaş
+                </button>
+              )}
+              
               <button
                 onClick={handleBack}
                 className="w-full bg-white/10 text-white font-semibold py-3 px-6 rounded-xl hover:bg-white/20 transition-all duration-200"
@@ -520,6 +537,16 @@ export default function ApiIntegratedNewsTriviaPage(): JSX.Element {
           </div>
         )}
       </div>
+
+      {/* Social Share Modal */}
+      <SocialShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        gameType="newsguessr"
+        score={gameState.score}
+        totalQuestions={game?.questions.length || 0}
+        isPerfectScore={isPerfectScore()}
+      />
     </div>
   );
 }

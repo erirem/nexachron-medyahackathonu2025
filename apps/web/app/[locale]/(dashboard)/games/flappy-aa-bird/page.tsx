@@ -1,22 +1,62 @@
 'use client';
 
-import { useState, type JSX } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useGamification } from '@/contexts/gamification-context';
+import { SocialShareModal } from '@/components/social-share-modal';
 import { FlappyAABirdGame } from '../_components/flappy-aa-bird-game';
 
 export default function FlappyAABirdPage(): JSX.Element {
   const [isGameOpen, setIsGameOpen] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
+  const [isNewRecord, setIsNewRecord] = useState(false);
+  const [gameStats, setGameStats] = useState({
+    gamesPlayed: 0,
+    bestScore: 0,
+    totalScore: 0,
+    totalXP: 0
+  });
   const { userProfile, addXP } = useGamification();
   const router = useRouter();
   const t = useTranslations('games');
 
+  // Load game stats from localStorage
+  useEffect(() => {
+    const savedStats = localStorage.getItem('flappy-bird-stats');
+    if (savedStats) {
+      setGameStats(JSON.parse(savedStats));
+    }
+  }, []);
+
   const handleGameComplete = (score: number) => {
+    // Store score for sharing
+    setLastScore(score);
+    
     // Calculate XP based on score
     const baseXp = 20;
     const bonusXp = Math.min(score * 2, 50); // Max 50 bonus XP
     const totalXp = baseXp + bonusXp;
+    
+    // Update game stats
+    const newStats = {
+      gamesPlayed: gameStats.gamesPlayed + 1,
+      bestScore: Math.max(gameStats.bestScore, score),
+      totalScore: gameStats.totalScore + score,
+      totalXP: gameStats.totalXP + totalXp
+    };
+    
+    setGameStats(newStats);
+    localStorage.setItem('flappy-bird-stats', JSON.stringify(newStats));
+    
+    // Check if it's a new record
+    const isNewRecord = score > gameStats.bestScore;
+    setIsNewRecord(isNewRecord);
+    
+    if (isNewRecord) {
+      localStorage.setItem('flappy-bird-high-score', score.toString());
+    }
     
     addXP('QUIZ_COMPLETE', totalXp);
     
@@ -34,7 +74,7 @@ export default function FlappyAABirdPage(): JSX.Element {
       {/* Background Mascots */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Left Mascot */}
-        <div className="absolute left-4 top-1/4 opacity-35 transform -rotate-12">
+        <div className="absolute left-4 top-1/4 opacity-35 transform -rotate-12 z-10">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -43,7 +83,7 @@ export default function FlappyAABirdPage(): JSX.Element {
         </div>
         
         {/* Right Mascot */}
-        <div className="absolute right-4 top-1/3 opacity-35 transform rotate-12">
+        <div className="absolute right-4 top-1/3 opacity-35 transform rotate-12 z-20">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -52,7 +92,7 @@ export default function FlappyAABirdPage(): JSX.Element {
         </div>
         
         {/* Center Top Mascot */}
-        <div className="absolute left-1/2 top-8 transform -translate-x-1/2 opacity-25 -rotate-6">
+        <div className="absolute left-1/2 top-8 transform -translate-x-1/2 opacity-25 -rotate-6 z-5">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -61,7 +101,7 @@ export default function FlappyAABirdPage(): JSX.Element {
         </div>
         
         {/* Left Center Mascot */}
-        <div className="absolute left-8 top-1/2 transform -translate-y-1/2 opacity-30 rotate-24">
+        <div className="absolute left-12 top-1/2 transform -translate-y-1/2 opacity-30 rotate-24 z-15">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -70,7 +110,7 @@ export default function FlappyAABirdPage(): JSX.Element {
         </div>
         
         {/* Right Center Mascot */}
-        <div className="absolute right-8 top-1/2 transform -translate-y-1/2 opacity-30 -rotate-24">
+        <div className="absolute right-12 top-3/4 transform -translate-y-1/2 opacity-30 -rotate-24 z-15">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -79,7 +119,7 @@ export default function FlappyAABirdPage(): JSX.Element {
         </div>
         
         {/* Bottom Left Mascot */}
-        <div className="absolute left-1/4 bottom-1/4 opacity-20 transform rotate-45">
+        <div className="absolute left-1/4 bottom-1/4 opacity-20 transform rotate-45 z-5">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -88,7 +128,7 @@ export default function FlappyAABirdPage(): JSX.Element {
         </div>
         
         {/* Bottom Right Mascot */}
-        <div className="absolute right-1/4 bottom-1/3 opacity-20 transform -rotate-45">
+        <div className="absolute right-1/4 bottom-1/3 opacity-20 transform -rotate-45 z-5">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -97,7 +137,7 @@ export default function FlappyAABirdPage(): JSX.Element {
         </div>
         
         {/* Center Bottom Mascot */}
-        <div className="absolute left-1/2 bottom-8 transform -translate-x-1/2 opacity-15 rotate-12">
+        <div className="absolute left-1/2 bottom-8 transform -translate-x-1/2 opacity-15 rotate-12 z-5">
           <img 
             src="/mascot.svg" 
             alt="AA Mascot" 
@@ -137,19 +177,19 @@ export default function FlappyAABirdPage(): JSX.Element {
             <h2 className="text-xl font-semibold text-white mb-4 text-center">Oyun İstatistikleri</h2>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-blue-400">0</div>
+                <div className="text-2xl font-bold text-blue-400">{gameStats.gamesPlayed}</div>
                 <div className="text-sm text-white/60">Oynanan Oyun</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-400">0</div>
+                <div className="text-2xl font-bold text-green-400">{gameStats.bestScore}</div>
                 <div className="text-sm text-white/60">En İyi Skor</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-yellow-400">0</div>
+                <div className="text-2xl font-bold text-yellow-400">{gameStats.totalScore}</div>
                 <div className="text-sm text-white/60">Toplam Puan</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-purple-400">0</div>
+                <div className="text-2xl font-bold text-purple-400">{gameStats.totalXP}</div>
                 <div className="text-sm text-white/60">Kazanılan XP</div>
               </div>
             </div>
@@ -192,6 +232,27 @@ export default function FlappyAABirdPage(): JSX.Element {
             onClose={handleClose}
           />
         )}
+
+        {/* Share Button - show after game completion */}
+        {!isGameOpen && lastScore > 0 && (
+          <div className="fixed bottom-6 right-6 z-40">
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg text-white font-medium transition-all duration-200 shadow-lg flex items-center gap-2"
+            >
+              {isNewRecord ? '🏆' : '🎉'} Başarımı Paylaş
+            </button>
+          </div>
+        )}
+
+        {/* Social Share Modal */}
+        <SocialShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          gameType="flappy-bird"
+          highScore={lastScore}
+          isNewRecord={isNewRecord}
+        />
       </div>
     </div>
   );

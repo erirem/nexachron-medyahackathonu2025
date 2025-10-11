@@ -500,12 +500,22 @@ export function WordleGame({ onComplete, onClose, difficulty = 'medium', dailyMo
                 </button>
               </>
             ) : (
-              <button
-                onClick={onClose}
-                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-medium transition-all duration-200"
-              >
-                Kapat
-              </button>
+              <div className="flex gap-3">
+                {game.isWon && onShare && (
+                  <button
+                    onClick={onShare}
+                    className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg text-white font-medium transition-all duration-200"
+                  >
+                    🎉 Paylaş
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-medium transition-all duration-200"
+                >
+                  Kapat
+                </button>
+              </div>
             )}
           </div>
         </div>

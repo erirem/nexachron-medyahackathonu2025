@@ -4,6 +4,25 @@
       "label": "Dil"
     }
   },
+  "socialShare": {
+    "title": "Sosyal Medyada Paylaş",
+    "description": "Başarınızı sosyal medyada paylaşın ve arkadaşlarınızı da Nexachron'a davet edin!",
+    "perfectScore": "Mükemmel Skor!",
+    "newRecord": "Yeni Rekor!",
+    "congratulations": "Tebrikler!",
+    "copyText": "Metni Kopyala",
+    "copied": "Kopyalandı!",
+    "shareTexts": {
+      "quizPerfect": "🎉 Mükemmel! {score}/{total} soruyu doğru cevapladım! Nexachron'da haber quizlerini deneyin! 🧠✨",
+      "quizScore": "🎯 {score}/{total} soruyu doğru cevapladım! Nexachron'da haber quizlerini deneyin! 🧠✨",
+      "newsguessrPerfect": "🗺️ Harika! Tüm haberleri doğru tahmin ettim! Nexachron'da NewsGuessr oyununu deneyin! 🎯✨",
+      "newsguessrScore": "🗺️ {score}/{total} haberi doğru tahmin ettim! Nexachron'da NewsGuessr oyununu deneyin! 🎯✨",
+      "wordleSuccess": "📝 Wordle'da \"{word}\" kelimesini {attempts} denemede buldum! Nexachron'da Türkçe Wordle oynayın! 🎮✨",
+      "flappyNewRecord": "🦅 Yeni rekor! Flappy AA Bird'de {score} puan aldım! Nexachron'da oyunu deneyin! 🏆✨",
+      "flappyScore": "🦅 Flappy AA Bird'de {score} puan aldım! Nexachron'da oyunu deneyin! 🎮✨",
+      "default": "🎮 Nexachron'da harika bir oyun deneyimi yaşadım! Siz de deneyin! ✨"
+    }
+  },
   "newsGuessr": {
     "title": "NewsGuessr",
     "score": "Skor: {score}/{total}",
@@ -492,6 +511,12 @@
           "good": "İyi iş! 👍",
           "okay": "Fena değil! 😊",
           "needsWork": "Daha çok çalışmalısın! 💪"
+        },
+        "hint": {
+          "button": "İpucu Al (-5 XP)",
+          "used": "İpucu Kullanıldı",
+          "label": "İpucu:",
+          "insufficientXp": "Yeterli XP yok"
         }
       }
     },
@@ -586,6 +611,12 @@
       },
       "labels": {
         "questionProgress": "Soru {current} / {total}"
+      },
+      "hint": {
+        "button": "İpucu Al (-5 XP)",
+        "used": "İpucu Kullanıldı",
+        "label": "İpucu:",
+        "insufficientXp": "Yeterli XP yok"
       },
       "results": {
         "title": "Quiz Tamamlandı!",
