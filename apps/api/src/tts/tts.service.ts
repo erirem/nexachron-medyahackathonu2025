@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
-import { NewsService } from '../news/news.service';
+import { NewsService } from '../modules/news/services/news.service';
 import {
   GenerateTTSRequest,
   TTSAudioResponse,
@@ -71,11 +71,10 @@ export class TTSService {
     const { newsId, contentType, voice = TTSVoice.ALLOY, speed = 1.0 } = request;
 
     // Haber var mı kontrol et
-    const newsResponse = await this.newsService.getNewsById(newsId);
-    if (!newsResponse.data) {
+    const news = await this.newsService.findById(newsId);
+    if (!news) {
       throw new NotFoundException('Haber bulunamadı');
     }
-    const news = newsResponse.data;
 
     // Mevcut TTS kaydı var mı kontrol et
     const existingTTS = await this.getExistingTTS(newsId, contentType, voice);
