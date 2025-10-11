@@ -100,7 +100,26 @@ class NewsApiService {
             print('🔍 First item structure: ${json.encode(items.first)}');
           }
 
-          return items.map((item) => NewsItem.fromJson(item)).toList();
+          return items.map((item) {
+            final newsItem = NewsItem.fromJson(item);
+            // İçeriği boş bırak
+            return NewsItem(
+              id: newsItem.id,
+              title: newsItem.title,
+              summary: newsItem.summary,
+              content: '', // İçeriği boş bırak
+              categoryId: newsItem.categoryId,
+              category: newsItem.category,
+              city: newsItem.city,
+              imageUrl: newsItem.imageUrl,
+              images: newsItem.images,
+              isPopular: newsItem.isPopular,
+              createdAt: newsItem.createdAt,
+              publishedAt: newsItem.publishedAt,
+              mediaSummary: newsItem.mediaSummary,
+              media: newsItem.media,
+            );
+          }).toList();
         }
         throw Exception('Invalid response format');
       } else {
@@ -222,21 +241,71 @@ class NewsApiService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         // API response format: { ok: true, items: [...] }
         if (data['ok'] == true && data['items'] != null) {
           final items = data['items'] as List<dynamic>;
           print('✅ Loaded ${items.length} recommendation items');
-          return items.map((item) => NewsItem.fromJson(item)).toList();
+          
+          // İçeriği boş bırak ve random sırala
+          final newsItems = items.map((item) {
+            final newsItem = NewsItem.fromJson(item);
+            // İçeriği boş bırak
+            return NewsItem(
+              id: newsItem.id,
+              title: newsItem.title,
+              summary: newsItem.summary,
+              content: '', // İçeriği boş bırak
+              categoryId: newsItem.categoryId,
+              category: newsItem.category,
+              city: newsItem.city,
+              imageUrl: newsItem.imageUrl,
+              images: newsItem.images,
+              isPopular: newsItem.isPopular,
+              createdAt: newsItem.createdAt,
+              publishedAt: newsItem.publishedAt,
+              mediaSummary: newsItem.mediaSummary,
+              media: newsItem.media,
+            );
+          }).toList();
+          
+          // Random sırala
+          newsItems.shuffle();
+          return newsItems;
         }
-        
+
         // Fallback: check for success/data format
         if (data['success'] == true && data['data'] != null) {
           final items = data['data']['items'] as List<dynamic>;
           print('✅ Loaded ${items.length} recommendation items');
-          return items.map((item) => NewsItem.fromJson(item)).toList();
+          
+          // İçeriği boş bırak ve random sırala
+          final newsItems = items.map((item) {
+            final newsItem = NewsItem.fromJson(item);
+            // İçeriği boş bırak
+            return NewsItem(
+              id: newsItem.id,
+              title: newsItem.title,
+              summary: newsItem.summary,
+              content: '', // İçeriği boş bırak
+              categoryId: newsItem.categoryId,
+              category: newsItem.category,
+              city: newsItem.city,
+              imageUrl: newsItem.imageUrl,
+              images: newsItem.images,
+              isPopular: newsItem.isPopular,
+              createdAt: newsItem.createdAt,
+              publishedAt: newsItem.publishedAt,
+              mediaSummary: newsItem.mediaSummary,
+              media: newsItem.media,
+            );
+          }).toList();
+          
+          // Random sırala
+          newsItems.shuffle();
+          return newsItems;
         }
-        
+
         throw Exception('Invalid response format');
       } else {
         throw Exception(

@@ -26,6 +26,7 @@ import 'features/games/presentation/pages/timeline_game_page.dart';
 import 'features/games/presentation/pages/spot_difference_page.dart';
 import 'features/games/presentation/pages/flappy_bird_page.dart';
 import 'features/games/presentation/pages/news_trivia_page.dart';
+import 'features/games/presentation/pages/multiplayer_lobby_page.dart';
 import 'features/games/presentation/providers/game_provider.dart';
 
 Future<void> main() async {
@@ -102,6 +103,7 @@ class NexachronApp extends StatelessWidget {
               '/spot-difference': (context) => const SpotDifferencePage(),
               '/flappy-bird': (context) => const FlappyBirdPage(),
               '/news-trivia': (context) => const NewsTriviaPage(),
+              '/multiplayer': (context) => const MultiplayerLobbyPage(),
             },
           ),
         );

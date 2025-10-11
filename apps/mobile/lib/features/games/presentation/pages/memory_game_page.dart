@@ -21,7 +21,7 @@ class _MemoryGamePageState extends ConsumerState<MemoryGamePage>
   late AnimationController _matchController;
   
   List<MemoryCard> _cards = [];
-  List<int> _flippedIndices = [];
+  final List<int> _flippedIndices = [];
   int _matches = 0;
   int _moves = 0;
   int _score = 0;
@@ -193,6 +193,7 @@ class _MemoryGamePageState extends ConsumerState<MemoryGamePage>
       context: context,
       barrierDismissible: false,
       builder: (context) => GameCompletionDialog(
+        title: 'Başarılı!',
         gameTitle: 'Hafıza Oyunu',
         score: _score,
         maxScore: _maxScore,
@@ -203,7 +204,7 @@ class _MemoryGamePageState extends ConsumerState<MemoryGamePage>
           _initializeGame();
           setState(() {});
         },
-        onBackToGames: () {
+        onExit: () {
           Navigator.of(context).pop();
           Navigator.of(context).pop();
         },

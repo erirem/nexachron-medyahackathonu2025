@@ -134,6 +134,59 @@ class Game {
   }
 }
 
+enum AchievementType {
+  firstWin,
+  perfectScore,
+  speedRun,
+  comboMaster,
+  streakWarrior,
+  categoryExpert,
+}
+
+class Achievement {
+  final String id;
+  final AchievementType type;
+  final String title;
+  final String description;
+  final String iconPath;
+  final int xpReward;
+  final DateTime unlockedAt;
+
+  const Achievement({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.iconPath,
+    required this.xpReward,
+    required this.unlockedAt,
+  });
+
+  factory Achievement.fromJson(Map<String, dynamic> json) {
+    return Achievement(
+      id: json['id'],
+      type: AchievementType.values.firstWhere((e) => e.name == json['type']),
+      title: json['title'],
+      description: json['description'],
+      iconPath: json['iconPath'],
+      xpReward: json['xpReward'],
+      unlockedAt: DateTime.parse(json['unlockedAt']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'type': type.name,
+      'title': title,
+      'description': description,
+      'iconPath': iconPath,
+      'xpReward': xpReward,
+      'unlockedAt': unlockedAt.toIso8601String(),
+    };
+  }
+}
+
 class GameResult {
   final String gameId;
   final int score;
@@ -142,6 +195,9 @@ class GameResult {
   final Duration timeTaken;
   final DateTime completedAt;
   final Map<String, dynamic>? metadata;
+  final int streakBonus;
+  final int comboMultiplier;
+  final List<Achievement> achievementsUnlocked;
 
   const GameResult({
     required this.gameId,
@@ -151,9 +207,14 @@ class GameResult {
     required this.timeTaken,
     required this.completedAt,
     this.metadata,
+    this.streakBonus = 0,
+    this.comboMultiplier = 1,
+    this.achievementsUnlocked = const [],
   });
 
   double get scorePercentage => maxScore > 0 ? (score / maxScore) * 100 : 0;
+  int get totalScore => score + streakBonus;
+  int get totalXP => (xpEarned * comboMultiplier) + (streakBonus ~/ 10);
 
   Map<String, dynamic> toJson() {
     return {
@@ -164,6 +225,9 @@ class GameResult {
       'timeTaken': timeTaken.inSeconds,
       'completedAt': completedAt.toIso8601String(),
       'metadata': metadata,
+      'streakBonus': streakBonus,
+      'comboMultiplier': comboMultiplier,
+      'achievementsUnlocked': achievementsUnlocked.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -176,6 +240,11 @@ class GameResult {
       timeTaken: Duration(seconds: json['timeTaken'] as int),
       completedAt: DateTime.parse(json['completedAt'] as String),
       metadata: json['metadata'] as Map<String, dynamic>?,
+      streakBonus: json['streakBonus'] as int? ?? 0,
+      comboMultiplier: json['comboMultiplier'] as int? ?? 1,
+      achievementsUnlocked: (json['achievementsUnlocked'] as List<dynamic>?)
+          ?.map((e) => Achievement.fromJson(e))
+          .toList() ?? [],
     );
   }
 }

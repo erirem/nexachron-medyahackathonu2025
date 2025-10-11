@@ -26,6 +26,18 @@ import {
 
 type Period = 'daily' | 'weekly' | 'monthly';
 
+interface AccordionState {
+  motivational: boolean;
+  stats: boolean;
+  currentStatus: boolean;
+  achievements: boolean;
+  categoryAnalysis: boolean;
+  charts: boolean;
+  rankProgress: boolean;
+  weeklyTrend: boolean;
+  recommendations: boolean;
+}
+
 export default function PersonalAnalystPage(): JSX.Element {
   const t = useTranslations('personalAnalyst');
   const locale = useLocale();
@@ -33,6 +45,24 @@ export default function PersonalAnalystPage(): JSX.Element {
   const { userProfile } = useGamification();
   const { personalAnalyst, generateAnalysis, getMotivationalMessage, getRecommendations, getAchievements } = usePersonalAnalyst();
   const [activePeriod, setActivePeriod] = useState<Period>('weekly');
+  const [accordionState, setAccordionState] = useState<AccordionState>({
+    motivational: true,
+    stats: true,
+    currentStatus: true,
+    achievements: false,
+    categoryAnalysis: false,
+    charts: false,
+    rankProgress: false,
+    weeklyTrend: false,
+    recommendations: true,
+  });
+
+  const toggleAccordion = (key: keyof AccordionState) => {
+    setAccordionState(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
 
   useEffect(() => {
     if (userProfile && !personalAnalyst) {
@@ -158,11 +188,11 @@ export default function PersonalAnalystPage(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#162639_0%,#1a2234_55%,#0f1624_100%)] p-4 text-white">
-      <div className="max-w-6xl mx-auto py-8">
+      <div className="max-w-7xl mx-auto py-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-4xl font-bold mb-2">{t('title')}</h1>
+            <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
             <p className="text-white/70">Kişiselleştirilmiş analiz ve öneriler</p>
           </div>
           <button
@@ -174,503 +204,556 @@ export default function PersonalAnalystPage(): JSX.Element {
         </div>
 
         {/* Period Tabs */}
-        <div className="flex space-x-1 bg-white/10 rounded-xl p-1 mb-8">
+        <div className="flex space-x-1 bg-white/10 rounded-xl p-1 mb-4">
           {[
-            { key: 'daily', label: 'Günlük', icon: '📅' },
-            { key: 'weekly', label: 'Haftalık', icon: '📊' },
-            { key: 'monthly', label: 'Aylık', icon: '📈' }
+            { key: 'daily', label: 'Günlük', icon: (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+              </svg>
+            )},
+            { key: 'weekly', label: 'Haftalık', icon: (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 19v-6l2-2 2 2v6h-4zm-2-8l2-2 2 2-2 2-2-2zm8-2l2-2 2 2-2 2-2-2z"/>
+              </svg>
+            )},
+            { key: 'monthly', label: 'Aylık', icon: (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+              </svg>
+            )}
           ].map(({ key, label, icon }) => (
             <button
               key={key}
               onClick={() => setActivePeriod(key as Period)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all ${
                 activePeriod === key
                   ? 'bg-blue-600 text-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="text-lg">{icon}</span>
-              <span className="font-medium">{label}</span>
+              {icon}
+              <span className="font-medium text-sm">{label}</span>
             </button>
           ))}
         </div>
 
         {/* Motivational Message */}
-        <div className="bg-gradient-to-br from-blue-900/80 to-blue-800/70 border border-blue-500/30 rounded-2xl p-6 mb-8 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold">{t('analystSays')}</h2>
-          </div>
-          <p className="text-white/90 text-lg leading-relaxed">{motivationalMessage}</p>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M9 19v-6l2-2 2 2v6h-4zm-2-8l2-2 2 2-2 2-2-2zm8-2l2-2 2 2-2 2-2-2z"/>
-            </svg>
-            {activePeriod === 'daily' ? 'Günlük' : activePeriod === 'weekly' ? 'Haftalık' : 'Aylık'} İstatistikler
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <StatCard 
-              label="Haber Okundu" 
-              value={currentStats.newsRead} 
-              icon={
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-                </svg>
-              }
-            />
-            <StatCard 
-              label="Yorum Yapıldı" 
-              value={currentStats.commentsMade} 
-              icon={
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                </svg>
-              }
-            />
-            <StatCard 
-              label="Quiz Tamamlandı" 
-              value={currentStats.quizzesCompleted} 
-              icon={
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
-              }
-            />
-            <StatCard 
-              label="XP Kazanıldı" 
-              value={currentStats.xpEarned} 
-              unit="XP"
-              icon={
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              }
-            />
-            <StatCard 
-              label="Konu Takip Edildi" 
-              value={currentStats.topicsFollowed} 
-              icon={
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              }
-            />
-            <StatCard 
-              label="Streak Günü" 
-              value={currentStats.streakDays} 
-              unit="Gün"
-              icon={
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
-              }
-            />
-          </div>
-        </div>
-
-        {/* Current Status & Next Rank */}
-        <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+        <AccordionSection 
+          title="Analist Mesajı" 
+          icon={
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
-            Mevcut Durum
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <InfoItem label="Rütbe" value={`${currentRankInfo.name}`} />
-              <InfoItem label="Lig" value={`${currentLeagueInfo.name}`} />
-              <InfoItem label="Toplam XP" value={`${userProfile.xp} XP`} />
+          } 
+          isOpen={accordionState.motivational} 
+          onToggle={() => toggleAccordion('motivational')}
+        >
+          <div className="bg-gradient-to-br from-blue-900/80 to-blue-800/70 border border-blue-500/30 rounded-2xl p-4 text-center">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold">{t('analystSays')}</h2>
             </div>
-            <div>
-              {nextRankProgress && (
-                <>
-                  <h3 className="text-xl font-semibold mb-3">Sonraki Rütbe</h3>
-                  <p className="text-white/80 mb-2">
-                    {nextRankProgress.nextRank} rütbesine ulaşmak için {nextRankProgress.xpToNext} XP kaldı.
-                  </p>
-                  <ProgressBar progress={nextRankProgress.progressPercentage} />
-                </>
-              )}
+            <p className="text-white/90 text-base leading-relaxed">{motivationalMessage}</p>
+          </div>
+        </AccordionSection>
+
+        {/* Stats Overview */}
+        <AccordionSection 
+          title={`${activePeriod === 'daily' ? 'Günlük' : activePeriod === 'weekly' ? 'Haftalık' : 'Aylık'} İstatistikler`} 
+          icon={
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 19v-6l2-2 2 2v6h-4zm-2-8l2-2 2 2-2 2-2-2zm8-2l2-2 2 2-2 2-2-2z"/>
+            </svg>
+          } 
+          isOpen={accordionState.stats} 
+          onToggle={() => toggleAccordion('stats')}
+        >
+          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <StatCard 
+                label="Haber Okundu" 
+                value={currentStats.newsRead} 
+                icon={
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                  </svg>
+                }
+              />
+              <StatCard 
+                label="Yorum Yapıldı" 
+                value={currentStats.commentsMade} 
+                icon={
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                }
+              />
+              <StatCard 
+                label="Quiz Tamamlandı" 
+                value={currentStats.quizzesCompleted} 
+                icon={
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                }
+              />
+              <StatCard 
+                label="XP Kazanıldı" 
+                value={currentStats.xpEarned} 
+                unit="XP"
+                icon={
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                }
+              />
+              <StatCard 
+                label="Konu Takip Edildi" 
+                value={currentStats.topicsFollowed} 
+                icon={
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                }
+              />
+              <StatCard 
+                label="Streak Günü" 
+                value={currentStats.streakDays} 
+                unit="Gün"
+                icon={
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                }
+              />
             </div>
           </div>
-        </div>
+        </AccordionSection>
+
+        {/* Current Status & Next Rank */}
+        <AccordionSection 
+          title="Mevcut Durum" 
+          icon={
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          } 
+          isOpen={accordionState.currentStatus} 
+          onToggle={() => toggleAccordion('currentStatus')}
+        >
+          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <InfoItem label="Rütbe" value={`${currentRankInfo.name}`} />
+                <InfoItem label="Lig" value={`${currentLeagueInfo.name}`} />
+                <InfoItem label="Toplam XP" value={`${userProfile.xp} XP`} />
+              </div>
+              <div>
+                {nextRankProgress && (
+                  <>
+                    <h3 className="text-lg font-semibold mb-2">Sonraki Rütbe</h3>
+                    <p className="text-white/80 mb-2">
+                      {nextRankProgress.nextRank} rütbesine ulaşmak için {nextRankProgress.xpToNext} XP kaldı.
+                    </p>
+                    <ProgressBar progress={nextRankProgress.progressPercentage} />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </AccordionSection>
 
         {/* Achievements */}
         {achievements.length > 0 && (
-          <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <AccordionSection 
+            title="Başarılar" 
+            icon={
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
-              Başarılar
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {achievements.map((achievement, index) => (
-                <div key={index} className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
+            } 
+            isOpen={accordionState.achievements} 
+            onToggle={() => toggleAccordion('achievements')}
+          >
+            <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {achievements.map((achievement, index) => (
+                  <div key={index} className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      </div>
+                      <span className="font-medium text-white text-sm">{achievement}</span>
                     </div>
-                    <span className="font-medium text-white">{achievement}</span>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </AccordionSection>
         )}
 
         {/* Category Analysis */}
-        <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            Kategori Analizi
-          </h2>
-          
-          {/* Category Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[...currentStats.categoryStats]
-              .sort((a, b) => b.newsRead - a.newsRead)
-              .map((category, index) => (
-              <div key={category.categoryId} className="bg-gradient-to-br from-white/5 to-white/10 rounded-xl p-4 border border-white/10">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-white">{category.categoryName}</h3>
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    {index + 1}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/60">Haber Sayısı:</span>
-                    <span className="text-white font-semibold">{category.newsRead}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/60">Toplam Süre:</span>
-                    <span className="text-white font-semibold">{category.totalTimeSpent} dk</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/60">Ortalama:</span>
-                    <span className="text-white font-semibold">
-                      {category.newsRead > 0 ? Math.round(category.totalTimeSpent / category.newsRead) : 0} dk/haber
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/60">Favori Zaman:</span>
-                    <span className="text-white font-semibold">
-                      {category.favoriteTimeOfDay === 'morning' ? 'Sabah' :
-                       category.favoriteTimeOfDay === 'afternoon' ? 'Öğleden Sonra' :
-                       category.favoriteTimeOfDay === 'evening' ? 'Akşam' : 'Gece'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Category Reading Chart */}
-            <div className="h-64">
-              <h3 className="text-lg font-semibold mb-3 text-white">Okuma Dağılımı</h3>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[...currentStats.categoryStats].sort((a, b) => b.newsRead - a.newsRead)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
-                    dataKey="categoryName" 
-                    stroke="#9CA3AF" 
-                    fontSize={10}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis stroke="#9CA3AF" fontSize={10} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#F9FAFB',
-                      fontSize: '12px'
-                    }} 
-                  />
-                  <Bar 
-                    dataKey="newsRead" 
-                    fill="#3B82F6"
-                    radius={[2, 2, 0, 0]}
-                    name="Haber Sayısı"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Reading Time Chart */}
-            <div className="h-64">
-              <h3 className="text-lg font-semibold mb-3 text-white">Okuma Süresi</h3>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[...currentStats.categoryStats].sort((a, b) => b.totalTimeSpent - a.totalTimeSpent)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
-                    dataKey="categoryName" 
-                    stroke="#9CA3AF" 
-                    fontSize={10}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis stroke="#9CA3AF" fontSize={10} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#F9FAFB',
-                      fontSize: '12px'
-                    }} 
-                  />
-                  <Bar 
-                    dataKey="totalTimeSpent" 
-                    fill="#10B981"
-                    radius={[2, 2, 0, 0]}
-                    name="Süre (dk)"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Activity Chart */}
-          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
-              </svg>
-              Haftalık Aktivite
-            </h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={activityData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} />
-                  <YAxis stroke="#9CA3AF" fontSize={10} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#F9FAFB',
-                      fontSize: '12px'
-                    }} 
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="haber" 
-                    stackId="1" 
-                    stroke="#3B82F6" 
-                    fill="#3B82F6" 
-                    fillOpacity={0.6}
-                    name="Haber"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="yorum" 
-                    stackId="1" 
-                    stroke="#10B981" 
-                    fill="#10B981" 
-                    fillOpacity={0.6}
-                    name="Yorum"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="xp" 
-                    stackId="1" 
-                    stroke="#F59E0B" 
-                    fill="#F59E0B" 
-                    fillOpacity={0.6}
-                    name="XP"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Category Breakdown */}
-          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-              Aktivite Dağılımı
-            </h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#F9FAFB',
-                      fontSize: '12px'
-                    }} 
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {categoryData.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-white/80">{item.name}: {item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* XP Progress Chart */}
-        <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            Rütbe İlerlemesi
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={xpProgressData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="rank" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
-                  }} 
-                />
-                <Bar dataKey="threshold" fill="#374151" name="Gerekli XP" />
-                <Bar dataKey="current" fill="#3B82F6" name="Mevcut XP" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Weekly Trend Chart */}
-        <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <AccordionSection 
+          title="Kategori Analizi" 
+          icon={
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
             </svg>
-            Aylık Gelişim Trendi
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weeklyTrendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="week" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
-                  }} 
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="xp" 
-                  stroke="#3B82F6" 
-                  strokeWidth={3}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 6 }}
-                  name="XP"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="haber" 
-                  stroke="#10B981" 
-                  strokeWidth={3}
-                  dot={{ fill: '#10B981', strokeWidth: 2, r: 6 }}
-                  name="Haber"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="yorum" 
-                  stroke="#F59E0B" 
-                  strokeWidth={3}
-                  dot={{ fill: '#F59E0B', strokeWidth: 2, r: 6 }}
-                  name="Yorum"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          } 
+          isOpen={accordionState.categoryAnalysis} 
+          onToggle={() => toggleAccordion('categoryAnalysis')}
+        >
+          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+            {/* Compact Category List */}
+            <div className="space-y-2 mb-4">
+              {[...currentStats.categoryStats]
+                .sort((a, b) => b.newsRead - a.newsRead)
+                .map((category, index) => (
+                <div key={category.categoryId} className="bg-gradient-to-r from-white/5 to-white/10 rounded-lg p-3 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <h3 className="font-semibold text-white text-sm">{category.categoryName}</h3>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-white/70">
+                      <span>{category.newsRead} haber</span>
+                      <span>{category.totalTimeSpent} dk</span>
+                      <span>{category.newsRead > 0 ? Math.round(category.totalTimeSpent / category.newsRead) : 0} dk/haber</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Category Reading Chart */}
+              <div className="h-48">
+                <h3 className="text-base font-semibold mb-2 text-white">Okuma Dağılımı</h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[...currentStats.categoryStats].sort((a, b) => b.newsRead - a.newsRead)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="categoryName" 
+                      stroke="#9CA3AF" 
+                      fontSize={9}
+                      angle={-45}
+                      textAnchor="end"
+                      height={50}
+                    />
+                    <YAxis stroke="#9CA3AF" fontSize={9} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB',
+                        fontSize: '11px'
+                      }} 
+                    />
+                    <Bar 
+                      dataKey="newsRead" 
+                      fill="#3B82F6"
+                      radius={[2, 2, 0, 0]}
+                      name="Haber Sayısı"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Reading Time Chart */}
+              <div className="h-48">
+                <h3 className="text-base font-semibold mb-2 text-white">Okuma Süresi</h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[...currentStats.categoryStats].sort((a, b) => b.totalTimeSpent - a.totalTimeSpent)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="categoryName" 
+                      stroke="#9CA3AF" 
+                      fontSize={9}
+                      angle={-45}
+                      textAnchor="end"
+                      height={50}
+                    />
+                    <YAxis stroke="#9CA3AF" fontSize={9} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB',
+                        fontSize: '11px'
+                      }} 
+                    />
+                    <Bar 
+                      dataKey="totalTimeSpent" 
+                      fill="#10B981"
+                      radius={[2, 2, 0, 0]}
+                      name="Süre (dk)"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
-        </div>
+        </AccordionSection>
+
+        {/* Charts Section */}
+        <AccordionSection 
+          title="Aktivite Grafikleri" 
+          icon={
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 19v-6l2-2 2 2v6h-4zm-2-8l2-2 2 2-2 2-2-2zm8-2l2-2 2 2-2 2-2-2z"/>
+            </svg>
+          } 
+          isOpen={accordionState.charts} 
+          onToggle={() => toggleAccordion('charts')}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Activity Chart */}
+            <div className="bg-white/10 rounded-2xl p-3 border border-white/20">
+              <h3 className="text-base font-bold mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                </svg>
+                Haftalık Aktivite
+              </h3>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="day" stroke="#9CA3AF" fontSize={9} />
+                    <YAxis stroke="#9CA3AF" fontSize={9} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB',
+                        fontSize: '11px'
+                      }} 
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="haber" 
+                      stackId="1" 
+                      stroke="#3B82F6" 
+                      fill="#3B82F6" 
+                      fillOpacity={0.6}
+                      name="Haber"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="yorum" 
+                      stackId="1" 
+                      stroke="#10B981" 
+                      fill="#10B981" 
+                      fillOpacity={0.6}
+                      name="Yorum"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="xp" 
+                      stackId="1" 
+                      stroke="#F59E0B" 
+                      fill="#F59E0B" 
+                      fillOpacity={0.6}
+                      name="XP"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Category Breakdown */}
+            <div className="bg-white/10 rounded-2xl p-3 border border-white/20">
+              <h3 className="text-base font-bold mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                Aktivite Dağılımı
+              </h3>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={60}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB',
+                        fontSize: '11px'
+                      }} 
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-1">
+                {categoryData.map((item, index) => (
+                  <div key={index} className="flex items-center gap-1 text-xs">
+                    <div 
+                      className="w-2 h-2 rounded-full" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-white/80">{item.name}: {item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </AccordionSection>
+
+        {/* XP Progress Chart */}
+        <AccordionSection 
+          title="Rütbe İlerlemesi" 
+          icon={
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          } 
+          isOpen={accordionState.rankProgress} 
+          onToggle={() => toggleAccordion('rankProgress')}
+        >
+          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={xpProgressData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="rank" stroke="#9CA3AF" fontSize={9} />
+                  <YAxis stroke="#9CA3AF" fontSize={9} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB',
+                      fontSize: '11px'
+                    }} 
+                  />
+                  <Bar dataKey="threshold" fill="#374151" name="Gerekli XP" />
+                  <Bar dataKey="current" fill="#3B82F6" name="Mevcut XP" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </AccordionSection>
+
+        {/* Weekly Trend Chart */}
+        <AccordionSection 
+          title="Aylık Gelişim Trendi" 
+          icon={
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+            </svg>
+          } 
+          isOpen={accordionState.weeklyTrend} 
+          onToggle={() => toggleAccordion('weeklyTrend')}
+        >
+          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={weeklyTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="week" stroke="#9CA3AF" fontSize={9} />
+                  <YAxis stroke="#9CA3AF" fontSize={9} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB',
+                      fontSize: '11px'
+                    }} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="xp" 
+                    stroke="#3B82F6" 
+                    strokeWidth={2}
+                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                    name="XP"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="haber" 
+                    stroke="#10B981" 
+                    strokeWidth={2}
+                    dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                    name="Haber"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="yorum" 
+                    stroke="#F59E0B" 
+                    strokeWidth={2}
+                    dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
+                    name="Yorum"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </AccordionSection>
 
         {/* Recommendations */}
         {recommendations.length > 0 && (
-          <div className="bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <AccordionSection 
+            title="Öneriler" 
+            icon={
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
-              Öneriler
-            </h2>
-            <ul className="space-y-3">
-              {recommendations.map((rec, index) => (
-                <li key={index} className="flex items-start gap-3 text-white/80">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <span>{rec}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+            } 
+            isOpen={accordionState.recommendations} 
+            onToggle={() => toggleAccordion('recommendations')}
+          >
+            <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+              <ul className="space-y-2">
+                {recommendations.map((rec, index) => (
+                  <li key={index} className="flex items-start gap-2 text-white/80 text-sm">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>{rec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </AccordionSection>
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-center gap-4 mt-8">
+        <div className="flex justify-center gap-3 mt-6">
           <Link href={`/${locale}/games`} passHref>
-            <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-8 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-2 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
               </svg>
               Oyunları Oyna
             </button>
           </Link>
           <Link href={`/${locale}/dashboard`} passHref>
-            <button className="bg-white/10 text-white font-semibold py-3 px-8 rounded-xl hover:bg-white/20 transition-all duration-200 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <button className="bg-white/10 text-white font-semibold py-2 px-6 rounded-xl hover:bg-white/20 transition-all duration-200 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
               </svg>
               Haberleri Oku
@@ -682,21 +765,54 @@ export default function PersonalAnalystPage(): JSX.Element {
   );
 }
 
-interface StatCardProps {
-  label: string;
-  value: number;
-  unit?: string;
+interface AccordionSectionProps {
+  title: string;
   icon: JSX.Element;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+function AccordionSection({ title, icon, isOpen, onToggle, children }: AccordionSectionProps): JSX.Element {
+  return (
+    <div className="mb-4">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-3 bg-white/10 rounded-xl border border-white/20 hover:bg-white/15 transition-colors duration-300"
+        aria-expanded={isOpen}
+      >
+        <div className="flex items-center gap-2">
+          <div className="text-white/80">
+            {icon}
+          </div>
+          <h2 className="text-lg font-bold text-white">{title}</h2>
+        </div>
+        <svg
+          className={`w-5 h-5 text-white/70 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="mt-2">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function StatCard({ label, value, unit = '', icon }: StatCardProps): JSX.Element {
   return (
-    <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-center">
-      <div className="flex items-center justify-center gap-2 mb-2 text-blue-400">
+    <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-center">
+      <div className="flex items-center justify-center gap-2 mb-1 text-blue-400">
         {icon}
       </div>
-      <p className="text-white/70 text-sm mb-1">{label}</p>
-      <p className="text-3xl font-bold text-white">{value} {unit}</p>
+      <p className="text-white/70 text-xs mb-1">{label}</p>
+      <p className="text-2xl font-bold text-white">{value} {unit}</p>
     </div>
   );
 }

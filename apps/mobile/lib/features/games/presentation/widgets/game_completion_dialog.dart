@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
 
 class GameCompletionDialog extends StatelessWidget {
-  final String gameTitle;
+  final String title;
+  final String? gameTitle;
   final int score;
   final int maxScore;
-  final Duration timeElapsed;
+  final int? correctAnswers;
+  final int? totalQuestions;
+  final int? xpEarned;
+  final Duration? timeElapsed;
   final int? moves;
   final VoidCallback onPlayAgain;
-  final VoidCallback onBackToGames;
+  final VoidCallback onExit;
 
   const GameCompletionDialog({
     super.key,
-    required this.gameTitle,
+    required this.title,
+    this.gameTitle,
     required this.score,
     required this.maxScore,
-    required this.timeElapsed,
+    this.correctAnswers,
+    this.totalQuestions,
+    this.xpEarned,
+    this.timeElapsed,
     this.moves,
     required this.onPlayAgain,
-    required this.onBackToGames,
+    required this.onExit,
   });
 
   @override
@@ -75,11 +83,7 @@ class GameCompletionDialog extends StatelessWidget {
             
             // Title
             Text(
-              isExcellent
-                  ? 'Mükemmel!'
-                  : isGood
-                      ? 'İyi İş!'
-                      : 'Tamamlandı!',
+              title,
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -89,13 +93,14 @@ class GameCompletionDialog extends StatelessWidget {
             
             const SizedBox(height: 8),
             
-            Text(
-              '$gameTitle tamamlandı',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white.withOpacity(0.8),
+            if (gameTitle != null)
+              Text(
+                '$gameTitle tamamlandı',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.8),
+                ),
               ),
-            ),
             
             const SizedBox(height: 24),
             
@@ -153,12 +158,20 @@ class GameCompletionDialog extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _StatItem(
-                        icon: Icons.access_time,
-                        label: 'Süre',
-                        value: _formatTime(timeElapsed),
-                        color: Colors.blue,
-                      ),
+                      if (timeElapsed != null)
+                        _StatItem(
+                          icon: Icons.access_time,
+                          label: 'Süre',
+                          value: _formatTime(timeElapsed!),
+                          color: Colors.blue,
+                        ),
+                      if (correctAnswers != null && totalQuestions != null)
+                        _StatItem(
+                          icon: Icons.quiz,
+                          label: 'Doğru',
+                          value: '$correctAnswers/$totalQuestions',
+                          color: Colors.green,
+                        ),
                       if (moves != null)
                         _StatItem(
                           icon: Icons.touch_app,
@@ -181,34 +194,35 @@ class GameCompletionDialog extends StatelessWidget {
             const SizedBox(height: 24),
             
             // XP Earned
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+            if (xpEarned != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.star,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '+${_calculateXP()} XP Kazandın!',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.star,
                       color: Colors.white,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Text(
+                      '+$xpEarned XP Kazandın!',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
             
             const SizedBox(height: 24),
             
@@ -217,7 +231,7 @@ class GameCompletionDialog extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: onBackToGames,
+                    onPressed: onExit,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(
@@ -228,7 +242,7 @@ class GameCompletionDialog extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'Oyunlara Dön',
+                      'Çıkış',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -268,24 +282,6 @@ class GameCompletionDialog extends StatelessWidget {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  int _calculateXP() {
-    // Base XP + score bonus
-    int baseXP = 50;
-    int scoreBonus = (score / maxScore * 50).round();
-    
-    // Time bonus (faster = more XP)
-    int timeBonus = 0;
-    if (timeElapsed.inSeconds < 60) {
-      timeBonus = 25;
-    } else if (timeElapsed.inSeconds < 120) {
-      timeBonus = 15;
-    } else if (timeElapsed.inSeconds < 180) {
-      timeBonus = 10;
-    }
-    
-    return baseXP + scoreBonus + timeBonus;
   }
 }
 

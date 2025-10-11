@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/news_provider.dart';
 import '../../domain/entities/news_item.dart';
-import '../../domain/entities/comment.dart';
 import '../../domain/entities/ai_summary.dart';
 import '../widgets/inline_media_widget.dart';
 import '../widgets/interactive_image_viewer.dart';

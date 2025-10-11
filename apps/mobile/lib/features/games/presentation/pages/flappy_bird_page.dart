@@ -23,7 +23,7 @@ class _FlappyBirdPageState extends ConsumerState<FlappyBirdPage>
   Timer? _gameTimer;
   double _birdY = 0.5;
   double _birdVelocity = 0;
-  List<Pipe> _pipes = [];
+  final List<Pipe> _pipes = [];
   int _score = 0;
   bool _gameStarted = false;
   bool _gameOver = false;
@@ -182,6 +182,7 @@ class _FlappyBirdPageState extends ConsumerState<FlappyBirdPage>
       context: context,
       barrierDismissible: false,
       builder: (context) => GameCompletionDialog(
+        title: 'Oyun Bitti!',
         gameTitle: 'Flappy AA Bird',
         score: _score * 2,
         maxScore: _maxScore,
@@ -191,7 +192,7 @@ class _FlappyBirdPageState extends ConsumerState<FlappyBirdPage>
           _initializeGame();
           setState(() {});
         },
-        onBackToGames: () {
+        onExit: () {
           Navigator.of(context).pop();
           Navigator.of(context).pop();
         },

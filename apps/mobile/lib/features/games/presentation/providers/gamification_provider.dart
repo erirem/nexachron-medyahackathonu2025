@@ -6,10 +6,85 @@ import '../../domain/repositories/game_repository.dart';
 import '../../data/repositories/gamification_repository_impl.dart';
 import '../services/gamification_api_service_impl.dart';
 
-// Provider for SharedPreferences
+// Provider for SharedPreferences - Mock implementation
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('SharedPreferences must be overridden');
+  // Mock SharedPreferences implementation for development
+  return MockSharedPreferences();
 });
+
+// Mock SharedPreferences class
+class MockSharedPreferences implements SharedPreferences {
+  final Map<String, dynamic> _prefs = {};
+
+  @override
+  Future<bool> clear() async => true;
+
+  @override
+  Future<bool> commit() async => true;
+
+  @override
+  bool containsKey(String key) => _prefs.containsKey(key);
+
+  @override
+  dynamic get(String key) => _prefs[key];
+
+  @override
+  bool? getBool(String key) => _prefs[key] as bool?;
+
+  @override
+  double? getDouble(String key) => _prefs[key] as double?;
+
+  @override
+  int? getInt(String key) => _prefs[key] as int?;
+
+  @override
+  Set<String> getKeys() => _prefs.keys.toSet();
+
+  @override
+  String? getString(String key) => _prefs[key] as String?;
+
+  @override
+  List<String>? getStringList(String key) => _prefs[key] as List<String>?;
+
+  @override
+  Future<void> reload() async {}
+
+  @override
+  Future<bool> remove(String key) async {
+    _prefs.remove(key);
+    return true;
+  }
+
+  @override
+  Future<bool> setBool(String key, bool value) async {
+    _prefs[key] = value;
+    return true;
+  }
+
+  @override
+  Future<bool> setDouble(String key, double value) async {
+    _prefs[key] = value;
+    return true;
+  }
+
+  @override
+  Future<bool> setInt(String key, int value) async {
+    _prefs[key] = value;
+    return true;
+  }
+
+  @override
+  Future<bool> setString(String key, String value) async {
+    _prefs[key] = value;
+    return true;
+  }
+
+  @override
+  Future<bool> setStringList(String key, List<String> value) async {
+    _prefs[key] = value;
+    return true;
+  }
+}
 
 // Provider for GamificationRepository
 final gamificationRepositoryProvider = Provider<GamificationRepository>((ref) {

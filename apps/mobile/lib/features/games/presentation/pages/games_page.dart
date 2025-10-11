@@ -106,30 +106,78 @@ class _GamesPageState extends ConsumerState<GamesPage> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                userProfileAsync.when(
-                                  data: (profile) => Text(
-                                    profile != null 
-                                        ? 'Toplam ${profile.xp} XP - ${_getRankName(profile.currentRank)}'
-                                        : 'Eğlen ve XP kazan',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF8fb8ff),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: userProfileAsync.when(
+                                        data: (profile) => Text(
+                                          profile != null
+                                              ? 'Toplam ${profile.xp} XP - ${_getRankName(profile.currentRank)}'
+                                              : 'Eğlen ve XP kazan',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF8fb8ff),
+                                          ),
+                                        ),
+                                        loading: () => const Text(
+                                          'Yükleniyor...',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF8fb8ff),
+                                          ),
+                                        ),
+                                        error: (_, __) => const Text(
+                                          'Eğlen ve XP kazan',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF8fb8ff),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  loading: () => const Text(
-                                    'Yükleniyor...',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF8fb8ff),
+                                    const SizedBox(width: 12),
+                                    GestureDetector(
+                                      onTap: () => Navigator.pushNamed(context, '/multiplayer'),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF8b5cf6), Color(0xFFa855f7)],
+                                          ),
+                                          borderRadius: BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF8b5cf6).withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.people,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            const Text(
+                                              'Çok Oyunculu',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  error: (_, __) => const Text(
-                                  'Eğlen ve XP kazan',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF8fb8ff),
-                                    ),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),

@@ -15,10 +15,10 @@ class WordPuzzlePage extends ConsumerStatefulWidget {
 
 class _WordPuzzlePageState extends ConsumerState<WordPuzzlePage> {
   List<String> _words = [];
-  List<String> _foundWords = [];
+  final List<String> _foundWords = [];
   List<List<String>> _grid = [];
   String _selectedWord = '';
-  List<Position> _selectedPositions = [];
+  final List<Position> _selectedPositions = [];
   int _score = 0;
   bool _gameCompleted = false;
   int _timeElapsed = 0;
@@ -219,6 +219,7 @@ class _WordPuzzlePageState extends ConsumerState<WordPuzzlePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => GameCompletionDialog(
+        title: 'Harika!',
         gameTitle: 'Kelime Bulmaca',
         score: _score,
         maxScore: _maxScore,
@@ -228,7 +229,7 @@ class _WordPuzzlePageState extends ConsumerState<WordPuzzlePage> {
           _initializeGame();
           setState(() {});
         },
-        onBackToGames: () {
+        onExit: () {
           Navigator.of(context).pop();
           Navigator.of(context).pop();
         },

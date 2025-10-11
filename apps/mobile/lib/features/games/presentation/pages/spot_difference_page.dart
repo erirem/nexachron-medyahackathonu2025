@@ -15,7 +15,7 @@ class SpotDifferencePage extends ConsumerStatefulWidget {
 
 class _SpotDifferencePageState extends ConsumerState<SpotDifferencePage> {
   List<DifferencePoint> _differences = [];
-  List<int> _foundDifferences = [];
+  final List<int> _foundDifferences = [];
   int _score = 0;
   bool _gameCompleted = false;
   int _timeElapsed = 0;
@@ -130,6 +130,7 @@ class _SpotDifferencePageState extends ConsumerState<SpotDifferencePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => GameCompletionDialog(
+        title: 'Tebrikler!',
         gameTitle: 'Farkı Bul',
         score: _score,
         maxScore: _maxScore,
@@ -139,7 +140,7 @@ class _SpotDifferencePageState extends ConsumerState<SpotDifferencePage> {
           _initializeGame();
           setState(() {});
         },
-        onBackToGames: () {
+        onExit: () {
           Navigator.of(context).pop();
           Navigator.of(context).pop();
         },

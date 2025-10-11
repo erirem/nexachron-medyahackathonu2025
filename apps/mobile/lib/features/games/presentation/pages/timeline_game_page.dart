@@ -15,7 +15,7 @@ class TimelineGamePage extends ConsumerStatefulWidget {
 
 class _TimelineGamePageState extends ConsumerState<TimelineGamePage> {
   List<TimelineEvent> _events = [];
-  List<TimelineEvent> _userOrder = [];
+  final List<TimelineEvent> _userOrder = [];
   int _score = 0;
   bool _gameCompleted = false;
   int _timeElapsed = 0;
@@ -232,6 +232,7 @@ class _TimelineGamePageState extends ConsumerState<TimelineGamePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => GameCompletionDialog(
+        title: 'Mükemmel!',
         gameTitle: 'Zaman Tüneli',
         score: _score,
         maxScore: _maxScore,
@@ -242,7 +243,7 @@ class _TimelineGamePageState extends ConsumerState<TimelineGamePage> {
           _initializeGame();
           setState(() {});
         },
-        onBackToGames: () {
+        onExit: () {
           Navigator.of(context).pop();
           Navigator.of(context).pop();
         },

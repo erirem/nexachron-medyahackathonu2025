@@ -418,64 +418,122 @@ class GamificationRepositoryImpl implements GamificationRepository {
   }
 
   UserProfile _getDefaultUserProfile() {
+    // Web'deki mock verilere benzer şekilde zengin mock profil
+    final mockBadges = _getMockBadges();
+    
     return UserProfile(
-      id: 'default_user',
-      email: 'user@example.com',
-      name: 'Oyuncu',
-      xp: 0,
-      currentRank: UserRank.newMember,
-      league: League.bronze,
-      currentStreak: 0,
-      longestStreak: 0,
-      badges: _getDefaultBadges(),
-      streakProtection: 3,
-      joinDate: DateTime.now(),
+      id: 'user-123',
+      email: 'ahmet.yilmaz@example.com',
+      name: 'Ahmet Yılmaz',
+      xp: 1250,
+      currentRank: UserRank.activeReader,
+      league: League.silver,
+      currentStreak: 5,
+      longestStreak: 12,
+      badges: mockBadges,
+      streakProtection: 2,
+      joinDate: DateTime(2024, 1, 15),
       lastActive: DateTime.now(),
-      followedTopics: [],
-      weeklyXp: 0,
-      monthlyXp: 0,
-      seasonXp: 0,
+      followedTopics: ['Teknoloji', 'Ekonomi'],
+      weeklyXp: 320,
+      monthlyXp: 1250,
+      seasonXp: 1250,
     );
   }
 
-  List<Badge> _getDefaultBadges() {
+  List<Badge> _getMockBadges() {
     return [
-      const Badge(
+      // Kazanılmış rozetler (web'deki mock verilere göre)
+      Badge(
         type: BadgeType.streak3,
-        name: '3 Günlük Seri',
-        description: '3 gün üst üste oyun oyna',
-        iconPath: 'assets/icons/badge_streak_3.svg',
+        name: '3 Gün Streak',
+        description: '3 gün üst üste giriş yap',
+        iconPath: '🔥',
+        isEarned: true,
+        earnedDate: DateTime(2024, 1, 20),
         rarity: 1,
       ),
-      const Badge(
+      Badge(
         type: BadgeType.streak7,
-        name: '7 Günlük Seri',
-        description: '7 gün üst üste oyun oyna',
-        iconPath: 'assets/icons/badge_streak_7.svg',
+        name: '7 Gün Streak',
+        description: '1 hafta boyunca giriş yap',
+        iconPath: '🏏',
+        isEarned: true,
+        earnedDate: DateTime(2024, 1, 25),
         rarity: 2,
       ),
-      const Badge(
-        type: BadgeType.streak30,
-        name: '30 Günlük Seri',
-        description: '30 gün üst üste oyun oyna',
-        iconPath: 'assets/icons/badge_streak_30.svg',
-        rarity: 4,
+      Badge(
+        type: BadgeType.quizMaster,
+        name: 'Quiz Ustası',
+        description: '10 quiz\'i doğru çöz',
+        iconPath: '🧠',
+        isEarned: true,
+        earnedDate: DateTime(2024, 2, 1),
+        rarity: 2,
       ),
-      const Badge(
-        type: BadgeType.firstWin,
-        name: 'İlk Zafer',
-        description: 'İlk oyununu tamamla',
-        iconPath: 'assets/icons/badge_first_win.svg',
+      Badge(
+        type: BadgeType.explorer,
+        name: 'Trend Takipçisi',
+        description: '5 trend konuyu takip et',
+        iconPath: '📈',
+        isEarned: true,
+        earnedDate: DateTime(2024, 2, 5),
         rarity: 1,
       ),
-      const Badge(
+      Badge(
+        type: BadgeType.earlyBird,
+        name: 'İlk 1000',
+        description: 'Platforma ilk 1000 kullanıcıdan biri ol',
+        iconPath: '👑',
+        isEarned: true,
+        earnedDate: DateTime(2024, 1, 15),
+        rarity: 5,
+      ),
+      Badge(
         type: BadgeType.perfectScore,
-        name: 'Mükemmel',
-        description: 'Bir oyunda %100 skor al',
-        iconPath: 'assets/icons/badge_perfect.svg',
+        name: 'Mükemmel Hafta',
+        description: '7 gün boyunca her gün en az 100 XP kazan',
+        iconPath: '⭐',
+        isEarned: true,
+        earnedDate: DateTime(2024, 2, 10),
+        rarity: 4,
+      ),
+      Badge(
+        type: BadgeType.speedDemon,
+        name: 'Haber Kaşifi',
+        description: '100 farklı kategoriden haber oku',
+        iconPath: '🗺️',
+        isEarned: true,
+        earnedDate: DateTime(2024, 2, 15),
         rarity: 3,
       ),
+      // Henüz kazanılmamış rozetler
+      const Badge(
+        type: BadgeType.streak30,
+        name: '30 Gün Streak',
+        description: '1 ay boyunca giriş yap',
+        iconPath: '🏅',
+        rarity: 3,
+      ),
+      const Badge(
+        type: BadgeType.streak100,
+        name: '100 Gün Streak',
+        description: '100 gün üst üste giriş yap',
+        iconPath: '⚡',
+        rarity: 5,
+      ),
+      const Badge(
+        type: BadgeType.challenger,
+        name: 'Topluluk Şampiyonu',
+        description: 'Aylık liderlik tablosunda 1. ol',
+        iconPath: '🏆',
+        rarity: 5,
+      ),
     ];
+  }
+
+  List<Badge> _getDefaultBadges() {
+    return _getMockBadges();
   }
 
   List<DailyChallenge> _getDefaultDailyChallenges() {

@@ -193,7 +193,7 @@ class _CommentsSectionState extends State<CommentsSection> {
                 Row(
                   children: [
                     Text(
-                      '${_totalLikes} beğeni',
+                      '$_totalLikes beğeni',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.6),
                         fontSize: 14,
